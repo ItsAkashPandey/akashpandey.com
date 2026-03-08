@@ -1,0 +1,34 @@
+{
+  "socials": [
+    {
+      "name": "LinkedIn",
+      "href": "https://www.linkedin.com/in/iamakashpandey/",
+      "icon": "linkedin"
+    },
+    {
+      "name": "GitHub",
+      "href": "https://github.com/ItsAkashPandey",
+      "icon": "github"
+    },
+    {
+      "name": "ORCID",
+      "href": "https://orcid.org/0009-0009-0757-6276",
+      "icon": "circle-user-round"
+    },
+    {
+      "name": "ResearchGate",
+      "href": "https://www.researchgate.net/profile/Akash-Kumar-251",
+      "icon": "flask-conical"
+    },
+    {
+      "name": "Google Scholar",
+      "href": "https://scholar.google.com/citations?user=wg6rG0cAAAAJ&hl=en",
+      "icon": "graduation-cap"
+    },
+    {
+      "name": "Email",
+      "href": "mailto:akash_k@ce.iitr.ac.in",
+      "icon": "mail"
+    }
+  ]
+}

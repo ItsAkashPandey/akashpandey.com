@@ -1,0 +1,91 @@
+{
+  "publications": [
+    {
+      "id": 1,
+      "title": "PhenoAI: A deep learning Python framework to process close-range time-lapse PhenoCam data",
+      "authors": "Akash Kumar, Siddhartha Khare, and Sergio Rossi",
+      "year": 2025,
+      "type": "Journal",
+      "journal": "Ecological Informatics",
+      "journalLogo": "/img/logos/ecoinf.jpg",
+      "journalQuartile": "Q1",
+      "impactFactor": 7.3,
+      "volume": 88,
+      "article": "103134",
+      "doi": "https://doi.org/10.1016/j.ecoinf.2025.103134",
+      "status": "Published"
+    },
+    {
+      "id": 2,
+      "title": "A comparison of PhenoCam and satellite indices with in-situ observations for black spruce in the boreal forest of Quebec, Canada",
+      "authors": "Akash Kumar, Ganesh Sai Sivani Noolu, Siddhartha Khare, and Sergio Rossi",
+      "year": 2025,
+      "type": "Journal",
+      "journal": "Ecological Informatics",
+      "journalLogo": "/img/logos/ecoinf.jpg",
+      "journalQuartile": "Q1",
+      "impactFactor": 7.3,
+      "volume": 88,
+      "article": "103137",
+      "doi": "https://doi.org/10.1016/j.ecoinf.2025.103137",
+      "status": "Published"
+    },
+    {
+      "id": 3,
+      "title": "Linking Phenocam Derived Phenology With Satellite and Field Observations in the Evergreen Forest",
+      "authors": "Akash Kumar, Noolu G. S. Sivani, Siddhartha Khare, and Sergio Rossi",
+      "year": 2024,
+      "type": "Conference",
+      "conference": "2024 IEEE India Geoscience and Remote Sensing Symposium (InGARSS)",
+      "conferenceLogo": "/img/logos/ingarss.png",
+      "doi": "https://doi.org/10.1109/InGARSS61818.2024.10984047",
+      "status": "Published"
+    },
+    {
+      "id": 4,
+      "title": "Smart agriculture platforms: Case studies",
+      "authors": "Tushar Bharadwaj, Akash Kumar, and Siddhartha Khare",
+      "year": 2023,
+      "type": "Book Chapter",
+      "book": "Technological Prospects and Social Applications of Society 5.0",
+      "publisher": "CRC Press",
+      "publisherLogo": "/img/logos/crc.png",
+      "pages": "169-176",
+      "doi": "https://doi.org/10.1201/9781003324720-15",
+      "status": "Published"
+    },
+    {
+      "id": 5,
+      "title": "Integrating PhenoCam and AWS Data to Quantify Stage-Specific Climatic Impacts on Rice Phenology",
+      "authors": "Akash Kumar, Zainab Khan, Siddhartha Khare, Umesh Kumar Saxena, and Purushottam Kumar",
+      "year": 2026,
+      "type": "Journal",
+      "journal": "Remote Sensing Applications: Society and Environment",
+      "journalLogo": "/img/logos/rsae.jpg",
+      "journalQuartile": "Q1",
+      "impactFactor": 4.5,
+      "preprint": "https://dx.doi.org/10.2139/ssrn.6087391",
+      "status": "Under Review"
+    },
+    {
+      "id": 6,
+      "title": "Deep Learning based field segmentation and multitemporal Sentinel-2 analysis for crop yield estimation for smallholder systems of India",
+      "authors": "Akash Kumar and Siddhartha Khare",
+      "year": 2026,
+      "type": "Manuscript",
+      "status": "In Preparation"
+    },
+    {
+      "id": 7,
+      "title": "Evaluation of PlanetScope and Sentinel-2 derived wheat crop phenology using infrared-enabled PhenoCam and field observations",
+      "authors": "Akash Kumar and Siddhartha Khare",
+      "year": 2026,
+      "type": "Journal",
+      "journal": "Ecological Informatics",
+      "journalLogo": "/img/logos/ecoinf.jpg",
+      "journalQuartile": "Q1",
+      "impactFactor": 7.3,
+      "status": "Under Review"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Akash Kumar",
+  "short_name": "Akash",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "description": "Geospatial research, remote sensing, and precision agriculture.",
+  "icons": [
+    {
+      "src": "/favicon2.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon1.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,366 @@
+{
+  "activities": [
+    {
+      "name": "India International Science Festival (IISF 2022)",
+      "description": "We participated in the India International Science Festival 2022 held from 21–24 January 2023 at Maulana Azad National Institute of Technology Bhopal. The festival included a large Startup Expo where selected startups from different institutes and organizations across India showcased their technologies.\n\nAt the expo, we exhibited Bhoomicam at our booth and demonstrated the platform to visitors, researchers, and industry representatives.\n\nThe event was part of India’s G20 presidency celebrations and the Azadi Ka Amrit Mahotsav.\n\nWith: Tushar Bharadwaj",
+      "date": "2023-01-24",
+      "location": "MANIT, Bhopal",
+      "imageFolder": "IISF_Bhopal",
+      "links": [
+        {
+          "name": "Tour Playlist",
+          "href": "https://youtube.com/playlist?list=PL5_z3z6Hgdze0dgSv08q1DwdAAhdXp1wS&si=TjLqfmVmRcQNYrgX",
+          "icon": "youtube"
+        }
+      ]
+    },
+    {
+      "name": "Surveying–Geomatics Karyashala 2023",
+      "description": "I served as the primary coordinator for the \"Hands-on Training on Advance Surveying Instruments\" (Karyashala), a national-level workshop organized by Prof. Siddhartha Khare from 1-11 January 2023.\n\nI was responsible for the end-to-end execution of the 11-day program, managing 25+ selected researchers from across India.\n\nI assisted instructors during practical sessions and guided participants in field demonstrations using instruments such as Total Station, Digital Level, GNSS/GPS receivers, Terrestrial Laser Scanner, and UAV/drone-based photogrammetry systems.\n\nWith: Prof. Siddhartha Khare, Tushar Bharadwaj",
+      "date": "2023-01-01",
+      "location": "Geospatial Engineering, IIT Roorkee",
+      "imageFolder": "Karyashala",
+      "links": [
+        {
+          "name": "IITR Newsletter (Page 6)",
+          "href": "https://civil.iitr.ac.in/assets/PDF/e-Newsletter%20Jan-Jun%202023.pdf",
+          "icon": "file-text"
+        },
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/feed/update/urn:li:activity:6994651150578794496?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        }
+      ]
+    },
+    {
+      "name": "UG Civil Survey Camp 2022",
+      "description": "From 27-Nov to 10-Dec-2022, I volunteered in the annual Survey Camp conducted by the Geospatial Division, Civil Engg. Dept., IIT Roorkee. This year under the supervision of Prof. Saurabh Vijay and Prof. Siddhartha Khare. The camp was held at Chandi Ghat, Haridwar, where 2nd year UG students carried out practical field surveying exercises.\n\nIt was more than 125 hours of survey with Total Station, GPS, Drone and Satellite Remote Sensing Data.\n\nDuring the two-week camp, I helped coordinate and guide 180+ UG and PG students in field activities such as measurements, data collection, and spatial mapping.\n\nWith: Prof. Saurabh Vijay, Prof. Siddhartha Khare, Prashant Singh and Volunteering TAs",
+      "date": "2022-12-10",
+      "location": "Chandighat, Haridwar, Uttarakhand",
+      "imageFolder": "Survey_Camp",
+      "links": [
+        {
+          "name": "IITR Newsletter (Page 6)",
+          "href": "https://civil.iitr.ac.in/assets/PDF/E%20News%20letter_JULY-DEC%202022.pdf",
+          "icon": "file-text"
+        }
+      ]
+    },
+    {
+      "name": "AABTonics 2022 - National Geospatial Startup Competition",
+      "description": "We participated in AABTonics 2022, a GIS startup competition organized by AABSyS IT Pvt. Ltd.\n\nWe presented the startup idea regarding a geospatial and data-driven solution on improving agricultural monitoring and decision-making using spatial technologies.\n\nOur startup was awarded **1st Prize** and received a cash award of **₹50,000** on 16 Nov 2022 (International GIS Day).\n\nWith: Prof. Siddhartha Khare, Tushar Bharadwaj",
+      "date": "2022-09-14",
+      "location": "IIT Roorkee",
+      "imageFolder": "abtonics",
+      "links": [
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/posts/aabsys-it_aheadwithaabsys-aabsysabrit-gis-activity-6999281050040328192-fEAu?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        },
+        {
+          "name": "Result link",
+          "href": "https://aabsys.com/press-releases/aabsys-successfully-conducts-aabtonics-2022/",
+          "icon": "globe"
+        }
+      ]
+    },
+    {
+      "name": "175th Foundation Day of IIT Roorkee",
+      "description": "We showcased our startup, BhoomiCam, at the Startup Expo 2022, organized during the historic 175th Foundation Day celebrations of IIT Roorkee.\n\nDuring the celebration, a commemorative coin and postal stamp were also released to mark 175 years of IIT Roorkee.\n\nWith: Prof. Siddhartha Khare",
+      "date": "2022-11-25",
+      "location": "MAC, IIT Roorkee",
+      "imageFolder": "Foundation_Day_2022",
+      "links": [
+        {
+          "name": "Website",
+          "href": "https://ir.iitr.ac.in/EventsAbroad/index.html",
+          "icon": "globe"
+        }
+      ]
+    },
+    {
+      "name": "Outreach Program by Krishi Vibhag",
+      "description": "I participated in an outreach program organized by Krishi Vigyan Kendra Dhanauri (Haridwar) where we visited several villages in and around Roorkee to interact directly with farmers and rural communities.\n\nProf. Siddhartha Khare presented and promoted Bhoomicam, explaining how drone-based services, satellite insights, and AI-driven tools can help farmers in crop monitoring, spraying, and better field management.\n\nWith: Prof. Siddhartha Khare, Mr. Umesh Saxena",
+      "date": "2023-05-02",
+      "location": "Roorkee, Uttarakhand",
+      "imageFolder": "KVK_Outreach",
+      "links": []
+    },
+    {
+      "name": "World Environment Day Program at KVK",
+      "description": "We took part in an outreach and awareness program organized at Krishi Vigyan Kendra Dhanauri, Roorkee (Haridwar) on the occasion of World Environment Day (05-Jun-2023). The event brought together students and scientists from agricultural domain, and local farmers to discuss environmental responsibility in agriculture and the role of modern technologies in sustainable farming.\n\nDuring the program, a plantation (*Vriksha Ropan*) activity was organized as a symbolic and practical step toward environmental conservation.\n\nWith: Prof. Siddhartha Khare, Mr. Umesh Saxena, Tushar Bharadwaj",
+      "date": "2023-06-05",
+      "location": "Krishi Vigyan Kendra, Haridwar",
+      "imageFolder": "world_environemnt_day_KVK",
+      "links": []
+    },
+    {
+      "name": "National Agri-Startup Conclave 2023",
+      "description": "I participated in the National Agri-Startup Conclave 2023 organized at Govind Ballabh Pant University of Agriculture and Technology, Pantnagar, Uttarakhand under the IDP-NAHEP program.\nThe event provided a platform for startups to present their solutions, exchange ideas, and interact with students and experts working towards advancing agricultural innovation in India.\n\nDuring the event with my supervisor Prof. Siddhartha Khare, we represented Bhoomicam and presented our technology platform focused on integrating drone & satellite insights. And discussed how such technologies can help farmers improve crop monitoring, optimize resource use, and make more informed decisions for farm management.\n\nWith: Prof. Siddhartha Khare, Prof. Saurabh Vijay",
+      "date": "2023-10-07",
+      "location": "GB Pant University, Pantnagar, Uttarakhand",
+      "imageFolder": "GB_Pant",
+      "links": []
+    },
+    {
+      "name": "PhenoCam Installation at KVK",
+      "description": "We deployed a CCFC PhenoCam integrated with meteorological sensors to track the crop phenology.\n\nThe PhenoMet station was installed at the experimental farm with rice-wheat rotational cropping.\n\nThe camera was mounted on a tower at a height of approximately 6.5 meters and fixed in a north-facing direction to reduce the influence of direct sunlight.\n\nWith: Prof. Siddhartha Khare, Tushar Bharadwaj, Shreyas Goswami, Apurwa Chaurasia, Sivani and Peeyush.",
+      "date": "2023-11-22",
+      "location": "Krishi Vigyan Kendra (KVK) Dhanauri, Uttarakhand",
+      "imageFolder": "PhenoCam_Installation_KVK",
+      "links": []
+    },
+    {
+      "name": "Faridabad Mela Mahotsav 2023",
+      "description": "I represented Bhoomicam at the Faridabad Mela Mahotsav held at Surajkund, Faridabad from 21-24 Dec 2023. The Mahotsav is a large cultural fair that brings together people from different regions to celebrate their heritage, traditions, and community activities.\n\nDuring the event, I presented our startup's agricultural technology platform, which integrates drone services, satellite insights, and AI-based tools to support farmers in precision agriculture.\n\nWith: Peeyush Jasaiwal",
+      "date": "2023-12-23",
+      "location": "Surajkund Mela Ground, Faridabad (Haryana)",
+      "imageFolder": "Faridabad_Mela",
+      "links": []
+    },
+    {
+      "name": "Research Day - Startup Expo 2024",
+      "description": "Participated in Institute Research Day 2024 at IIT Roorkee on 14 March 2024. The event celebrates research and innovation across the institute and coincides with Pi Day and the birthday of Albert Einstein. Research groups, students, and startups showcased their work through posters, demonstrations, and exhibition stalls.\n\nDuring the event, we presented our startup Bhoomicam at the exhibition area and interacted with faculty members, researchers, and students from different departments\n\nWith: Prof. Siddhartha Khare, Shreyas Goswami, Apurwa Chaurasia, and Sivani.",
+      "date": "2024-03-14",
+      "location": "MAC, IIT Roorkee",
+      "imageFolder": "ResearchDay_MAC",
+      "links": []
+    },
+    {
+      "name": "TIPS 4.0 – Technology Innovation at IIT Bombay",
+      "description": "I attended the TIPS 4.0 – Technology Innovation in Cyber-Physical Systems held at IIT Bombay on 13–14 May 2024. The event was organised by the Technology Innovation Hub (TIH-IoT).\n\nWe attended the event to represent the BhoomiCam startup. It was a good opportunity to present, interact with startups and explore collaborations. During the event, around 40+ deep-tech startups showcased their technologies, and pitched their ideas to VCs and investors.\n\nWith: Prof. Siddhartha Khare and Shreyas Goswami",
+      "date": "2024-05-13",
+      "location": "IIT Bombay",
+      "imageFolder": "TIPS_Bombay",
+      "links": [
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/posts/siddhartha-khare-503a4429_agridrone-tips-iitbombay-activity-7195786288027893761--mM7?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        }
+      ]
+    },
+    {
+      "name": "Startup Day 2024 by TIDES IIT Roorkee",
+      "description": "On 20 July 2024, I attended Startup Day 2024 organised by TIDES, IIT Roorkee. The program focused on showcasing startups, sharing experiences from entrepreneurs, and creating interaction between early-stage founders and the startup ecosystem around IIT Roorkee.\n\nDuring Startup Day, we discussed with Mr. Amit Sinha, ADG, Uttarakhand Police and other defense officers regarding the possible solutions related to geospatial tracking and monitoring of sensitive areas.\n\nWith: Shreyas Goswami",
+      "date": "2024-07-20",
+      "location": "IIT Roorkee",
+      "imageFolder": "TIDES_StartupDay",
+      "links": [
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/posts/siddhartha-khare-503a4429_startup-agridrone-agritech-activity-7220483496950050817-qW-O?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        }
+      ]
+    },
+    {
+      "name": "RuTAGe Smart Village Centre",
+      "description": "The RuTAGe Smart Village Centre (RSVC) was inaugurated on 10 September 2024 at Khoont village, Almora, the birthplace of Govind Ballabh Pant. The centre was set up by IIT Roorkee, with collaboration from Nehir Himalayan Sansthan and other local partners.\n\nRuTAGe works to take technologies developed in institutions like IITs and deploy them in rural areas. At the centre, several were demonstrated, such as a solar-assisted Bageshwari wool charkha, a cooled vegetable vending cart, pico-hydro based cold storage, and a mechanised felt-making device etc.\n\nWith: Dr. Neeraj Pant and Geetu Saini",
+      "date": "2024-09-10",
+      "location": "Khoont Village, Almora, Uttarakhand",
+      "imageFolder": "RUTAG_Almora",
+      "links": []
+    },
+    {
+      "name": "NASA Space Apps Challenge 2024",
+      "description": "We participated in the 2024 NASA International Space Apps Challenge on 5–6 October 2024.\n\nWe have developed a web tool to access Landsat-8/9 data, which allows users to enter coordinates and quickly get future satellite pass time and pixel reflectance values, which is useful for comparing ground observations with satellite imagery.\n\nWe received the \"Galactic Problem Solver\" certificate from NASA.\n\nWith: Shreyas Goswami, Amarjeet Kumar Mahato, Nitin Lodhi",
+      "date": "2024-10-06",
+      "location": "IIT Roorkee",
+      "imageFolder": "NASA_Space_Challenge",
+      "links": [
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/posts/goswami-shreyas_nasa-remotesensing-geospatialtechnology-ugcPost-7286431380400414721-j7NA?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        },
+        {
+          "name": "GitHub Project",
+          "href": "https://github.com/nitDev10per/Space-Apps",
+          "icon": "github"
+        }
+      ]
+    },
+    {
+      "name": "NASSCOM Technology Confluence 2024",
+      "description": "I attended the NASSCOM Technology Confluence 2024 at Chandigarh on 12 Nov 2024. It was a good opportunity to interact with entrepreneurs and researchers, and to discuss how technologies like remote sensing and data analytics can support practical solutions in agriculture.\n\nI participated as a representative of IIT Roorkee and also showcased the work of BhoomiCam, an agri-tech startup led by Prof. Siddhartha Khare.\n\nWith: Prof. Vivek Kumar Malik and Shreyas Goswami",
+      "date": "2024-11-12",
+      "location": "Hyatt Centric, Sector 17, Chandigarh",
+      "imageFolder": "NASSCOM_Confluence",
+      "links": [
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/posts/siddhartha-khare-503a4429_iitroorkee-innovation-incubation-activity-7263442784370528256-VBS9?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        }
+      ]
+    },
+    {
+      "name": "IEEE InGARSS Conference",
+      "description": "I attended the IEEE InGARSS 2024 conference held at the National Institute of Technology (NIT) Goa. During the conference, I had the opportunity to present a part of my PhD research, where I shared my work and received useful feedback from researchers and participants working in the field of geoscience and remote sensing.\n\nIt was a good experience to interact with fellow researchers, and to connect with students and scientists from different institutions working on similar problems.\n\nWith: Colleagues from Geospatial, IITR",
+      "date": "2024-12-04",
+      "location": "NIT Goa",
+      "imageFolder": "InGARSS_Goa",
+      "links": [
+        {
+          "name": "Publication",
+          "href": "https://ieeexplore.ieee.org/document/10984047",
+          "icon": "book"
+        },
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/posts/iamakashpandey_ingarss2024-ieee-phenocam-activity-7273666158367563776-9zql?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        }
+      ]
+    },
+    {
+      "name": "PhenoCam Site Selection at Kashmir",
+      "description": "We visited Kashmir for selecting suitable sites for installing PhenoCam. During the visit, we went to the University of Kashmir and met Prof. Rayees Malik and Prof. Manzoor Shah from the Department of Botany. We discussed possible locations and collaboration for setting up the cameras to monitor vegetation phenology.\n\nAs part of the visit, we also travelled to Gulmarg in Baramulla district, Jammu and Kashmir to visit the High Altitude Research Field Station.\n\nWith: Prof. Siddhartha Khare",
+      "date": "2025-02-22",
+      "location": "University of Kashmir, Srinagar, J&K",
+      "imageFolder": "Kashmir",
+      "links": []
+    },
+    {
+      "name": "Operation Dronagiri Program",
+      "description": "Our Startup Bhoomicam has been selected among the **TOP 25** startups in India from over 750+ applications received under the Operation Dronagiri program, organized by Ministry of Science and Technology.\n\nBhoomicam has been awarded a **₹10 Lakh funding grant** under the National Geospatial Startup Challenge.\n\nAs part of this, Bhoomicam will collaborate with local administrative bodies across five districts to deploy its geospatial solutions.\n\nWith: Prof. Siddhartha Khare",
+      "date": "2025-03-17",
+      "location": "Navavishkar I-Hub Foundation, IIT Tirupati",
+      "imageFolder": "Dronagiri",
+      "links": [
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/posts/siddhartha-khare-503a4429_tides-bhoomicam-operationdronagiri-activity-7308167172218912770-fuxm?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        }
+      ]
+    },
+    {
+      "name": "Drone Tech Expo at Dehradun",
+      "description": "Represented IIT Roorkee's Drone Lab and Bhoomicam in Surya Drone Tech at Dehradun organised by the Central Command of the Indian Army. The exhibition is showcasing state-of-the-art drone technologies developed in the country as well as the application, which are tailored to multi-dimensional military requirements.\n\nWith: Sahil Kundal",
+      "date": "2025-04-30",
+      "location": "Dehradun Cantonment, Uttarakhand",
+      "imageFolder": "Surya_Drone_Tech_Dehradun",
+      "links": []
+    },
+    {
+      "name": "Geospatial Mapathon 2025 (Edition V)",
+      "description": "We participated in the FOSSEE Geospatial Mapathon 2025 from 15 March 2025 to 20 July 2025 and were recognized as **winners** in this open-source mapping challenge.\n\nOur project focused on **mapping forest fires caused by Jhum cultivation in Mizoram**. We used open-source QGIS software and satellite data from the Bhuvan portal to analyze how this traditional farming practice impacts the environment.\n\nWe were able to identify areas with high deforestation and frequent seasonal fires.\n\nWith: Shreyas Goswami, Ishfaqul Haque, Akash A.",
+      "date": "2025-07-20",
+      "location": "RuDRA Lab, IIT Bombay",
+      "imageFolder": "Mapathon",
+      "links": [
+        {
+          "name": "Result link",
+          "href": "https://iitb-aai-mapathon-2025.fossee.in/results",
+          "icon": "globe"
+        }
+      ]
+    },
+    {
+      "name": "Soil Moisture Sensors at Jaisalmer",
+      "description": "Visited Jaisalmer (18-29 Aug 2025) to install soil moisture sensors at 28 different locations across arid field sites. This field campaign was part of an ongoing project of Bhoomicam to evaluate the performance of a biofertilizer that claims to improve soil moisture retention under dry sandy soil conditions.\n\nAll sensors were calibrated and geo-tagged for spatial tracking and long-term monitoring.\n\nWith: Sushmit Srivastava",
+      "date": "2025-08-21",
+      "location": "Jaisalmer, Rajasthan",
+      "imageFolder": "Jaisalmer",
+      "links": [
+        {
+          "name": "Bhoomicam Post",
+          "href": "https://www.linkedin.com/posts/bhoomicam-private-limited_farmers-smart-ground-activity-7368484756222652417-FH_H?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        }
+      ]
+    },
+    {
+      "name": "Plantation Health Assessment at NTPC",
+      "description": "Conducted a detailed plantation health assessment of the 108-hectare green belt at NTPC Solapur using multispectral UAV (Trinity F90+) data. The objective was to evaluate individual tree health across the entire industrial campus.\n\nWith: Gaurav Singh Bareth",
+      "date": "2025-10-12",
+      "location": "NTPC Solapur, Maharashtra",
+      "imageFolder": "NTPC_Solapur",
+      "links": []
+    },
+    {
+      "name": "NTRO AI Grand Challenge",
+      "description": "Our startup **Bhoomicam**, led by Prof. Siddhartha Khare, has been selected among the **TOP 6 startups nationwide** for Stage 2 of the NCIIPC Startup India AI Grand Challenge 2025.\n\nPS 10: Change Detection in Satellite Imagery\n\nAs part of this national recognition, Bhoomicam has received a **₹3 lakh prize** and a **₹5 lakh development grant**.\n\nWith: Shreyas Goswami",
+      "date": "2025-11-17",
+      "location": "IIT Delhi",
+      "imageFolder": "NTRO_Challenge",
+      "links": [
+        {
+          "name": "IITR Post",
+          "href": "https://www.linkedin.com/posts/indian-institute-of-technology-roorkee_iitroorkee-startupachievement-geospatialintelligence-activity-7427322830779961344-TvB8?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        },
+        {
+          "name": "Shortlisted Startups",
+          "href": "https://www.ai-grand-challenge.in/",
+          "icon": "globe"
+        }
+      ]
+    },
+    {
+      "name": "GeoSmart India Conference",
+      "description": "Presented my PhD research at GeoSmart India 2025, one of Asia's premier geospatial conferences.\n\nI had the opportunity to network and share insights on vegetation phenology monitoring using multi-sensor approaches with my collegues from Shiv Nadar University - Dr. Ghanshyam Giri, Manoj Yadav, Apoorva Yadav and junior from MANIT, Bhopal - Pournima.\n\n With: My supervisor -  Prof. Siddhartha Khare",
+      "date": "2025-12-04",
+      "location": "Bharat Mandapam, New Delhi",
+      "href": "https://geospatialworld.net/gsi/2025/technical-sessions.php",
+      "imageFolder": "GeoSmart_Dec_2025",
+      "links": [
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/posts/iamakashpandey_geosmartindia2025-geospatialworld-geospatial-activity-7408289077193605122-oA6N?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        },
+        {
+          "name": "See GeoSmart Technical Sessions",
+          "href": "https://geospatialworld.net/gsi/2025/technical-sessions.php",
+          "icon": "globe"
+        }
+      ]
+    },
+    {
+      "name": "100 Startups, 100 Days at IIT Ropar",
+      "description": "Attended the AI Impact Pre-Summit (#100Startups100Days) organized by iHub-AWaDH at IIT Ropar. Our startup **Bhoomicam Private Limited** was awarded a grant support of ₹2 Lakhs.\n\nWe also had the privilege of meeting **Prof. HC Verma**, a renowned physicist and a great teacher who made physics interesting in our school times with his books.\n\nWith: Prof. Siddhartha Khare",
+      "date": "2025-12-16",
+      "location": "IIT Ropar, Punjab",
+      "imageFolder": "100Startups_IIT_Ropar",
+      "links": [
+        {
+          "name": "IIT Roorkee Post",
+          "href": "https://www.linkedin.com/posts/indian-institute-of-technology-roorkee_iitroorkee-tidesiitroorkee-startupsuccess-activity-7407025989089783808-wF1Q?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        }
+      ]
+    },
+    {
+      "name": "NRSC Offline Coding Challenge 2025",
+      "description": "We participated in the NRSC Offline EO Data Processing Challenge from 03 June 2025 to 06 July 2025. Our aim was to develop an automated cloud and shadow masking model for Resourcesat-2/2A LISS-IV satellite images using open-source tools.\n\nWe were awarded **Second Winner** in the competition and received certificates along with a scale model of LVM3 as a memento.\n\nWith: Shreyas Goswami, Isfaqul Haque, Akash A.",
+      "date": "2026-01-28",
+      "location": "NRSC, ISRO, Hyderabad",
+      "imageFolder": "NRSC",
+      "links": [
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/posts/siddhartha-khare-503a4429_nrsccodingchallenge-isro-remotesensing-activity-7354531052045889536--YE5?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        },
+        {
+          "name": "GitHub",
+          "href": "https://github.com/goswamishreyas/NRCC251168/tree/main/NRCC251168_output",
+          "icon": "github"
+        }
+      ]
+    },
+    {
+      "name": "PhenoMet Installation at Almora",
+      "description": "First visited Almora on 30–31 Jan 2026 for site selection in pine and oak dominated forest. Returned again on 14–22 Feb 2026 to install a CCFC PhenoCam with meteorological sensors — PAR, wind, soil moisture, relative humidity, temperature, precipitation, etc.\n\nDuring our visit, we also observed early Rhododendron flowering that typically expected in April–May; and included the tree in our camera's field of view.\n\nWith: Suyash Khare & Gaurav Singh Bareth",
+      "date": "2026-02-14",
+      "location": "Sitlakhet, Almora, Uttarakhand",
+      "imageFolder": "Almora_Phenocam_Installation",
+      "links": []
+    }
+  ]
+}

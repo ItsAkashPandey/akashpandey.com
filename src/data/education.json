@@ -1,0 +1,49 @@
+{
+  "education": [
+    {
+      "name": "Indian Institute of Technology Roorkee",
+      "href": "https://www.iitr.ac.in/",
+      "logo": "/img/iitr.png",
+      "positions": [
+        {
+          "title": "PhD in Geospatial Engineering",
+          "start": "2022",
+          "end": "Present",
+          "description": [
+            "Thesis: Multi-scale analysis of crop phenology using PhenoCam & satellite data"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maulana Azad National Institute of Technology Bhopal",
+      "href": "https://www.manit.ac.in/",
+      "logo": "/img/manit.png",
+      "positions": [
+        {
+          "title": "M.Tech in Geoinformatics",
+          "start": "2020",
+          "end": "2022",
+          "description": [
+            "Thesis: A web-GIS based approach for mapping rice residues burning and generated pollutants over Punjab"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Meerut Institute of Engineering and Technology",
+      "href": "https://www.miet.ac.in/",
+      "logo": "/img/miet.png",
+      "positions": [
+        {
+          "title": "B.Tech in Civil Engineering",
+          "start": "2014",
+          "end": "2018",
+          "description": [
+            "Thesis: Design of flexible pavement for a flyover and study of structural and environmental influencing factors"
+          ]
+        }
+      ]
+    }
+  ]
+}

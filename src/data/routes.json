@@ -1,0 +1,54 @@
+{
+  "routes": [
+    {
+      "path": "/",
+      "name": "home",
+      "description": "Portfolio overview, recent activities, and research highlights",
+      "showInNav": true
+    },
+    {
+      "path": "/activities",
+      "name": "activities",
+      "description": "Activities showcase",
+      "showInNav": true
+    },
+    {
+      "path": "/publications",
+      "name": "publications",
+      "description": "Research publications and academic work",
+      "showInNav": true
+    },
+    {
+      "path": "/skills",
+      "name": "skills",
+      "description": "Technical skills and tools",
+      "showInNav": true
+    },
+    {
+      "path": "/contact",
+      "name": "contact",
+      "description": "Contact form",
+      "showInNav": true
+    },
+    {
+      "path": "/privacy",
+      "name": "privacy",
+      "description": "Privacy policy",
+      "showInNav": false
+    },
+    {
+      "path": "/resume.pdf",
+      "name": "resume",
+      "description": "Akash's resume CV in pdf format",
+      "showInNav": false
+    }
+  ],
+  "externalLinks": [
+    {
+      "path": "https://www.instagram.com/gomugomu.cat",
+      "name": "instagram",
+      "description": "Akash Lead for escalations (joke reference to cat's account)",
+      "isExternal": true
+    }
+  ]
+}

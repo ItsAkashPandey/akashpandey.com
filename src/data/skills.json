@@ -1,0 +1,255 @@
+{
+  "skills": [
+    {
+      "id": 1,
+      "mainCategory": "Instrument Handling",
+      "description": "During my PhD at IIT Roorkee, I got the chance to work with many different field surveying instruments. I learned how to handle both traditional surveying tools and newer technologies like UAVs, GPS, and ground sensors through regular and extensive fieldworks.",
+      "image": "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop",
+      "images": [
+        "/skills/MySkillPhotos/20230926_111450.jpg",
+        "/skills/MySkillPhotos/20230926_112133.jpg",
+        "/skills/MySkillPhotos/20230926_113040.jpg",
+        "/skills/MySkillPhotos/IMG-20230402-WA0021.jpg",
+        "/skills/MySkillPhotos/IMG-20230402-WA0023.jpg",
+        "/skills/MySkillPhotos/IMG-20230525-WA0003.jpg",
+        "/skills/MySkillPhotos/IMG-20230525-WA0005.jpg",
+        "/skills/MySkillPhotos/IMG-20230909-WA0015.jpg",
+        "/skills/MySkillPhotos/IMG-20230909-WA0017.jpg",
+        "/skills/MySkillPhotos/IMG-20230909-WA0026.jpg",
+        "/skills/MySkillPhotos/IMG-20230926-WA0002.jpg",
+        "/skills/MySkillPhotos/IMG-20230926-WA0003.jpg",
+        "/skills/MySkillPhotos/IMG-20230926-WA0004.jpg",
+        "/skills/MySkillPhotos/IMG-20240104-WA0009.jpg",
+        "/skills/MySkillPhotos/IMG-20240104-WA0010.jpg",
+        "/skills/MySkillPhotos/IMG-20240302-WA0021.jpg",
+        "/skills/MySkillPhotos/IMG-20240302-WA0023.jpg",
+        "/skills/MySkillPhotos/IMG-20240313-WA0012.jpg",
+        "/skills/MySkillPhotos/IMG20230127123147.jpg",
+        "/skills/MySkillPhotos/IMG_20240415_131338952_HDR_AE.jpg",
+        "/skills/MySkillPhotos/IMG_20240415_131345685_HDR_AE.jpg",
+        "/skills/MySkillPhotos/IMG_20240415_131406021_HDR_AE.jpg",
+        "/skills/MySkillPhotos/IMG_20240415_131415649_HDR_AE.jpg",
+        "/skills/MySkillPhotos/IMG_20240416_163042120_HDR.jpg",
+        "/skills/MySkillPhotos/IMG_20240416_164355731_HDR_AE.jpg",
+        "/skills/MySkillPhotos/IMG_20240416_164528440_HDR_AE.jpg",
+        "/skills/MySkillPhotos/IMG_20240501_135255926_HDR_AE.jpg",
+        "/skills/MySkillPhotos/IMG_20240501_135316762_HDR_AE.jpg",
+        "/skills/MySkillPhotos/IMG_20240501_135319264_HDR_AE.jpg"
+      ],
+      "subcategories": [
+        {
+          "name": "UAVs",
+          "tools": [
+            {
+              "name": "IdeaForge Q6",
+              "logo": "/skills/ideaforge.png",
+              "invertDark": true,
+              "popupImages": [
+                "/skills/ideaforge/IMG-20240405-WA0025.jpg",
+                "/skills/ideaforge/IMG_20240423_113310993_HDR_AE.jpg",
+                "/skills/ideaforge/IMG_20240423_113314558_HDR_AE.jpg",
+                "/skills/ideaforge/IMG_20240423_113325976_HDR_AE.jpg",
+                "/skills/ideaforge/IMG_20240423_115044144_HDR_AE.jpg",
+                "/skills/ideaforge/IMG_20240423_130344577_HDR_AE.jpg"
+              ]
+            },
+            {
+              "name": "Trinity F90+",
+              "logo": "/skills/trinity.png",
+              "invertLight": true
+            },
+            {
+              "name": "DJI Matrice 100",
+              "logo": "/skills/dji.png",
+              "invertDark": true,
+              "popupImages": [
+                "/skills/DJI_Drone/IMG-20230909-WA0022.jpg",
+                "/skills/DJI_Drone/IMG20220827093637.jpg",
+                "/skills/DJI_Drone/IMG20220827093803.jpg",
+                "/skills/DJI_Drone/IMG20230127125351.jpg",
+                "/skills/DJI_Drone/IMG20231025113437.jpg",
+                "/skills/DJI_Drone/IMG20231025113606.jpg"
+              ]
+            },
+            {
+              "name": "Agri-Spray Drone",
+              "logo": "/skills/agridrone.png",
+              "invertDark": true,
+              "popupImages": [
+                "/skills/agridrone/IMG-20231119-WA0002.jpg",
+                "/skills/agridrone/IMG20231126155609.jpg",
+                "/skills/agridrone/IMG20240404160834_01.jpg",
+                "/skills/agridrone/IMG_20240415_131420806_HDR_AE.jpg",
+                "/skills/agridrone/IMG_20240415_131528801_HDR_AE.jpg",
+                "/skills/agridrone/IMG_20240417_122514986_HDR_AE.jpg"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Ground Sensors",
+          "tools": [
+            {
+              "name": "PhenoCam",
+              "logo": "/skills/phenocam.png",
+              "invertDark": true
+            },
+            {
+              "name": "AWS",
+              "logo": "/skills/aws.png",
+              "invertDark": true
+            },
+            {
+              "name": "Spectroradiometer SVC",
+              "logo": "/skills/spectroradiometer.png",
+              "invertLight": true
+            },
+            {
+              "name": "FARO TLS",
+              "logo": "/skills/tls.png",
+              "invertDark": true
+            }
+          ]
+        },
+        {
+          "name": "GPS",
+          "tools": [
+            {
+              "name": "Trimble DA2",
+              "logo": "/skills/trimble.png",
+              "invertDark": true
+            },
+            {
+              "name": "Emlid Reach RS2/RS3",
+              "logo": "/skills/emlid.png",
+              "invertDark": true
+            },
+            {
+              "name": "Sokkia GRX2",
+              "logo": "/skills/sokkia.png",
+              "invertDark": true
+            }
+          ]
+        },
+        {
+          "name": "Surveying",
+          "tools": [
+            {
+              "name": "Total Station",
+              "logo": "/skills/ts.png",
+              "invertDark": true
+            },
+            {
+              "name": "Analytical Theodolite",
+              "logo": "/skills/theodolite.png",
+              "invertLight": true
+            },
+            {
+              "name": "Digital Level",
+              "logo": "/skills/digitallevel.png",
+              "invertDark": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "mainCategory": "Software",
+      "description": "Comprehensive suite of tools for geospatial analysis, GIS, remote sensing, and spatial data processing",
+      "image": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=600&fit=crop",
+      "subcategories": [
+        {
+          "name": "Programming",
+          "tools": [
+            {
+              "name": "Python",
+              "logo": "/skills/python.png",
+              "invertDark": true
+            },
+            {
+              "name": "R",
+              "logo": "/skills/R.png",
+              "invertDark": true
+            },
+            {
+              "name": "LaTeX",
+              "logo": "/skills/latex.png",
+              "invertDark": true
+            }
+          ]
+        },
+        {
+          "name": "Geospatial Analysis",
+          "tools": [
+            {
+              "name": "Google Earth Engine",
+              "logo": "/skills/gee.png",
+              "invertDark": true
+            },
+            {
+              "name": "QGIS",
+              "logo": "/skills/qgis.png",
+              "invertDark": true
+            },
+            {
+              "name": "ArcGIS Pro",
+              "logo": "/skills/arcgis.png",
+              "invertDark": true
+            },
+            {
+              "name": "ERDAS IMAGINE",
+              "logo": "/skills/erdas.png",
+              "invertDark": true
+            },
+            {
+              "name": "ENVI",
+              "logo": "/skills/envi.png",
+              "invertDark": true
+            }
+          ]
+        },
+        {
+          "name": "Photogrammetry",
+          "tools": [
+            {
+              "name": "Pix4D Mapper",
+              "logo": "/skills/pix4d.png",
+              "invertDark": true
+            },
+            {
+              "name": "FARO Scene",
+              "logo": "/skills/scene.png",
+              "invertDark": true
+            },
+            {
+              "name": "CloudCompare",
+              "logo": "/skills/cloudcompare.png",
+              "invertDark": true
+            }
+          ]
+        },
+        {
+          "name": "Civil Engineering",
+          "tools": [
+            {
+              "name": "AutoCAD 3D",
+              "logo": "/skills/autocad.png",
+              "invertDark": true
+            },
+            {
+              "name": "Revit",
+              "logo": "/skills/revit.png",
+              "invertDark": true
+            },
+            {
+              "name": "STAAD.Pro",
+              "logo": "/skills/stadd.jpg",
+              "invertDark": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

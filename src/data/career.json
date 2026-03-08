@@ -1,0 +1,80 @@
+{
+  "career": [
+    {
+      "name": "Bhoomicam Pvt Ltd",
+      "href": "https://www.bhoomicam.com/",
+      "logo": "/img/bhoomicam.png",
+      "positions": [
+        {
+          "title": "Co-Director",
+          "start": "Jun 2023",
+          "end": "Present",
+          "description": [
+            "Handling operations and B2B partnerships for geospatial agritech startup focused on precision agriculture."
+          ]
+        },
+        {
+          "title": "Chief Remote Sensing Scientist",
+          "start": "Apr 2025",
+          "end": "Present",
+          "description": [
+            "Led the technical team in building geospatial solutions for crop monitoring using satellite and drone-based remote sensing technologies."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Indian Institute of Technology Roorkee",
+      "href": "https://www.iitr.ac.in/",
+      "logo": "/img/iitr.png",
+      "positions": [
+        {
+          "title": "Senior Research Fellow",
+          "start": "May 2025",
+          "end": "Present",
+          "description": [
+            "Advanced research in geospatial analysis and remote sensing applications for agricultural monitoring and phenological studies."
+          ]
+        },
+        {
+          "title": "Junior Research Fellow (JRF)",
+          "start": "Jul 2022",
+          "end": "May 2025",
+          "description": [
+            "Conducted research on phenocam-based plant phenology monitoring and satellite-based crop assessment using machine learning techniques."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BHEL",
+      "href": "https://www.bhel.com/",
+      "logo": "/img/bhel.png",
+      "positions": [
+        {
+          "title": "Civil Site Engineer",
+          "start": "2018",
+          "end": "2019",
+          "description": [
+            "Supervised construction activities, executed quality control and designs with on-site teams in power plant projects."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DK Architects",
+      "href": "https://dkarchitects.in/",
+      "logo": "/img/dk.webp",
+      "positions": [
+        {
+          "title": "Architectural Design Intern",
+          "start": "Apr 2016",
+          "end": "Oct 2016",
+          "description": [
+            "Assisted in architectural design and documentation for residential and commercial projects, gaining hands-on experience in CAD and site management."
+          ]
+        }
+      ]
+    }
+  ]
+}
