@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-import { readFile } from "node:fs/promises";
+
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getAdminCookieName, verifyAdminSessionCookieValue } from "@/lib/admin-auth";

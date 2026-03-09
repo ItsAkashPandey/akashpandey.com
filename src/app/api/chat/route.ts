@@ -1,7 +1,5 @@
 export const runtime = "nodejs";
 
-import { cookies } from "next/headers";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { appendChatLogRows, type ChatLogAppendResult, type ChatLogRow } from "@/lib/chat-log";
 import { PROFILE_CONTENT } from "@/data/static-content";
