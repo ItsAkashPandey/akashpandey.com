@@ -5,18 +5,17 @@ import { Resend } from "resend";
 import { z } from "zod";
 import { ContactFormSchema } from "./schemas";
 
-if (!process.env.RESEND_API_KEY) {
-  console.warn("RESEND_API_KEY is not defined in environment variables!");
-}
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 type ContactFormInputs = z.infer<typeof ContactFormSchema>;
 
 export async function sendEmail(data: ContactFormInputs) {
+  console.log("sendEmail Server Action triggered with data:", { ...data, message: data.message?.substring(0, 20) + "..." });
+
   if (!process.env.RESEND_API_KEY) {
+    console.error("Missing RESEND_API_KEY in environment!");
     return { error: "Email service is not configured (missing API key)." };
   }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const result = ContactFormSchema.safeParse(data);
 
   if (result.error) {

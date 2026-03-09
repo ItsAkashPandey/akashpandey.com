@@ -62,16 +62,22 @@ export default function ContactForm() {
     if (!formData) return;
 
     setShowConfirmDialog(false);
-    const result = await sendEmail(formData);
 
-    if (result.error) {
-      toast.error(typeof result.error === "string" ? result.error : "An error occurred! Please try again later.");
-      return;
+    try {
+      const result = await sendEmail(formData);
+
+      if (result.error) {
+        toast.error(typeof result.error === "string" ? result.error : "An error occurred! Please try again later.");
+        return;
+      }
+
+      toast.success("Message sent successfully!");
+      reset();
+      setFormData(null);
+    } catch (e) {
+      console.error("Form processing error:", e);
+      toast.error("Failed to connect to the email service. Please try again.");
     }
-
-    toast.success("Message sent successfully!");
-    reset();
-    setFormData(null);
   };
 
   return (
