@@ -65,7 +65,7 @@ export default function ContactForm() {
     const result = await sendEmail(formData);
 
     if (result.error) {
-      toast.error("An error occurred! Please try again later.");
+      toast.error(typeof result.error === "string" ? result.error : "An error occurred! Please try again later.");
       return;
     }
 
