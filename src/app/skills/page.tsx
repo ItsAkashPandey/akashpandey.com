@@ -94,18 +94,18 @@ export default function SkillsPage() {
                             openLightbox(popupImages);
                           }
                         }}
-                        className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg bg-background/60 border border-border/20 hover:border-primary/40 transition-all duration-300 min-h-[48px] ${(tool as any).popupImages ? "cursor-pointer" : ""}`}
+                        className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg bg-background/60 border border-border/20 hover:border-primary/40 transition-all duration-300 min-h-[54px] ${(tool as any).popupImages ? "cursor-pointer" : ""}`}
                       >
                         {/* Logo */}
-                        <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center relative">
+                        <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center relative">
                           <ImageWithSkeleton
                             src={(isDark && (tool as any).logoDark) ? (tool as any).logoDark : tool.logo}
                             alt={tool.name}
-                            width={32}
-                            height={32}
+                            width={36}
+                            height={36}
                             containerClassName="w-full h-full"
                             className={cn(
-                              "w-full h-full object-contain",
+                              "w-full h-full object-contain transition-transform duration-300 group-hover:scale-110",
                               (tool as any).invertDark && "dark:invert",
                               (tool as any).invertLight && "invert dark:invert-0"
                             )}
@@ -115,8 +115,13 @@ export default function SkillsPage() {
                           />
                         </div>
 
-                        {/* Tool Name - full width, no truncation */}
-                        <span className="text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors leading-tight break-words">
+                        {/* Tool Name - Bold Brand Gradient */}
+                        <span className={cn(
+                          "text-sm font-bold leading-tight break-words transition-colors",
+                          (tool as any).gradient
+                            ? `bg-gradient-to-r ${(tool as any).gradient} bg-clip-text text-transparent`
+                            : "text-muted-foreground group-hover:text-foreground"
+                        )}>
                           {tool.name}
                         </span>
                       </div>

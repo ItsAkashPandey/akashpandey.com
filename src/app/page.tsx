@@ -27,20 +27,21 @@ import { cn } from "@/lib/utils";
 const AKASH_BIRTH_YEAR = 1998;
 const LIMIT = 2; // max show 2
 
-// Featured skills to show on home page (curated selection with official brand colors)
-const featuredSkills = [
-  // Top row - Software (official brand colors)
-  { name: "Python", logo: "/skills/python.png", invertDark: true, gradient: "from-[#4B8BBE] to-[#FFD43B]" }, // Official Python blue & yellow
-  { name: "LaTeX", logo: "/skills/latex.png", invertDark: true, gradient: "from-[#008080] to-[#00CED1]" }, // Teal (common LaTeX representation)
-  { name: "Google Earth Engine", logo: "/skills/gee.png", invertDark: true, gradient: "from-[#4285F4] to-[#255FDB]" }, // Google Earth blues
-  { name: "QGIS", logo: "/skills/qgis.png", invertDark: true, gradient: "from-[#93B023] to-[#589632]" }, // Official QGIS green
-  { name: "CloudCompare", logo: "/skills/cloudcompare.png", invertDark: true, gradient: "from-[#F7931E] to-[#E85D04]" }, // Orange (from logo)
-  // Bottom row - Instruments (official brand colors)
-  { name: "PhenoCam", logo: "/skills/phenocam.png", invertDark: true, gradient: "from-[#2D6A4F] to-[#40916C]" }, // Nature/vegetation green
-  { name: "Trinity F90+", logo: "/skills/trinity.png", invertLight: true, gradient: "from-[#0010ED] to-[#4361EE]" }, // Quantum Systems Commercial Blue
-  { name: "AWS", logo: "/skills/aws.png", invertDark: true, gradient: "from-[#FF9900] to-[#E65100]" }, // Weather orange/amber
-  { name: "FARO TLS", logo: "/skills/tls.png", invertDark: true, gradient: "from-[#3258DB] to-[#1E40AF]" }, // FARO Royal Blue
+// Derive featured skills from centralized skills data to ensure consistent brand colors/gradients
+const featuredSkillNames = [
+  "Python", "LaTeX", "Google Earth Engine", "QGIS", "CloudCompare",
+  "PhenoCam", "Trinity F90+", "AWS", "FARO TLS"
 ];
+
+// Flat list of all tools from all categories
+const allTools = skillsData.skills.flatMap(cat =>
+  cat.subcategories.flatMap(sub => sub.tools)
+);
+
+// Map the featured names to their full tool objects from skills.json
+const featuredSkills = featuredSkillNames.map(name =>
+  allTools.find(tool => tool.name === name)
+).filter(Boolean) as any[];
 
 export default function Home() {
   const currentAge = new Date().getFullYear() - AKASH_BIRTH_YEAR;
