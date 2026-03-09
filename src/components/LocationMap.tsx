@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import { User, MapPin } from "lucide-react";
+import { LocateFixed, Target } from "lucide-react";
 
 export default function LocationMap() {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -318,7 +318,7 @@ export default function LocationMap() {
           title="Zoom to Akash"
           className="flex size-8 items-center justify-center rounded-lg border border-white/20 bg-background/60 text-foreground shadow-lg backdrop-blur-md transition-all hover:bg-background/80 hover:scale-105 active:scale-95"
         >
-          <MapPin className="size-4 text-indigo-500" />
+          <LocateFixed className="size-4 text-indigo-500" />
         </button>
 
         {distance && visitorLocation && (
@@ -337,7 +337,7 @@ export default function LocationMap() {
             title="Zoom to You"
             className="flex size-8 items-center justify-center rounded-lg border border-white/20 bg-background/60 text-foreground shadow-lg backdrop-blur-md transition-all hover:bg-background/80 hover:scale-105 active:scale-95"
           >
-            <User className="size-4 text-sky-500" />
+            <Target className="size-4 text-sky-500" />
           </button>
         )}
       </div>
