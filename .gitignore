@@ -42,34 +42,3 @@ output/
 logs/
 
 # large public image/event directories (host these on a CDN)
-public/100Startups_IIT_Ropar/
-public/Abtonics/
-public/Almora_Phenocam_Installation/
-public/Chess/
-public/Dronagiri/
-public/Faridabad_Mela/
-public/Foundation_Day_2022/
-public/GB_Pant/
-public/GeoSmart_Dec_2025/
-public/IISF_Bhopal/
-public/InGARSS_Goa/
-public/Jaisalmer/
-public/Karyashala/
-public/Kashmir/
-public/KVK_Outreach/
-public/Mapathon/
-public/NASA_Space_Challenge/
-public/NASSCOM_Confluence/
-public/NRSC/
-public/NTPC_Solapur/
-public/NTRO_Challenge/
-public/PhenoCam_Installation_KVK/
-public/ResearchDay_MAC/
-public/RUTAG_Almora/
-public/skills/
-public/Survey_Camp/
-public/Surya_Drone_Tech_Dehradun/
-public/TA/
-public/TIDES_StartupDay/
-public/TIPS_Bombay/
-public/world_environemnt_day_KVK/
