@@ -113,7 +113,7 @@ function safeLastUserMessage(messages: IncomingMessage[]): string | null {
 let cachedProfileContext: string | null = null;
 
 async function getProfileContext() {
-  const profilePath = path.join(process.cwd(), "src", "data", "profile.md");
+  const profilePath = path.join(process.cwd(), "src/data/profile.md");
 
   // In dev, the profile changes frequently. Avoid serving stale cached context.
   if (process.env.NODE_ENV !== "production") {

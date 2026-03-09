@@ -125,9 +125,8 @@ export async function GET(req: Request) {
         },
       );
     } catch (error) {
-      readWarning = `Webhook read failed; falling back. ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`;
+      readWarning = `Webhook read failed; falling back. ${error instanceof Error ? error.message : "Unknown error"
+        }`;
     }
   }
 
@@ -164,9 +163,8 @@ export async function GET(req: Request) {
       params.push(limit);
       const limitParam = `$${params.length}`;
 
-      const sql = `select id, timestamp, visitor_id as "visitorId", visitor_name as "visitorName", conversation_id as "conversationId", role, message from chat_logs${
-        where.length ? ` where ${where.join(" and ")}` : ""
-      } order by timestamp desc, id desc limit ${limitParam}`;
+      const sql = `select id, timestamp, visitor_id as "visitorId", visitor_name as "visitorName", conversation_id as "conversationId", role, message from chat_logs${where.length ? ` where ${where.join(" and ")}` : ""
+        } order by timestamp desc, id desc limit ${limitParam}`;
 
       const result = await pool.query(sql, params);
       const rows = (result.rows || []).slice().reverse();
@@ -187,13 +185,23 @@ export async function GET(req: Request) {
         },
       );
     } catch (error) {
-      readWarning = `${readWarning ? `${readWarning} ` : ""}Postgres read failed; falling back. ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`;
+      readWarning = `${readWarning ? `${readWarning} ` : ""}Postgres read failed; falling back. ${error instanceof Error ? error.message : "Unknown error"
+        }`;
     }
   }
 
   const filePath = process.env.CHAT_LOG_FILE_PATH || "./logs/chat-log.jsonl";
+
+  // Serverless / Vercel safeguard: prevent aggressive project-wide tracing
+  if (process.env.VERCEL === "1" && !process.env.CHAT_LOG_FILE_PATH) {
+    return NextResponse.json({
+      rows: [],
+      storage: "none",
+      message: "Local file logging is disabled on Vercel by default to prevent build bloat. Use Google Sheets or Postgres."
+    }, {
+      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate" },
+    });
+  }
 
   let text = "";
   try {

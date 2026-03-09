@@ -138,6 +138,10 @@ export async function appendChatLogRows(rows: ChatLogRow[]) {
 
   // Fallback: local append-only JSONL file (no external API). Requires a persistent filesystem.
   // NOTE: This is not reliable on serverless platforms that do not persist disk writes.
+  if (process.env.VERCEL === "1" && !process.env.CHAT_LOG_FILE_PATH) {
+    return { status: "disabled", reason: "Local file logging is disabled on Vercel to prevent build bloat" } as const;
+  }
+
   const { appendFile, mkdir } = await import("node:fs/promises");
   const path = await import("node:path");
   const resolvedPath = filePath!.trim();
