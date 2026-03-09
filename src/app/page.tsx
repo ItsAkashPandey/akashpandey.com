@@ -21,6 +21,9 @@ import homeContent from "@/data/home.json";
 import publicationsData from "@/data/publications.json";
 import skillsData from "@/data/skills.json";
 
+import ImageWithSkeleton from "@/components/ImageWithSkeleton";
+import { cn } from "@/lib/utils";
+
 const AKASH_BIRTH_YEAR = 1998;
 const LIMIT = 2; // max show 2
 
@@ -123,11 +126,18 @@ export default function Home() {
                   key={skill.name}
                   className="group flex flex-col items-center gap-2 transition-all duration-300 hover:scale-110"
                 >
-                  <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10">
-                    <img
+                  <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative">
+                    <ImageWithSkeleton
                       src={skill.logo}
                       alt={skill.name}
-                      className={`h-full w-full object-contain ${skill.invertDark ? 'dark:invert' : ''} ${(skill as any).invertLight ? 'invert dark:invert-0' : ''}`}
+                      width={64}
+                      height={64}
+                      containerClassName="w-full h-full"
+                      className={cn(
+                        "h-full w-full object-contain",
+                        skill.invertDark && "dark:invert",
+                        (skill as any).invertLight && "invert dark:invert-0"
+                      )}
                     />
                   </div>
                   <span className={`text-xs sm:text-sm font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
@@ -144,11 +154,18 @@ export default function Home() {
                   key={skill.name}
                   className="group flex flex-col items-center gap-2 transition-all duration-300 hover:scale-110"
                 >
-                  <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10">
-                    <img
+                  <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative">
+                    <ImageWithSkeleton
                       src={skill.logo}
                       alt={skill.name}
-                      className={`h-full w-full object-contain ${skill.invertDark ? 'dark:invert' : ''} ${(skill as any).invertLight ? 'invert dark:invert-0' : ''}`}
+                      width={64}
+                      height={64}
+                      containerClassName="w-full h-full"
+                      className={cn(
+                        "h-full w-full object-contain",
+                        skill.invertDark && "dark:invert",
+                        (skill as any).invertLight && "invert dark:invert-0"
+                      )}
                     />
                   </div>
                   <span className={`text-xs sm:text-sm font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>

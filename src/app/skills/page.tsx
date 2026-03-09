@@ -16,6 +16,8 @@ import {
   Camera,
   Building,
 } from "lucide-react";
+import ImageWithSkeleton from "@/components/ImageWithSkeleton";
+import { cn } from "@/lib/utils";
 
 // Map subcategory names to icons
 const subcategoryIcons: Record<string, React.ReactNode> = {
@@ -95,13 +97,20 @@ export default function SkillsPage() {
                         className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg bg-background/60 border border-border/20 hover:border-primary/40 transition-all duration-300 min-h-[48px] ${(tool as any).popupImages ? "cursor-pointer" : ""}`}
                       >
                         {/* Logo */}
-                        <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center">
-                          <img
+                        <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center relative">
+                          <ImageWithSkeleton
                             src={(isDark && (tool as any).logoDark) ? (tool as any).logoDark : tool.logo}
                             alt={tool.name}
-                            className={`w-full h-full object-contain ${(tool as any).invertDark ? 'dark:invert' : ''} ${(tool as any).invertLight ? 'invert dark:invert-0' : ''}`}
+                            width={32}
+                            height={32}
+                            containerClassName="w-full h-full"
+                            className={cn(
+                              "w-full h-full object-contain",
+                              (tool as any).invertDark && "dark:invert",
+                              (tool as any).invertLight && "invert dark:invert-0"
+                            )}
                             onError={(e) => {
-                              e.currentTarget.src = "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/devicon/devicon-original.svg";
+                              (e.target as HTMLImageElement).src = "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/devicon/devicon-original.svg";
                             }}
                           />
                         </div>

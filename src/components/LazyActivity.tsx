@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ActivityCard } from "./ActivityCard";
 import { Activity } from "@/lib/schemas";
+import { Skeleton } from "./ui/skeleton";
 
 interface Props {
     activity: Activity & { elementId: string; resolvedImages: string[] };
@@ -47,7 +48,7 @@ export default function LazyActivity({ activity, index }: Props) {
             {isIntersecting ? (
                 <ActivityCard activity={activity} images={activity.resolvedImages} />
             ) : (
-                <div className="w-full h-[300px] animate-pulse rounded-2xl bg-white/5 dark:bg-white/[0.02] border border-white/10" />
+                <Skeleton className="w-full h-[300px] border border-white/10" />
             )}
         </div>
     );
