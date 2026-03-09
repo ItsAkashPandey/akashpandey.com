@@ -205,6 +205,7 @@ export async function GET(req: Request) {
 
   let text = "";
   try {
+    const { readFile } = await import("node:fs/promises");
     text = await readFile(filePath, "utf-8");
   } catch (error) {
     return NextResponse.json(

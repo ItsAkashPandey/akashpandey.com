@@ -1,10 +1,10 @@
 export const runtime = "nodejs";
 
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { appendChatLogRows, type ChatLogAppendResult, type ChatLogRow } from "@/lib/chat-log";
+import { PROFILE_CONTENT } from "@/data/static-content";
 
 type IncomingMessage = {
   role: "user" | "assistant";
@@ -110,24 +110,6 @@ function safeLastUserMessage(messages: IncomingMessage[]): string | null {
   return null;
 }
 
-let cachedProfileContext: string | null = null;
-
-async function getProfileContext() {
-  const profilePath = path.join(process.cwd(), "src/data/profile.md");
-
-  // In dev, the profile changes frequently. Avoid serving stale cached context.
-  if (process.env.NODE_ENV !== "production") {
-    return await readFile(profilePath, "utf-8");
-  }
-
-  if (cachedProfileContext) {
-    return cachedProfileContext;
-  }
-
-  cachedProfileContext = await readFile(profilePath, "utf-8");
-  return cachedProfileContext;
-}
-
 export async function POST(req: Request) {
   try {
     const {
@@ -162,13 +144,12 @@ export async function POST(req: Request) {
       throw new Error("OPENROUTER_API_KEY is not configured.");
     }
 
-    const profileContext = await getProfileContext();
     const systemPrompt =
       `You are kasi, the website assistant for Akash.\n` +
       `Use PROFILE CONTEXT as the source of truth for Akash's personal facts (age, height, roles, contact, etc).\n` +
       `Do not guess, approximate, or invent Akash-specific details. If a personal fact is not present in PROFILE CONTEXT, say you don't have that info.\n` +
       `If the user asks about your (kasi's) physical attributes, you have none.\n\n` +
-      `PROFILE CONTEXT (authoritative):\n${profileContext}`;
+      `PROFILE CONTEXT (authoritative):\n${PROFILE_CONTENT}`;
     const chatMessages = [
       { role: "system" as const, content: systemPrompt },
       ...(messages || []).map((message) => ({
