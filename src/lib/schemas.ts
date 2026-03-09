@@ -29,6 +29,7 @@ const activity = z.object({
   image: z.string().optional(),
   images: z.array(z.string()).optional(),
   imageFolder: z.string().optional(),
+  resolvedImages: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional(),
   links: z.array(iconLink),
 });
