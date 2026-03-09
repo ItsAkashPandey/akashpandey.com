@@ -146,7 +146,7 @@
       "description": "We participated in AABTonics 2022, a GIS startup competition organized by AABSyS IT Pvt. Ltd.\n\nWe presented the startup idea regarding a geospatial and data-driven solution on improving agricultural monitoring and decision-making using spatial technologies.\n\nOur startup was awarded **1st Prize** and received a cash award of **₹50,000** on 16 Nov 2022 (International GIS Day).\n\nWith: Prof. Siddhartha Khare, Tushar Bharadwaj",
       "date": "2022-09-14",
       "location": "IIT Roorkee",
-      "imageFolder": "abtonics",
+      "imageFolder": "Abtonics",
       "links": [
         {
           "name": "LinkedIn Post",
@@ -160,9 +160,9 @@
         }
       ],
       "resolvedImages": [
-        "/abtonics/1.jpg",
-        "/abtonics/2.jpg",
-        "/abtonics/3.jpg"
+        "/Abtonics/1.jpg",
+        "/Abtonics/2.jpg",
+        "/Abtonics/3.jpg"
       ]
     },
     {
