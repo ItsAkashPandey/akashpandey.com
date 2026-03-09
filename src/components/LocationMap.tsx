@@ -142,8 +142,8 @@ export default function LocationMap() {
         const el = document.createElement("div");
         el.className = "group/marker relative flex size-6 items-center justify-center z-50";
         el.innerHTML = `
-          <div class="size-3 rounded-full bg-indigo-600 border-2 border-white dark:border-zinc-800 shadow-xl transition-transform group-hover/marker:scale-125 duration-300"></div>
-          <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900/95 dark:bg-white/95 text-white dark:text-zinc-900 text-[10px] font-bold rounded-md opacity-0 group-hover/marker:opacity-100 transition-all duration-300 shadow-xl pointer-events-none translate-y-1 group-hover/marker:translate-y-0 whitespace-nowrap">
+          <div class="size-3 rounded-full bg-indigo-600 border-2 border-white dark:border-zinc-800 shadow-xl transition-transform group-hover/marker:scale-125 duration-75"></div>
+          <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900/95 dark:bg-white/95 text-white dark:text-zinc-900 text-[10px] font-bold rounded-md opacity-0 group-hover/marker:opacity-100 transition-all duration-75 shadow-xl pointer-events-none translate-y-1 group-hover/marker:translate-y-0 whitespace-nowrap">
             Akash (Me)
           </div>
         `;
@@ -167,8 +167,8 @@ export default function LocationMap() {
           el.innerHTML = `
             <div class="absolute inset-0 rounded-full bg-sky-500/20 animate-ping"></div>
             <div class="size-3 rounded-full bg-sky-500 border-2 border-white dark:border-zinc-800 shadow-xl"></div>
-            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900/95 dark:bg-white/95 text-white dark:text-zinc-900 text-[10px] font-bold rounded-md opacity-0 group-hover/user:opacity-100 transition-all duration-300 shadow-xl pointer-events-none translate-y-1 group-hover/user:translate-y-0 whitespace-nowrap">
-              You (Visitor)
+            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900/95 dark:bg-white/95 text-white dark:text-zinc-900 text-[10px] font-bold rounded-md opacity-0 group-hover/user:opacity-100 transition-all duration-75 shadow-xl pointer-events-none translate-y-1 group-hover/user:translate-y-0 whitespace-nowrap">
+              You
             </div>
           `;
 
@@ -278,7 +278,7 @@ export default function LocationMap() {
       {/* Cloud and plane animations - hidden on hover */}
       <div
         data-hidden={!mapLoaded}
-        className="transition-opacity duration-500 group-hover:pointer-events-none group-hover:opacity-0 data-[hidden=true]:opacity-0"
+        className="transition-opacity duration-150 group-hover:pointer-events-none group-hover:opacity-0 data-[hidden=true]:opacity-0"
       >
         {/* Cloud */}
         <Image
