@@ -6,7 +6,7 @@ This site doesn’t track you. If you use the chatbot, messages are stored in my
 
 ## Hey 👋
 
-Thanks for stopping by. This is my personal portfolio and blog where I share my work, projects, and thoughts. I care about privacy, so here’s a simple, no-nonsense explanation of how things work.
+Thanks for stopping by. This is my personal portfolio where I share my work, projects, and research. I care about privacy, so here’s a simple, no-nonsense explanation of how things work.
 
 ## What I collect (and why)
 
