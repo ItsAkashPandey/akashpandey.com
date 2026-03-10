@@ -99,7 +99,7 @@ export default function Socials() {
   const socials = socialSchema.parse(data).socials;
 
   return (
-    <section className="flex flex-wrap gap-2 sm:gap-4">
+    <section className="flex flex-wrap gap-1.5 sm:gap-4">
       {socials.map((item) => {
         const IconComponent = iconMap[item.name];
         return (
@@ -107,7 +107,7 @@ export default function Socials() {
             href={item.href}
             key={item.name}
             target="_blank"
-            className="group relative flex flex-col items-center gap-1 overflow-hidden rounded-md p-1.5 text-muted-foreground transition-colors hover:text-foreground"
+            className="group relative flex flex-col items-center gap-1 overflow-hidden rounded-md p-1 sm:p-1.5 text-muted-foreground transition-colors hover:text-foreground"
             rel="noopener noreferrer"
             title={item.name}
           >

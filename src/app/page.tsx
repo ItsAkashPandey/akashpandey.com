@@ -61,8 +61,8 @@ export default function Home() {
       <section className="flex flex-col gap-1">
         <LocationMap />
 
-        <div className="mt-[22px] flex flex-row-reverse items-center justify-between gap-1 sm:gap-8 md:items-center">
-          <SwipeCards className="shrink-0 scale-[0.45] sm:scale-100 origin-right -mr-10 sm:mr-0" />
+        <div className="mt-[22px] flex flex-row-reverse items-center justify-between gap-1 px-2 sm:gap-8 sm:px-0 md:items-center">
+          <SwipeCards className="shrink-0 origin-right scale-[0.5] sm:scale-100" />
 
           <div className="flex flex-1 flex-col sm:max-w-3xl min-w-0">
             <h1 className="title text-balance text-2xl sm:text-5xl leading-tight">
@@ -80,11 +80,11 @@ export default function Home() {
 
             <ChatPromptButton chatPrompt={homeContent.introduction.chatPrompt} />
 
-            <section className="mt-6 flex flex-wrap items-center gap-2 sm:gap-4">
+            <section className="mt-6 flex flex-wrap items-center gap-1.5 px-0 sm:gap-4">
               <Link href="/resume.pdf" target="_blank">
-                <Button variant="outline" className="h-full py-3">
+                <Button variant="outline" className="h-[32px] sm:h-full py-1 px-2 sm:py-3 sm:px-4 text-[11px] sm:text-sm">
                   <span className="font-semibold">Resume</span>
-                  <FileDown className="ml-2 size-5" />
+                  <FileDown className="ml-1 sm:ml-2 size-3.5 sm:size-5" />
                 </Button>
               </Link>
               <Socials />
@@ -122,13 +122,13 @@ export default function Home() {
           {/* Skills grid - Two rows */}
           <div className="relative z-10 flex flex-col gap-6">
             {/* Top row - Software tools */}
-            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+            <div className="flex flex-wrap justify-center gap-1.5 sm:gap-6">
               {featuredSkills.slice(0, 5).map((skill) => (
                 <div
                   key={skill.name}
-                  className="group flex flex-col items-center gap-2 transition-all duration-300 hover:scale-110"
+                  className="group flex flex-col items-center gap-1.5 sm:gap-2 transition-all duration-300 hover:scale-110"
                 >
-                  <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative" >
+                  <div className="flex h-11 w-11 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-2 sm:p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative" >
                     <ImageWithSkeleton
                       src={skill.logo}
                       alt={skill.name}
@@ -142,7 +142,7 @@ export default function Home() {
                       )}
                     />
                   </div>
-                  <span className={`text-xs sm:text-sm font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
+                  <span className={`text-[10px] sm:text-sm max-w-[56px] sm:max-w-none text-center leading-tight font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
                     {skill.name}
                   </span>
                 </div>
@@ -150,13 +150,13 @@ export default function Home() {
             </div>
 
             {/* Bottom row - Instruments */}
-            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+            <div className="flex flex-wrap justify-center gap-1.5 sm:gap-6">
               {featuredSkills.slice(5).map((skill) => (
                 <div
                   key={skill.name}
-                  className="group flex flex-col items-center gap-2 transition-all duration-300 hover:scale-110"
+                  className="group flex flex-col items-center gap-1.5 sm:gap-2 transition-all duration-300 hover:scale-110"
                 >
-                  <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative" >
+                  <div className="flex h-11 w-11 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-2 sm:p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative" >
                     <ImageWithSkeleton
                       src={skill.logo}
                       alt={skill.name}
@@ -170,7 +170,7 @@ export default function Home() {
                       )}
                     />
                   </div>
-                  <span className={`text-xs sm:text-sm font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
+                  <span className={`text-[10px] sm:text-sm max-w-[56px] sm:max-w-none text-center leading-tight font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
                     {skill.name}
                   </span>
                 </div>
