@@ -51,21 +51,23 @@ export default function SkillsPage() {
         <h1 className="title">my skills.</h1>
       </div>
 
-      <div className="flex flex-col gap-12">
+      <div className="flex flex-col gap-8">
         {skillsData.skills.map((mainCat, idx) => (
-          <div key={mainCat.id} className="space-y-8">
+          <div key={mainCat.id} className="space-y-6">
             {/* Category Header with Photo beside it */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="flex flex-col gap-3">
-                <h2 className="title text-2xl sm:text-3xl">{mainCat.mainCategory}</h2>
+            {/* Category Header with Photo beside it - Side-by-side on all screens */}
+            <div className="flex flex-row-reverse items-center justify-between gap-4 sm:gap-12">
+              {/* Photo next to header - Right on all screens */}
+              <div className="shrink-0 scale-[0.6] sm:scale-100 origin-right transition-transform -mr-4 sm:mr-0 w-[120px] h-[200px] sm:w-[280px] sm:h-[250px]">
+                <SwipeCards images={(mainCat as any).images} className="w-full h-full" />
+              </div>
+
+              <div className="flex flex-1 flex-col gap-2 sm:gap-3 min-w-0">
+                <h2 className="title text-2xl sm:text-4xl">{mainCat.mainCategory}</h2>
                 {/* Description */}
-                <div className="prose mb-6 max-w-full text-justify text-sm text-muted-foreground dark:prose-invert sm:text-base">
+                <div className="prose max-w-full text-balance text-sm text-muted-foreground dark:prose-invert sm:text-base">
                   <Markdown>{mainCat.description}</Markdown>
                 </div>
-              </div>
-              {/* Photo next to header */}
-              <div className="flex justify-center md:justify-end">
-                <SwipeCards images={(mainCat as any).images} className="w-full max-w-[280px]" />
               </div>
             </div>
 
@@ -132,7 +134,7 @@ export default function SkillsPage() {
 
             {/* Divider */}
             {idx < skillsData.skills.length - 1 && (
-              <div className="border-t border-border/30 mt-4" />
+              <div className="border-t border-border/30" />
             )}
           </div>
         ))}

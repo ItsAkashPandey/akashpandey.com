@@ -16,14 +16,12 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    outputFileTracingExcludes: {
-      "*": [
-        "public/**/*",
-        "node_modules/@swc/core-linux-x64-gnu",
-        "node_modules/@swc/core-linux-x64-musl",
-      ],
-    },
+  outputFileTracingExcludes: {
+    "*": [
+      "public/**/*",
+      "node_modules/@swc/core-linux-x64-gnu",
+      "node_modules/@swc/core-linux-x64-musl",
+    ],
   },
   devIndicators: {
     appIsrStatus: false,

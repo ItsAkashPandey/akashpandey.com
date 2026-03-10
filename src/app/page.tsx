@@ -61,8 +61,8 @@ export default function Home() {
       <section className="flex flex-col gap-1">
         <LocationMap />
 
-        <div className="mt-8 flex flex-row-reverse items-start justify-between gap-2 sm:items-center sm:gap-8">
-          <SwipeCards className="shrink-0 scale-[0.6] sm:scale-100 origin-right transition-transform -mr-6 sm:mr-0 mt-2 sm:mt-0" />
+        <div className="mt-[22px] flex flex-row-reverse items-center justify-between gap-1 sm:gap-8 md:items-center">
+          <SwipeCards className="shrink-0 scale-[0.45] sm:scale-100 origin-right -mr-10 sm:mr-0" />
 
           <div className="flex flex-1 flex-col sm:max-w-3xl min-w-0">
             <h1 className="title text-balance text-2xl sm:text-5xl leading-tight">
@@ -95,108 +95,95 @@ export default function Home() {
 
       <Experience />
 
-      {/* Skills Section - Redesigned for mobile side-by-side consistency */}
-      <section className="flex flex-col gap-6 sm:gap-8">
-        <div className="flex flex-row-reverse items-start justify-between gap-4 sm:items-center">
-          {/* Logo Cloud on the right for mobile */}
-          <div className="relative h-24 w-32 shrink-0 overflow-hidden rounded-xl border border-border/50 bg-muted/5 sm:h-auto sm:w-auto sm:rounded-2xl sm:p-8 sm:bg-gradient-to-br sm:from-muted/30 sm:via-background sm:to-muted/20 md:flex-1">
-            <div className="md:hidden flex flex-wrap gap-1 p-2 items-center justify-center h-full">
-              {featuredSkills.slice(0, 4).map((skill) => (
-                <ImageWithSkeleton
+      {/* Skills Section - Unique floating logo cloud design */}
+      {/* Skills Section - Unique floating logo cloud design */}
+      <section className="flex flex-col gap-8">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <h2 className="title text-2xl sm:text-3xl">skills & tools</h2>
+            <Badge variant="secondary" className="text-xs">
+              {totalSkills}+
+            </Badge>
+          </div>
+          <LinkWithIcon
+            href="/skills"
+            position="right"
+            icon={<ArrowRightIcon className="size-5" />}
+            text="view more"
+          />
+        </div>
+
+        {/* Floating logo cloud with glassmorphism effect */}
+        <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-muted/30 via-background to-muted/20 p-6 sm:p-8">
+          {/* Background decorative elements */}
+          <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl" />
+
+          {/* Skills grid - Two rows */}
+          <div className="relative z-10 flex flex-col gap-6">
+            {/* Top row - Software tools */}
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+              {featuredSkills.slice(0, 5).map((skill) => (
+                <div
                   key={skill.name}
-                  src={skill.logo}
-                  alt={skill.name}
-                  width={24}
-                  height={24}
-                  className={cn(
-                    "size-5 object-contain",
-                    skill.invertDark && "dark:invert",
-                    (skill as any).invertLight && "invert dark:invert-0"
-                  )}
-                />
+                  className="group flex flex-col items-center gap-2 transition-all duration-300 hover:scale-110"
+                >
+                  <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative" >
+                    <ImageWithSkeleton
+                      src={skill.logo}
+                      alt={skill.name}
+                      width={64}
+                      height={64}
+                      containerClassName="w-full h-full"
+                      className={cn(
+                        "h-full w-full object-contain",
+                        skill.invertDark && "dark:invert",
+                        (skill as any).invertLight && "invert dark:invert-0"
+                      )}
+                    />
+                  </div>
+                  <span className={`text-xs sm:text-sm font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
+                    {skill.name}
+                  </span>
+                </div>
               ))}
             </div>
 
-            {/* Desktop Logo Cloud */}
-            <div className="hidden md:flex relative z-10 flex-col gap-6">
-              {/* Top row - Software tools */}
-              <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-                {featuredSkills.slice(0, 5).map((skill) => (
-                  <div
-                    key={skill.name}
-                    className="group flex flex-col items-center gap-2 transition-all duration-300 hover:scale-110"
-                  >
-                    <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative">
-                      <ImageWithSkeleton
-                        src={skill.logo}
-                        alt={skill.name}
-                        width={64}
-                        height={64}
-                        containerClassName="w-full h-full"
-                        className={cn(
-                          "h-full w-full object-contain",
-                          skill.invertDark && "dark:invert",
-                          (skill as any).invertLight && "invert dark:invert-0"
-                        )}
-                      />
-                    </div>
-                    <span className={`text-xs sm:text-sm font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
-                      {skill.name}
-                    </span>
+            {/* Bottom row - Instruments */}
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+              {featuredSkills.slice(5).map((skill) => (
+                <div
+                  key={skill.name}
+                  className="group flex flex-col items-center gap-2 transition-all duration-300 hover:scale-110"
+                >
+                  <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative" >
+                    <ImageWithSkeleton
+                      src={skill.logo}
+                      alt={skill.name}
+                      width={64}
+                      height={64}
+                      containerClassName="w-full h-full"
+                      className={cn(
+                        "h-full w-full object-contain",
+                        skill.invertDark && "dark:invert",
+                        (skill as any).invertLight && "invert dark:invert-0"
+                      )}
+                    />
                   </div>
-                ))}
-              </div>
-
-              {/* Bottom row - Instruments */}
-              <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-                {featuredSkills.slice(5).map((skill) => (
-                  <div
-                    key={skill.name}
-                    className="group flex flex-col items-center gap-2 transition-all duration-300 hover:scale-110"
-                  >
-                    <div className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative">
-                      <ImageWithSkeleton
-                        src={skill.logo}
-                        alt={skill.name}
-                        width={64}
-                        height={64}
-                        containerClassName="w-full h-full"
-                        className={cn(
-                          "h-full w-full object-contain",
-                          skill.invertDark && "dark:invert",
-                          (skill as any).invertLight && "invert dark:invert-0"
-                        )}
-                      />
-                    </div>
-                    <span className={`text-xs sm:text-sm font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
-                      {skill.name}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  <span className={`text-xs sm:text-sm font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
+                    {skill.name}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="flex flex-1 flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <h2 className="title text-2xl sm:text-3xl">skills & tools</h2>
-              <Badge variant="secondary" className="text-xs">
-                {totalSkills}+
-              </Badge>
-            </div>
-            <p className="hidden text-sm text-muted-foreground sm:block">
-              I use a variety of tools across UAVs, Surveying, GIS & Civil Engineering to solve complex geospatial problems.
-            </p>
-            <LinkWithIcon
-              href="/skills"
-              position="left"
-              icon={<ArrowRightIcon className="size-4" />}
-              text="view more"
-              className="w-fit"
-            />
+          {/* Bottom gradient hint for "more" */}
+          <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Wrench className="size-4" />
+            <span>and many more tools across UAVs, Surveying, GIS & Civil Engineering</span>
           </div>
         </div>
-
       </section>
 
       <section className="flex flex-col gap-8">
@@ -269,7 +256,7 @@ export default function Home() {
         </div>
         <Activities limit={LIMIT} />
       </section>
-    </article>
+    </article >
   );
 }
 
