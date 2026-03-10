@@ -80,9 +80,9 @@ export default function Home() {
 
             <ChatPromptButton chatPrompt={homeContent.introduction.chatPrompt} />
 
-            <section className="mt-6 flex flex-wrap items-center gap-4">
+            <section className="mt-6 flex flex-wrap items-center gap-2 sm:gap-4">
               <Link href="/resume.pdf" target="_blank">
-                <Button variant="outline">
+                <Button variant="outline" className="h-full py-3">
                   <span className="font-semibold">Resume</span>
                   <FileDown className="ml-2 size-5" />
                 </Button>
