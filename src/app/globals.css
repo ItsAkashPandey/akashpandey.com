@@ -4,26 +4,28 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 220 12% 92%;
+    /* Premium deep neutral grey */
     --foreground: 224 71.4% 4.1%;
-    --card: 0 0% 100%;
+    --card: 220 12% 93%;
     --card-foreground: 224 71.4% 4.1%;
-    --popover: 0 0% 100%;
+    --popover: 220 12% 93%;
     --popover-foreground: 224 71.4% 4.1%;
     --primary: 220.9 39.3% 11%;
     --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
+    --secondary: 220 8% 88%;
     --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
+    --muted: 220 8% 88%;
+    --muted-foreground: 220 10% 40%;
+    --accent: 220 8% 88%;
     --accent-foreground: 220.9 39.3% 11%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
+    --border: 220 8% 84%;
+    --input: 220 8% 84%;
     --ring: 224 71.4% 4.1%;
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+    /* Slightly softer corners */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -78,33 +80,68 @@
   * {
     @apply border-border;
   }
+
+  html,
   body {
-    @apply bg-background text-foreground;
+    @apply overflow-x-hidden max-w-full;
   }
+
+  body {
+    @apply bg-background text-foreground relative min-h-screen text-base antialiased;
+    background-attachment: fixed;
+  }
+
+  /* Subtle geospatial line overlay */
+  /* Minimalistic Background Overlay for subtle depth */
+  body::before {
+    content: "";
+    @apply pointer-events-none fixed inset-0 z-[-1] opacity-20;
+    background-image:
+      radial-gradient(circle at 2px 2px, hsl(var(--primary) / 0.03) 1px, transparent 0);
+    background-size: 48px 48px;
+  }
+
+  html,
+  body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden !important;
+    position: relative;
+    max-width: 100vw;
+  }
+
   .title {
-    @apply font-serif text-5xl tracking-wide decoration-border/75 decoration-2;
+    @apply font-serif text-5xl sm:text-6xl tracking-tight decoration-border/75 decoration-2;
   }
+
   .link {
     @apply text-muted-foreground transition-colors hover:text-foreground;
   }
+
   .prose pre {
     @apply overflow-x-auto rounded-lg bg-accent px-5 py-4 text-sm;
   }
+
   .prose pre code {
     @apply p-0 leading-[1.75];
   }
+
   .prose code {
     @apply rounded-lg px-1 py-0.5;
   }
+
   .prose code span {
     @apply font-medium;
   }
+
   .input-error {
     @apply ml-1 mt-2 text-sm text-rose-400;
   }
 }
 
 @layer components {
+
   /* Minimal prose customizations - let typography plugin handle most styling */
   .prose {
     /* Use your design system colors */
@@ -149,6 +186,7 @@
   0% {
     transform: translateX(-50%);
   }
+
   100% {
     transform: translateX(50%);
   }
@@ -158,6 +196,7 @@
   0% {
     transform: translateX(50%);
   }
+
   100% {
     transform: translateX(-50%);
   }
@@ -168,24 +207,31 @@
   0% {
     transform: rotate(0deg);
   }
+
   10% {
     transform: rotate(14deg);
   }
+
   20% {
     transform: rotate(-8deg);
   }
+
   30% {
     transform: rotate(14deg);
   }
+
   40% {
     transform: rotate(-4deg);
   }
+
   50% {
     transform: rotate(10deg);
   }
+
   60% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(0deg);
   }
@@ -197,12 +243,15 @@
     opacity: 0;
     transform: translateX(-100%);
   }
+
   20% {
     opacity: 1;
   }
+
   80% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
     transform: translateX(100%);
@@ -214,6 +263,7 @@
   0% {
     transform: translateX(-20%);
   }
+
   100% {
     transform: translateX(100%);
   }
@@ -225,12 +275,15 @@
     transform: translate(0, 0) rotate(-45deg);
     opacity: 0;
   }
+
   10% {
     opacity: 1;
   }
+
   90% {
     opacity: 1;
   }
+
   100% {
     transform: translate(-500px, -300px) rotate(-45deg);
     opacity: 0;
@@ -243,12 +296,15 @@
     transform: translate(8px, 8px) rotate(-45deg);
     opacity: 0;
   }
+
   10% {
     opacity: 0.3;
   }
+
   90% {
     opacity: 0.3;
   }
+
   100% {
     transform: translate(-492px, -292px) rotate(-45deg);
     opacity: 0;
@@ -262,22 +318,27 @@
     top: var(--start-y);
     opacity: 0;
   }
+
   5% {
     opacity: 1;
   }
+
   95% {
     opacity: 1;
   }
+
   100% {
     left: var(--end-x);
     top: var(--end-y);
     opacity: 0;
   }
 }
+
 @keyframes shimmer {
   from {
     transform: translateX(-100%);
   }
+
   to {
     transform: translateX(100%);
   }

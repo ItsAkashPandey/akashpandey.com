@@ -6,7 +6,7 @@ import Link from "next/link";
 import Markdown from "react-markdown";
 import Icon from "./Icon";
 import ActivitySwipeCards from "./ActivitySwipeCards";
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, MapPin, Users } from "lucide-react";
 
 interface Props {
     activity: Activity;
@@ -84,9 +84,31 @@ export function ActivityCard({ activity, images: resolvedImages }: Props) {
                     {/* Accent line */}
                     <div className="h-0.5 w-10 rounded-full bg-gradient-to-r from-primary/40 to-transparent" />
 
-                    {/* Description */}
+                    {/* Description & Collaborators */}
                     <div className="prose max-w-full text-justify font-sans text-sm leading-relaxed text-muted-foreground dark:prose-invert">
-                        <Markdown>{description}</Markdown>
+                        {(() => {
+                            // Split by "With: " (allowing for newlines before it)
+                            const parts = description.split(/\n+\s*With:\s*/);
+                            const mainContent = parts[0];
+                            const collaborators = parts[1];
+
+                            return (
+                                <>
+                                    <Markdown>{mainContent}</Markdown>
+                                    {collaborators && (
+                                        <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-2 pt-3 border-t border-primary/10 dark:border-white/5">
+                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary/70 dark:text-primary/60 uppercase tracking-widest bg-primary/5 dark:bg-primary/10 px-2 py-0.5 rounded-full w-fit">
+                                                <Users className="size-3" />
+                                                <span>With</span>
+                                            </div>
+                                            <span className="text-xs text-muted-foreground/90 font-medium italic">
+                                                {collaborators}
+                                            </span>
+                                        </div>
+                                    )}
+                                </>
+                            );
+                        })()}
                     </div>
 
                     {/* Links */}

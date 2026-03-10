@@ -13,8 +13,8 @@ export default function TimelineItem({ experience }: Props) {
   const logoArray = logos || (logo ? [logo] : []);
 
   return (
-    <li className="relative ml-10 py-4">
-      <div className="absolute -left-16 top-4 flex flex-col">
+    <li className="relative ml-6 sm:ml-10 py-4">
+      <div className="absolute -left-12 sm:-left-16 top-4 flex flex-col">
         {logoArray.map((logoSrc, idx) => {
           return (
             <Link
@@ -45,11 +45,11 @@ export default function TimelineItem({ experience }: Props) {
         <div className="flex flex-col gap-2">
           {positions.map((position) => (
             <div key={`${position.title}-${position.start}`}>
-              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                <p className="text-sm font-medium leading-none text-muted-foreground">
+              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 sm:gap-x-4">
+                <p className="text-sm font-medium leading-tight text-muted-foreground">
                   {position.title}
                 </p>
-                <time className="whitespace-nowrap pr-8 text-xs tabular-nums text-muted-foreground">
+                <time className="whitespace-nowrap text-[10px] sm:text-xs tabular-nums text-muted-foreground/80">
                   <span>{position.start}</span>
                   <span>{" - "}</span>
                   <span>{position.end ?? "Present"}</span>

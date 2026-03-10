@@ -143,19 +143,20 @@ export default function PublicationsWithSearch({ publications }: Props) {
     <div className="flex flex-col gap-12">
       <div className="space-y-4">
         {/* Search row */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <Input
             type="text"
             placeholder="Search by title or author..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1"
+            className="flex-1 min-w-0"
           />
           <Button
             size="sm"
             variant="secondary"
             onClick={resetFilters}
             disabled={!isFiltered}
+            className="h-10 sm:h-9"
           >
             Reset
             <Delete className="ml-2 size-4" />
@@ -163,14 +164,14 @@ export default function PublicationsWithSearch({ publications }: Props) {
         </div>
 
         {/* Controls row */}
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-end gap-3 sm:gap-4">
           {/* Year filter */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="year-filter" className="text-xs font-medium">
               Year
             </Label>
             <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-[120px]" id="year-filter">
+              <SelectTrigger className="w-full sm:w-[120px]" id="year-filter">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -184,13 +185,31 @@ export default function PublicationsWithSearch({ publications }: Props) {
             </Select>
           </div>
 
-          {/* Journal filter */}
+          {/* Sort by */}
           <div className="flex flex-col gap-2">
+            <Label htmlFor="sort-filter" className="text-xs font-medium">
+              Sort By
+            </Label>
+            <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortOption)}>
+              <SelectTrigger className="w-full sm:w-[140px]" id="sort-filter">
+                <ArrowUpDown className="mr-2 size-4 shrink-0" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
+                <SelectItem value="title">By Title</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Journal filter - Full width on very small screens or wrapped */}
+          <div className="col-span-2 flex flex-col gap-2 sm:col-auto">
             <Label htmlFor="journal-filter" className="text-xs font-medium">
               Journal
             </Label>
             <Select value={selectedJournal} onValueChange={setSelectedJournal}>
-              <SelectTrigger className="w-[180px]" id="journal-filter">
+              <SelectTrigger className="w-full sm:w-[180px]" id="journal-filter">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -200,24 +219,6 @@ export default function PublicationsWithSearch({ publications }: Props) {
                     {journal}
                   </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Sort by */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="sort-filter" className="text-xs font-medium">
-              Sort By
-            </Label>
-            <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortOption)}>
-              <SelectTrigger className="w-[140px]" id="sort-filter">
-                <ArrowUpDown className="mr-2 size-4" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="title">By Title</SelectItem>
               </SelectContent>
             </Select>
           </div>

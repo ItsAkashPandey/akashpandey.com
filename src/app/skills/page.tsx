@@ -45,14 +45,13 @@ export default function SkillsPage() {
   const closeLightbox = useCallback(() => setActiveImages(null), []);
 
   return (
-    <div className="flex flex-col gap-16 pb-16 relative">
+    <article className="mt-8 flex flex-col gap-8 pb-16 relative">
       {/* Header */}
       <div className="flex flex-col gap-2">
-        <h1 className="title text-3xl sm:text-4xl">my skills.</h1>
+        <h1 className="title">my skills.</h1>
       </div>
 
-      {/* Main Categories */}
-      <div className="flex flex-col gap-20">
+      <div className="flex flex-col gap-12">
         {skillsData.skills.map((mainCat, idx) => (
           <div key={mainCat.id} className="space-y-8">
             {/* Category Header with Photo beside it */}
@@ -149,6 +148,6 @@ export default function SkillsPage() {
           imageClassName="p-3 sm:p-5 bg-white rounded-xl shadow-2xl"
         />
       )}
-    </div>
+    </article>
   );
 }
