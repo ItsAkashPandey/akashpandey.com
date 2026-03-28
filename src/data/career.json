@@ -3,7 +3,7 @@
     {
       "name": "Bhoomicam Pvt Ltd",
       "href": "https://www.bhoomicam.com/",
-      "logo": "/img/bhoomicam.png",
+      "logo": "/img/bhoomicam.webp",
       "positions": [
         {
           "title": "Co-Director",
@@ -26,7 +26,7 @@
     {
       "name": "Indian Institute of Technology Roorkee",
       "href": "https://www.iitr.ac.in/",
-      "logo": "/img/iitr.png",
+      "logo": "/img/iitr.webp",
       "positions": [
         {
           "title": "Senior Research Fellow",
@@ -49,7 +49,7 @@
     {
       "name": "BHEL, Yelahanka, Bengaluru",
       "href": "https://www.bhel.com/",
-      "logo": "/img/bhel.png",
+      "logo": "/img/bhel.webp",
       "positions": [
         {
           "title": "Civil Site Engineer",

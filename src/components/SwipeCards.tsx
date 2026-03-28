@@ -163,18 +163,18 @@ type Card = {
 const cardData: Card[] = [
   {
     id: 1,
-    url: "/img/akash-1.jpeg",
+    url: "/img/akash-1.webp",
   },
   {
     id: 2,
-    url: "/img/akash-2.jpeg",
+    url: "/img/akash-2.webp",
   },
   {
     id: 3,
-    url: "/img/akash-3.jpeg",
+    url: "/img/akash-3.webp",
   },
   {
     id: 4,
-    url: "/img/akash-4.jpeg",
+    url: "/img/akash-4.webp",
   },
 ];

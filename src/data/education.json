@@ -3,7 +3,7 @@
     {
       "name": "Indian Institute of Technology Roorkee",
       "href": "https://www.iitr.ac.in/",
-      "logo": "/img/iitr.png",
+      "logo": "/img/iitr.webp",
       "positions": [
         {
           "title": "PhD in Geospatial Engineering",
@@ -18,7 +18,7 @@
     {
       "name": "Maulana Azad National Institute of Technology Bhopal",
       "href": "https://www.manit.ac.in/",
-      "logo": "/img/manit.png",
+      "logo": "/img/manit.webp",
       "positions": [
         {
           "title": "M.Tech in Geoinformatics",
@@ -33,7 +33,7 @@
     {
       "name": "Meerut Institute of Engineering and Technology",
       "href": "https://www.miet.ac.in/",
-      "logo": "/img/miet.png",
+      "logo": "/img/miet.webp",
       "positions": [
         {
           "title": "B.Tech in Civil Engineering",
