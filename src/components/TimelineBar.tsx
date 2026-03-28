@@ -225,8 +225,6 @@ export default function TimelineBar({ entries }: Props) {
             if (isDragging.current) return;
             cancelAnimationFrame(rafId.current);
             rafId.current = requestAnimationFrame(() => {
-                // Re-measure periodically to handle layout shifts from lazy loading
-                measureCards();
                 applyVisuals(getFloat(window.scrollY));
             });
         };

@@ -28,7 +28,7 @@
           "tools": [
             {
               "name": "IdeaForge Q6",
-              "logo": "/skills/ideaforge.",
+              "logo": "/skills/ideaforge.png",
               "invertDark": true,
               "gradient": "from-[#F7931E] to-[#E85D04]",
               "popupImages": [
@@ -62,7 +62,7 @@
             },
             {
               "name": "Agri-Spray Drone",
-              "logo": "/skills/agridrone.",
+              "logo": "/skills/agridrone.png",
               "invertDark": true,
               "gradient": "from-[#93B023] to-[#589632]",
               "popupImages": [
