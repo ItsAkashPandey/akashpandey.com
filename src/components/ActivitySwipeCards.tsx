@@ -186,6 +186,7 @@ const SwipeCard = ({
                         containerClassName="h-full w-full pointer-events-none"
                         className={imgClass}
                         fetchPriority="high"
+                        loading="eager"
                         priority
                     />
                 ) : (

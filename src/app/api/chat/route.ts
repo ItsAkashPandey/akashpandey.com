@@ -3,7 +3,7 @@ export const runtime = "nodejs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { appendChatLogRows, type ChatLogAppendResult, type ChatLogRow } from "@/lib/chat-log";
-import { PROFILE_CONTENT } from "@/data/static-content";
+import { buildAIContext } from "@/lib/build-ai-context";
 
 type IncomingMessage = {
   role: "user" | "assistant";
@@ -13,6 +13,24 @@ type IncomingMessage = {
 type NameInferenceResult = {
   visitorName: string | null;
 };
+
+/* ── friendly error messages (never expose internals) ── */
+
+const FRIENDLY_ERRORS = {
+  unavailable: "Kasi is taking a quick nap 😴 — try again in a moment!",
+  busy: "Looks like Kasi is a bit busy right now 🤔 — give it another shot!",
+  rateLimit: "Kasi got too popular! 🔥 Rate limited — try again in a few seconds.",
+  config: "Kasi isn't feeling well today 🤧 — Akash is working on it!",
+  generic: "Oops, something went sideways 🙃 — please try again!",
+};
+
+/* ── fallback free models to try if primary is rate-limited ── */
+const FREE_FALLBACK_MODELS = [
+  "openrouter/free",
+  "minimax/minimax-m2.5:free",
+  "nvidia/nemotron-3-nano-30b-a3b:free",
+  "liquid/lfm-2.5-1.2b-thinking:free",
+];
 
 function safeParseNameInference(text: string): NameInferenceResult | null {
   const trimmed = (text || "").trim();
@@ -40,7 +58,6 @@ async function inferVisitorNameFromUserText(opts: {
   const text = opts.userText.trim();
   if (!text) return null;
 
-  // Keep this extremely small/cheap and deterministic.
   const prompt =
     "You extract a user's preferred name from text. " +
     "Return STRICT JSON only (no markdown, no prose) like: {\"visitorName\":\"Akash\"} or {\"visitorName\":null}. " +
@@ -140,15 +157,23 @@ export async function POST(req: Request) {
     const model = process.env.OPENROUTER_MODEL || "openrouter/free";
 
     if (!apiKey) {
-      throw new Error("OPENROUTER_API_KEY is not configured.");
+      console.error("[Chat API] OPENROUTER_API_KEY is not configured");
+      return NextResponse.json(
+        { error: FRIENDLY_ERRORS.config },
+        { status: 503 },
+      );
     }
+
+    // Build dynamic context from website data + fed knowledge
+    const dynamicContext = buildAIContext();
 
     const systemPrompt =
       `You are kasi, the website assistant for Akash.\n` +
       `Use PROFILE CONTEXT as the source of truth for Akash's personal facts (age, height, roles, contact, etc).\n` +
       `Do not guess, approximate, or invent Akash-specific details. If a personal fact is not present in PROFILE CONTEXT, say you don't have that info.\n` +
       `If the user asks about your (kasi's) physical attributes, you have none.\n\n` +
-      `PROFILE CONTEXT (authoritative):\n${PROFILE_CONTENT}`;
+      `PROFILE CONTEXT (authoritative):\n${dynamicContext}`;
+
     const chatMessages = [
       { role: "system" as const, content: systemPrompt },
       ...(messages || []).map((message) => ({
@@ -158,50 +183,70 @@ export async function POST(req: Request) {
     ];
 
     let reply = "Sorry, I don't have an answer for that.";
-    try {
-      const apiResponse = await fetch(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-            "HTTP-Referer": "https://akashpandey.com",
-            "X-Title": "kasi - Akash Website Assistant",
+
+    // Build list of models to try: primary first, then fallbacks
+    const modelsToTry = [model, ...FREE_FALLBACK_MODELS.filter(m => m !== model)];
+
+    let lastError: string | null = null;
+    for (const tryModel of modelsToTry) {
+      try {
+        console.log(`[Chat API] Trying model: ${tryModel}`);
+        const apiResponse = await fetch(
+          "https://openrouter.ai/api/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${apiKey}`,
+              "HTTP-Referer": "https://akashpandey.com",
+              "X-Title": "kasi - Akash Website Assistant",
+            },
+            body: JSON.stringify({
+              model: tryModel,
+              messages: chatMessages,
+              temperature: 0.3,
+              max_tokens: 4096,
+            }),
           },
-          body: JSON.stringify({
-            model,
-            messages: chatMessages,
-            temperature: 0.3,
-            max_tokens: 512,
-          }),
-        },
-      );
+        );
 
-      if (!apiResponse.ok) {
-        throw new Error(`OpenRouter API error: ${apiResponse.statusText}`);
-      }
-
-      const result = (await apiResponse.json()) as {
-        choices?: Array<{ message?: { content?: string } }>;
-      };
-
-      reply =
-        (result.choices?.[0]?.message?.content || "").trim() || reply;
-    } catch (error) {
-      console.error("[OpenRouter API Error]", error);
-      return new Response(
-        JSON.stringify({ error: "Failed to communicate with OpenRouter API" }),
-        {
-          status: 502,
-          headers: { "Content-Type": "application/json" },
+        if (apiResponse.status === 429) {
+          console.warn(`[Chat API] Model ${tryModel} rate-limited (429), trying next...`);
+          lastError = "rate-limited";
+          continue; // Try next model
         }
+
+        if (!apiResponse.ok) {
+          const errBody = await apiResponse.text().catch(() => "");
+          console.warn(`[Chat API] Model ${tryModel} failed (${apiResponse.status}): ${errBody.slice(0, 200)}`);
+          lastError = `${apiResponse.status}`;
+          continue; // Try next model
+        }
+
+        const result = (await apiResponse.json()) as {
+          choices?: Array<{ message?: { content?: string } }>;
+        };
+
+        reply = (result.choices?.[0]?.message?.content || "").trim() || reply;
+        lastError = null; // Success!
+        break;
+      } catch (error) {
+        console.error(`[Chat API] Model ${tryModel} threw:`, error);
+        lastError = "exception";
+        continue;
+      }
+    }
+
+    if (lastError) {
+      console.error(`[Chat API] All models failed. Last error: ${lastError}`);
+      const friendlyMsg = lastError === "rate-limited" ? FRIENDLY_ERRORS.rateLimit : FRIENDLY_ERRORS.busy;
+      return NextResponse.json(
+        { error: friendlyMsg },
+        { status: 502 },
       );
     }
 
     // Best-effort: infer a preferred name from the latest user message if none was provided.
-    // Only attempt inference on the first 3 user messages to save API quota.
-    // If the visitor hasn't shared their name by then, they likely don't want to.
     let inferredVisitorName: string | null = null;
     const userMessageCount = (messages || []).filter((m) => m.role === "user").length;
     if (!resolvedVisitorName && userMessageCount <= 3) {
@@ -289,10 +334,9 @@ export async function POST(req: Request) {
     return res;
   } catch (error) {
     console.error("[API Chat Route Error]", error);
-    const errorMessage =
-      error instanceof Error ? error.message : "An unknown error occurred";
+    // Never expose internal error details to the user
     return NextResponse.json(
-      { error: "Internal Server Error", detail: errorMessage },
+      { error: FRIENDLY_ERRORS.generic },
       { status: 500 },
     );
   }

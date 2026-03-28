@@ -1,7 +1,9 @@
 import data from "@/data/activities.json";
 import { activitySchema } from "@/lib/schemas";
 import LazyActivity from "./LazyActivity";
-import TimelineBar from "./TimelineBar";
+import ProgressiveActivitiesList from "./ProgressiveActivitiesList";
+import fs from "fs";
+import path from "path";
 
 interface Props {
   limit?: number;
@@ -15,36 +17,52 @@ export default function Activities({ limit }: Props) {
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
+  const getImagesFromFolder = (folderName: string | undefined): string[] => {
+    if (!folderName) return [];
+    try {
+      const publicPath = path.join(process.cwd(), "public", folderName);
+      if (!fs.existsSync(publicPath)) return [];
+      const files = fs.readdirSync(publicPath);
+      return files
+        .filter((file) => /\.(png|jpe?g|webp|gif|svg)$/i.test(file))
+        .map((file) => `/${folderName}/${file}`);
+    } catch {
+      return [];
+    }
+  };
+
+  // Resolve images dynamically from folder, fallback to JSON array
+  const normalizeActivities = (source: typeof activities) =>
+    source.map((activity, idx) => {
+      const dynamicImages = getImagesFromFolder(activity.imageFolder);
+      return {
+        ...activity,
+        resolvedImages: dynamicImages.length > 0 ? dynamicImages : (activity.resolvedImages || []),
+        elementId: `activity-${idx}`,
+      };
+    });
+
+  const allActivities = normalizeActivities(activities);
+
   if (limit) {
-    activities = activities.slice(0, limit);
+    const limitedActivities = allActivities.slice(0, limit);
+
+    return (
+      <div className="relative">
+        <section className="flex flex-col gap-8">
+          {limitedActivities.map((activity, index) => (
+            <LazyActivity key={activity.elementId} activity={activity} index={index} initiallyVisible={true} />
+          ))}
+        </section>
+      </div>
+    );
   }
 
-  // Use pre-resolved images from the JSON
-  const activitiesWithImages = activities.map((activity, idx) => {
-    return {
-      ...activity,
-      resolvedImages: activity.resolvedImages || [],
-      elementId: `activity-${idx}`
-    };
-  });
-
-  // Build timeline entries for the bar
-  const timelineEntries = activitiesWithImages.map((a) => ({
-    id: a.elementId,
-    date: a.date,
-  }));
-
   return (
-    <div className="relative">
-      <section className="flex flex-col gap-8">
-        {activitiesWithImages.map((activity, index) => (
-          <LazyActivity key={activity.elementId} activity={activity} index={index} />
-        ))}
-      </section>
-
-      {/* Timeline bar — only rendered when not limited (full page) */}
-      {!limit && <TimelineBar entries={timelineEntries} />}
-    </div>
+    <ProgressiveActivitiesList
+      allActivities={allActivities}
+      initialVisibleCount={5}
+    />
   );
 }
 

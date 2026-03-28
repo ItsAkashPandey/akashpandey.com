@@ -1,28 +1,48 @@
 import Experience from "@/components/Experience";
 import LinkWithIcon from "@/components/LinkWithIcon";
-import LocationMap from "@/components/LocationMap";
 import Activities from "@/components/Activities";
-import Socials from "@/components/Socials";
-import SwipeCards from "@/components/SwipeCards";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import {
-  ArrowDown,
-  ArrowDownRight,
   ArrowRightIcon,
   FileDown,
   ExternalLink,
   Wrench,
 } from "lucide-react";
-import ChatPromptButton from "@/components/ChatPromptButton";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 
 import homeContent from "@/data/home.json";
 import publicationsData from "@/data/publications.json";
 import skillsData from "@/data/skills.json";
 
 import ImageWithSkeleton from "@/components/ImageWithSkeleton";
+import LazySection from "@/components/LazySection";
 import { cn } from "@/lib/utils";
+
+const LocationMap = dynamic(() => import("@/components/LocationMap"), {
+  loading: () => (
+    <div className="h-[270px] w-full rounded-2xl border border-border/50 bg-muted/40 animate-pulse" />
+  ),
+});
+
+const SwipeCards = dynamic(() => import("@/components/SwipeCards"), {
+  loading: () => (
+    <div className="h-[233px] w-[175px] rounded-xl border border-border/50 bg-muted/40 animate-pulse" />
+  ),
+});
+
+const Socials = dynamic(() => import("@/components/Socials"), {
+  loading: () => (
+    <div className="h-8 w-40 rounded-md bg-muted/40 animate-pulse" />
+  ),
+});
+
+const ChatPromptButton = dynamic(() => import("@/components/ChatPromptButton"), {
+  loading: () => (
+    <div className="mt-6 h-6 w-60 rounded-md bg-muted/40 animate-pulse" />
+  ),
+});
 
 const AKASH_BIRTH_YEAR = 1998;
 const LIMIT = 2; // max show 2
@@ -93,170 +113,176 @@ export default function Home() {
         </div>
       </section>
 
-      <Experience />
+      <LazySection heightHint={200}>
+        <Experience />
+      </LazySection>
 
       {/* Skills Section - Unique floating logo cloud design */}
-      {/* Skills Section - Unique floating logo cloud design */}
-      <section className="flex flex-col gap-8">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <h2 className="title text-2xl sm:text-3xl">skills & tools</h2>
-            <Badge variant="secondary" className="text-xs">
-              {totalSkills}+
-            </Badge>
-          </div>
-          <LinkWithIcon
-            href="/skills"
-            position="right"
-            icon={<ArrowRightIcon className="size-5" />}
-            text="view more"
-          />
-        </div>
-
-        {/* Floating logo cloud with glassmorphism effect */}
-        <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-muted/30 via-background to-muted/20 p-6 sm:p-8">
-          {/* Background decorative elements */}
-          <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl" />
-
-          {/* Skills grid - Two rows */}
-          <div className="relative z-10 flex flex-col gap-6">
-            {/* Top row - Software tools */}
-            <div className="flex flex-wrap justify-center gap-1.5 sm:gap-6">
-              {featuredSkills.slice(0, 5).map((skill) => (
-                <div
-                  key={skill.name}
-                  className="group flex flex-col items-center gap-1.5 sm:gap-2 transition-all duration-300 hover:scale-110"
-                >
-                  <div className="flex h-11 w-11 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-2 sm:p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative" >
-                    <ImageWithSkeleton
-                      src={skill.logo}
-                      alt={skill.name}
-                      width={64}
-                      height={64}
-                      containerClassName="w-full h-full"
-                      className={cn(
-                        "h-full w-full object-contain",
-                        skill.invertDark && "dark:invert",
-                        (skill as any).invertLight && "invert dark:invert-0"
-                      )}
-                    />
-                  </div>
-                  <span className={`text-[10px] sm:text-sm max-w-[56px] sm:max-w-none text-center leading-tight font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
-                    {skill.name}
-                  </span>
-                </div>
-              ))}
+      <LazySection heightHint={350}>
+        <section className="flex flex-col gap-8">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <h2 className="title text-2xl sm:text-3xl">skills & tools</h2>
+              <Badge variant="secondary" className="text-xs">
+                {totalSkills}+
+              </Badge>
             </div>
-
-            {/* Bottom row - Instruments */}
-            <div className="flex flex-wrap justify-center gap-1.5 sm:gap-6">
-              {featuredSkills.slice(5).map((skill) => (
-                <div
-                  key={skill.name}
-                  className="group flex flex-col items-center gap-1.5 sm:gap-2 transition-all duration-300 hover:scale-110"
-                >
-                  <div className="flex h-11 w-11 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-2 sm:p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative" >
-                    <ImageWithSkeleton
-                      src={skill.logo}
-                      alt={skill.name}
-                      width={64}
-                      height={64}
-                      containerClassName="w-full h-full"
-                      className={cn(
-                        "h-full w-full object-contain",
-                        skill.invertDark && "dark:invert",
-                        (skill as any).invertLight && "invert dark:invert-0"
-                      )}
-                    />
-                  </div>
-                  <span className={`text-[10px] sm:text-sm max-w-[56px] sm:max-w-none text-center leading-tight font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
-                    {skill.name}
-                  </span>
-                </div>
-              ))}
-            </div>
+            <LinkWithIcon
+              href="/skills"
+              position="right"
+              icon={<ArrowRightIcon className="size-5" />}
+              text="view more"
+            />
           </div>
 
-          {/* Bottom gradient hint for "more" */}
-          <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Wrench className="size-4" />
-            <span>and many more tools across UAVs, Surveying, GIS & Civil Engineering</span>
-          </div>
-        </div>
-      </section>
+          {/* Floating logo cloud with glassmorphism effect */}
+          <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-muted/30 via-background to-muted/20 p-6 sm:p-8">
+            {/* Background decorative elements */}
+            <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-primary/5 blur-3xl" />
 
-      <section className="flex flex-col gap-8">
-        <div className="flex justify-between">
-          <h2 className="title text-2xl sm:text-3xl">recent publications</h2>
-          <LinkWithIcon
-            href="/publications"
-            position="right"
-            icon={<ArrowRightIcon className="size-5" />}
-            text="view more"
-          />
-        </div>
-        <div className="flex flex-col gap-4">
-          {recentPublications.map((pub) => (
-            <div
-              key={pub.id}
-              className="group rounded-lg border border-border/50 p-4 transition-all hover:border-border hover:shadow-sm"
-            >
-              <div className="flex flex-col gap-3">
-                <h3 className="text-base font-semibold leading-snug">
-                  {pub.title}
-                </h3>
-                <p className="text-sm text-muted-foreground">{pub.authors}</p>
-                <div className="flex flex-wrap items-center gap-2">
-                  {pub.journal && (
-                    <Badge variant="outline" className="text-xs">
-                      {pub.journal}
-                    </Badge>
-                  )}
-                  {pub.conference && (
-                    <Badge variant="outline" className="text-xs">
-                      {pub.conference}
-                    </Badge>
-                  )}
-                  <Badge variant="outline" className="text-xs">
-                    {pub.year}
-                  </Badge>
-                  {pub.journalQuartile && (
-                    <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 text-xs">
-                      {pub.journalQuartile}
-                    </Badge>
-                  )}
-                </div>
-                {pub.doi && (
-                  <Link
-                    href={pub.doi}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80 w-fit"
+            {/* Skills grid - Two rows */}
+            <div className="relative z-10 flex flex-col gap-6">
+              {/* Top row - Software tools */}
+              <div className="flex flex-wrap justify-center gap-1.5 sm:gap-6">
+                {featuredSkills.slice(0, 5).map((skill) => (
+                  <div
+                    key={skill.name}
+                    className="group flex flex-col items-center gap-1.5 sm:gap-2 transition-all duration-300 hover:scale-110"
                   >
-                    <span>View Publication</span>
-                    <ExternalLink className="size-3.5" />
-                  </Link>
-                )}
+                    <div className="flex h-11 w-11 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-2 sm:p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative" >
+                      <ImageWithSkeleton
+                        src={skill.logo}
+                        alt={skill.name}
+                        width={64}
+                        height={64}
+                        containerClassName="w-full h-full"
+                        className={cn(
+                          "h-full w-full object-contain",
+                          skill.invertDark && "dark:invert",
+                          (skill as any).invertLight && "invert dark:invert-0"
+                        )}
+                      />
+                    </div>
+                    <span className={`text-[10px] sm:text-sm max-w-[56px] sm:max-w-none text-center leading-tight font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
+                      {skill.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bottom row - Instruments */}
+              <div className="flex flex-wrap justify-center gap-1.5 sm:gap-6">
+                {featuredSkills.slice(5).map((skill) => (
+                  <div
+                    key={skill.name}
+                    className="group flex flex-col items-center gap-1.5 sm:gap-2 transition-all duration-300 hover:scale-110"
+                  >
+                    <div className="flex h-11 w-11 sm:h-16 sm:w-16 items-center justify-center rounded-xl bg-background/80 p-2 sm:p-3 shadow-lg ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 group-hover:ring-primary/50 group-hover:shadow-xl group-hover:shadow-primary/10 overflow-hidden relative" >
+                      <ImageWithSkeleton
+                        src={skill.logo}
+                        alt={skill.name}
+                        width={64}
+                        height={64}
+                        containerClassName="w-full h-full"
+                        className={cn(
+                          "h-full w-full object-contain",
+                          skill.invertDark && "dark:invert",
+                          (skill as any).invertLight && "invert dark:invert-0"
+                        )}
+                      />
+                    </div>
+                    <span className={`text-[10px] sm:text-sm max-w-[56px] sm:max-w-none text-center leading-tight font-bold bg-gradient-to-r ${(skill as any).gradient} bg-clip-text text-transparent`}>
+                      {skill.name}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      </section>
 
-      <section className="flex flex-col gap-8">
-        <div className="flex justify-between">
-          <h2 className="title text-2xl sm:text-3xl">recent activities</h2>
-          <LinkWithIcon
-            href="/activities"
-            position="right"
-            icon={<ArrowRightIcon className="size-5" />}
-            text="view more"
-          />
-        </div>
-        <Activities limit={LIMIT} />
-      </section>
+            {/* Bottom gradient hint for "more" */}
+            <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Wrench className="size-4" />
+              <span>and many more tools across UAVs, Surveying, GIS & Civil Engineering</span>
+            </div>
+          </div>
+        </section>
+      </LazySection>
+
+      <LazySection heightHint={300}>
+        <section className="flex flex-col gap-8">
+          <div className="flex justify-between">
+            <h2 className="title text-2xl sm:text-3xl">recent publications</h2>
+            <LinkWithIcon
+              href="/publications"
+              position="right"
+              icon={<ArrowRightIcon className="size-5" />}
+              text="view more"
+            />
+          </div>
+          <div className="flex flex-col gap-4">
+            {recentPublications.map((pub) => (
+              <div
+                key={pub.id}
+                className="group rounded-lg border border-border/50 p-4 transition-all hover:border-border hover:shadow-sm"
+              >
+                <div className="flex flex-col gap-3">
+                  <h3 className="text-base font-semibold leading-snug">
+                    {pub.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{pub.authors}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {pub.journal && (
+                      <Badge variant="outline" className="text-xs">
+                        {pub.journal}
+                      </Badge>
+                    )}
+                    {pub.conference && (
+                      <Badge variant="outline" className="text-xs">
+                        {pub.conference}
+                      </Badge>
+                    )}
+                    <Badge variant="outline" className="text-xs">
+                      {pub.year}
+                    </Badge>
+                    {pub.journalQuartile && (
+                      <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 text-xs">
+                        {pub.journalQuartile}
+                      </Badge>
+                    )}
+                  </div>
+                  {pub.doi && (
+                    <Link
+                      href={pub.doi}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80 w-fit"
+                    >
+                      <span>View Publication</span>
+                      <ExternalLink className="size-3.5" />
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </LazySection>
+
+      <LazySection heightHint={400}>
+        <section className="flex flex-col gap-8">
+          <div className="flex justify-between">
+            <h2 className="title text-2xl sm:text-3xl">recent activities</h2>
+            <LinkWithIcon
+              href="/activities"
+              position="right"
+              icon={<ArrowRightIcon className="size-5" />}
+              text="view more"
+            />
+          </div>
+          <Activities limit={LIMIT} />
+        </section>
+      </LazySection>
     </article >
   );
 }
-

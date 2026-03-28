@@ -80,8 +80,17 @@ export default function ChatPanel({ isExpanded }: ChatPanelProps) {
         });
 
         if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText || "Failed to fetch response.");
+          // Parse the friendly error from the server
+          let friendlyMessage = "Oops, something went sideways 🙃 — please try again!";
+          try {
+            const errorData = await response.json();
+            if (errorData?.error && typeof errorData.error === "string") {
+              friendlyMessage = errorData.error;
+            }
+          } catch {
+            // If JSON parsing fails, use generic message
+          }
+          throw new Error(friendlyMessage);
         }
 
         const data = (await response.json()) as {

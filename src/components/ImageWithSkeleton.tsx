@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import Image, { type ImageProps } from "next/image";
 import { useState } from "react";
 import { Skeleton } from "./ui/skeleton";
+import { ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type ImageWithSkeletonProps = Omit<ImageProps, "onLoadingComplete"> & {
@@ -39,6 +40,10 @@ export default function ImageWithSkeleton({
                 skeletonClassName
               )}
             />
+            {/* Image icon hint so users know content is loading */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <ImageIcon className="size-5 text-muted-foreground/20" />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

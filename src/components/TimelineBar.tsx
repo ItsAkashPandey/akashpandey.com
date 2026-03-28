@@ -32,8 +32,6 @@ function buildGroups(entries: TimelineEntry[]): { flat: MonthStop[]; groups: Yea
         const year = d.getFullYear();
         const key = `${month}-${year}`;
 
-        // We still increment count if there are multiple activities in the same month
-        // but the user requested removing the "number badge" feature visually from the timeline
         if (key === prev) {
             flat[flat.length - 1].count++;
         } else {
@@ -73,7 +71,6 @@ export default function TimelineBar({ entries }: Props) {
     const cardTops = useRef<number[]>([]);
     const prevActive = useRef(-1);
     const prevYearIdx = useRef(-1);
-    const isHovering = useRef(false);
     const suppressClick = useRef(false);
 
     /* Smooth lerp state for pill */
@@ -139,8 +136,8 @@ export default function TimelineBar({ entries }: Props) {
 
         const tick = () => {
             const diff = targetPillY.current - currentPillY.current;
-            // Lerp factor — lower = smoother but laggier, higher = more responsive
-            const factor = 0.18;
+            // Lerp factor — higher = more responsive
+            const factor = 0.22;
 
             if (Math.abs(diff) < 0.3) {
                 // Snap when close enough
@@ -167,16 +164,24 @@ export default function TimelineBar({ entries }: Props) {
     const applyVisuals = useCallback((floatIdx: number) => {
         if (!pillRef.current || N === 0) return;
 
-        // Set target for lerp-based pill position
+        // Always update pill target position (fixes stuck pill on scroll direction change)
         const newPillY = getPillY(floatIdx);
         targetPillY.current = newPillY;
-        startLerp();
+
+        // Always ensure lerp is running when target changes
+        if (!lerpRunning.current && Math.abs(newPillY - currentPillY.current) > 0.3) {
+            startLerp();
+        } else if (lerpRunning.current) {
+            // Lerp is already running, it'll pick up the new target
+        } else {
+            startLerp();
+        }
 
         const rounded = Math.round(floatIdx);
         const activeYear = flat[rounded]?.year ?? 0;
         const activeYearGroupIdx = groups.findIndex(g => g.year === activeYear);
 
-        // Update month labels + dots
+        // Update month labels + dots (always update to avoid stuck states)
         if (rounded !== prevActive.current) {
             prevActive.current = rounded;
             for (let i = 0; i < N; i++) {
@@ -203,16 +208,27 @@ export default function TimelineBar({ entries }: Props) {
     /* ── scroll listener (rAF-throttled) ── */
     useEffect(() => {
         measureCards();
-        const onResize = () => measureCards();
-        window.addEventListener("resize", onResize);
 
-        // Listen for lazy-loaded activities finishing their mount to remeasure
+        const onResize = () => {
+            measureCards();
+            // Re-apply visuals after remeasure to fix stuck pill
+            requestAnimationFrame(() => {
+                const f = getFloat(window.scrollY);
+                applyVisuals(f);
+            });
+        };
+
+        window.addEventListener("resize", onResize);
         window.addEventListener("timeline-measure", onResize);
 
         const onScroll = () => {
             if (isDragging.current) return;
             cancelAnimationFrame(rafId.current);
-            rafId.current = requestAnimationFrame(() => applyVisuals(getFloat(window.scrollY)));
+            rafId.current = requestAnimationFrame(() => {
+                // Re-measure periodically to handle layout shifts from lazy loading
+                measureCards();
+                applyVisuals(getFloat(window.scrollY));
+            });
         };
 
         window.addEventListener("scroll", onScroll, { passive: true });
@@ -288,7 +304,6 @@ export default function TimelineBar({ entries }: Props) {
     const onPointerMove = useCallback((e: React.PointerEvent) => {
         if (!isDragging.current) return;
         e.preventDefault();
-        // Mark as a real drag if moved more than 4px
         if (Math.abs(e.clientY - dragStartY.current) > 4) {
             suppressClick.current = true;
         }
@@ -300,11 +315,14 @@ export default function TimelineBar({ entries }: Props) {
     const onPointerUp = useCallback((e: React.PointerEvent) => {
         (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
         isDragging.current = false;
-        // Don't recalculate from scroll — keep the position where we dragged to
-    }, []);
+        // After drag ends, re-sync from current scroll position
+        requestAnimationFrame(() => {
+            measureCards();
+            applyVisuals(getFloat(window.scrollY));
+        });
+    }, [measureCards, getFloat, applyVisuals]);
 
     const handleClick = useCallback((id: string) => {
-        // Suppress click if it followed a drag (pointer capture fires click on original element)
         if (suppressClick.current) {
             suppressClick.current = false;
             return;
@@ -424,7 +442,6 @@ export default function TimelineBar({ entries }: Props) {
                         borderRadius: 12,
                         boxShadow: "var(--tl-pill-shadow)",
                         willChange: "transform",
-                        /* No CSS transition — driven purely by rAF lerp */
                     }}
                 />
 
