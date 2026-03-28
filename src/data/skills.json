@@ -5,23 +5,7 @@
       "mainCategory": "instrument handling",
       "description": "During my PhD at IIT Roorkee, I got the chance to work with many different field surveying instruments. I learned how to handle both traditional surveying tools and newer technologies like UAVs, GPS, and ground sensors through regular and extensive fieldworks.",
       "image": "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop",
-      "images": [
-        "/skills/MySkillPhotos/20230926_111450.webp",
-        "/skills/MySkillPhotos/20230926_112133.webp",
-        "/skills/MySkillPhotos/IMG-20230402-WA0023.webp",
-        "/skills/MySkillPhotos/IMG-20230525-WA0003.webp",
-        "/skills/MySkillPhotos/IMG-20230909-WA0015.webp",
-        "/skills/MySkillPhotos/IMG-20230909-WA0017.webp",
-        "/skills/MySkillPhotos/IMG-20230909-WA0026.webp",
-        "/skills/MySkillPhotos/IMG_20240415_131338952_HDR_AE.webp",
-        "/skills/MySkillPhotos/IMG_20240415_131345685_HDR_AE.webp",
-        "/skills/MySkillPhotos/IMG_20240415_131406021_HDR_AE.webp",
-        "/skills/MySkillPhotos/IMG_20240415_131415649_HDR_AE.webp",
-        "/skills/MySkillPhotos/IMG_20240416_163042120_HDR.webp",
-        "/skills/MySkillPhotos/IMG_20240416_164528440_HDR_AE.webp",
-        "/skills/MySkillPhotos/IMG_20240501_135316762_HDR_AE.webp",
-        "/skills/MySkillPhotos/IMG_20240501_135319264_HDR_AE.webp"
-      ],
+      "imageFolder": "skills/MySkillPhotos",
       "subcategories": [
         {
           "name": "UAVs",
@@ -31,14 +15,7 @@
               "logo": "/skills/ideaforge.",
               "invertDark": true,
               "gradient": "from-[#F7931E] to-[#E85D04]",
-              "popupImages": [
-                "/skills/ideaforge/IMG-20240405-WA0025.webp",
-                "/skills/ideaforge/IMG20231025113457.webp",
-                "/skills/ideaforge/IMG_20240423_113314558_HDR_AE.webp",
-                "/skills/ideaforge/IMG_20240423_113325976_HDR_AE.webp",
-                "/skills/ideaforge/IMG_20240423_115044144_HDR_AE.webp",
-                "/skills/ideaforge/IMG_20240423_130344577_HDR_AE.webp"
-              ]
+              "imageFolder": "skills/ideaforge"
             },
             {
               "name": "Trinity F90+",
@@ -51,28 +28,14 @@
               "logo": "/skills/dji.png",
               "invertDark": true,
               "gradient": "from-[#00B4DB] to-[#0083B0]",
-              "popupImages": [
-                "/skills/DJI_Drone/IMG-20230909-WA0022.webp",
-                "/skills/DJI_Drone/IMG20220827093637.webp",
-                "/skills/DJI_Drone/IMG20220827093803.webp",
-                "/skills/DJI_Drone/IMG20230127125351.webp",
-                "/skills/DJI_Drone/IMG20231025113437.webp",
-                "/skills/DJI_Drone/IMG20231025113606.webp"
-              ]
+              "imageFolder": "skills/DJI_Drone"
             },
             {
               "name": "Agri-Spray Drone",
               "logo": "/skills/agridrone.",
               "invertDark": true,
               "gradient": "from-[#93B023] to-[#589632]",
-              "popupImages": [
-                "/skills/agridrone/IMG-20231119-WA0002.webp",
-                "/skills/agridrone/IMG20231126155609.webp",
-                "/skills/agridrone/IMG20240404160834_01.webp",
-                "/skills/agridrone/IMG_20240415_131420806_HDR_AE.webp",
-                "/skills/agridrone/IMG_20240415_131528801_HDR_AE.webp",
-                "/skills/agridrone/IMG_20240417_122514986_HDR_AE.webp"
-              ]
+              "imageFolder": "skills/agridrone"
             }
           ]
         },

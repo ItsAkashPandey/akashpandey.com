@@ -13,10 +13,15 @@ interface SwipeCardsProps {
 }
 
 const SwipeCards = ({ className, images }: SwipeCardsProps) => {
-  const initialCards: Card[] = images?.length
-    ? images.map((url, i) => ({ id: i + 1, url }))
-    : cardData;
+  const initialCards: Card[] = (images || []).map((url, i) => ({ id: i + 1, url }));
   const [cards, setCards] = useState<Card[]>(initialCards);
+
+  // Update state if images prop changes
+  useState(() => {
+    if (images && images.length > 0) {
+      setCards(images.map((url, i) => ({ id: i + 1, url })));
+    }
+  });
 
   const resetCards = () => {
     setCards(initialCards);
@@ -159,22 +164,3 @@ type Card = {
   id: number;
   url: string;
 };
-
-const cardData: Card[] = [
-  {
-    id: 1,
-    url: "/img/akash-1.webp",
-  },
-  {
-    id: 2,
-    url: "/img/akash-2.webp",
-  },
-  {
-    id: 3,
-    url: "/img/akash-3.webp",
-  },
-  {
-    id: 4,
-    url: "/img/akash-4.webp",
-  },
-];

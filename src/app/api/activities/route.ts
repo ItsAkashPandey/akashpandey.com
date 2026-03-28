@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import data from "@/data/activities.json";
 import { activitySchema } from "@/lib/schemas";
 
+import { getImagesFromFolder } from "@/lib/imageResolver";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -18,10 +20,13 @@ export async function GET(req: Request) {
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 
-  const batch = activities.slice(offset, offset + limit).map((activity) => ({
-    ...activity,
-    resolvedImages: activity.resolvedImages || [],
-  }));
+  const batch = activities.slice(offset, offset + limit).map((activity) => {
+    const dynamicImages = getImagesFromFolder(activity.imageFolder);
+    return {
+      ...activity,
+      resolvedImages: dynamicImages.length > 0 ? dynamicImages : (activity.resolvedImages || []),
+    };
+  });
 
   return NextResponse.json(
     {
