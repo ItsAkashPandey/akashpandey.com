@@ -28,7 +28,7 @@
           "tools": [
             {
               "name": "IdeaForge Q6",
-              "logo": "/skills/ideaforge.webp",
+              "logo": "/skills/ideaforge.",
               "invertDark": true,
               "gradient": "from-[#F7931E] to-[#E85D04]",
               "popupImages": [
@@ -42,13 +42,13 @@
             },
             {
               "name": "Trinity F90+",
-              "logo": "/skills/trinity.webp",
+              "logo": "/skills/trinity.png",
               "invertLight": true,
               "gradient": "from-[#0010ED] to-[#4361EE]"
             },
             {
               "name": "DJI Matrice 100",
-              "logo": "/skills/dji.webp",
+              "logo": "/skills/dji.png",
               "invertDark": true,
               "gradient": "from-[#00B4DB] to-[#0083B0]",
               "popupImages": [
@@ -62,7 +62,7 @@
             },
             {
               "name": "Agri-Spray Drone",
-              "logo": "/skills/agridrone.webp",
+              "logo": "/skills/agridrone.",
               "invertDark": true,
               "gradient": "from-[#93B023] to-[#589632]",
               "popupImages": [
@@ -81,25 +81,25 @@
           "tools": [
             {
               "name": "PhenoCam",
-              "logo": "/skills/phenocam.webp",
+              "logo": "/skills/phenocam.png",
               "invertDark": true,
               "gradient": "from-[#2D6A4F] to-[#40916C]"
             },
             {
               "name": "AWS",
-              "logo": "/skills/aws.webp",
+              "logo": "/skills/aws.png",
               "invertDark": true,
               "gradient": "from-[#FF9900] to-[#E65100]"
             },
             {
               "name": "Spectroradiometer SVC",
-              "logo": "/skills/spectroradiometer.webp",
+              "logo": "/skills/spectroradiometer.png",
               "invertLight": true,
               "gradient": "from-[#FF5F6D] to-[#FFC371]"
             },
             {
               "name": "FARO TLS",
-              "logo": "/skills/tls.webp",
+              "logo": "/skills/tls.png",
               "invertDark": true,
               "gradient": "from-[#3258DB] to-[#1E40AF]"
             }
@@ -110,19 +110,19 @@
           "tools": [
             {
               "name": "Trimble DA2",
-              "logo": "/skills/trimble.webp",
+              "logo": "/skills/trimble.png",
               "invertDark": true,
               "gradient": "from-[#FBC02D] to-[#F57F17]"
             },
             {
               "name": "Emlid Reach RS2/RS3",
-              "logo": "/skills/emlid.webp",
+              "logo": "/skills/emlid.png",
               "invertDark": true,
               "gradient": "from-[#2196F3] to-[#1976D2]"
             },
             {
               "name": "Sokkia GRX2",
-              "logo": "/skills/sokkia.webp",
+              "logo": "/skills/sokkia.png",
               "invertDark": true,
               "gradient": "from-[#D32F2F] to-[#B71C1C]"
             }
@@ -133,19 +133,19 @@
           "tools": [
             {
               "name": "Total Station",
-              "logo": "/skills/ts.webp",
+              "logo": "/skills/ts.png",
               "invertDark": true,
               "gradient": "from-[#607D8B] to-[#455A64]"
             },
             {
               "name": "Analytical Theodolite",
-              "logo": "/skills/theodolite.webp",
+              "logo": "/skills/theodolite.png",
               "invertLight": true,
               "gradient": "from-[#795548] to-[#5D4037]"
             },
             {
               "name": "Digital Level",
-              "logo": "/skills/digitallevel.webp",
+              "logo": "/skills/digitallevel.png",
               "invertDark": true,
               "gradient": "from-[#212121] to-[#000000]"
             }
@@ -164,19 +164,19 @@
           "tools": [
             {
               "name": "Python",
-              "logo": "/skills/python.webp",
+              "logo": "/skills/python.png",
               "invertDark": true,
               "gradient": "from-[#4B8BBE] to-[#FFD43B]"
             },
             {
               "name": "R",
-              "logo": "/skills/R.webp",
+              "logo": "/skills/R.png",
               "invertDark": true,
               "gradient": "from-[#276BBE] to-[#1B5299]"
             },
             {
               "name": "LaTeX",
-              "logo": "/skills/latex.webp",
+              "logo": "/skills/latex.png",
               "invertDark": true,
               "gradient": "from-[#008080] to-[#00CED1]"
             }
@@ -187,31 +187,31 @@
           "tools": [
             {
               "name": "Google Earth Engine",
-              "logo": "/skills/gee.webp",
+              "logo": "/skills/gee.png",
               "invertDark": true,
               "gradient": "from-[#4285F4] to-[#255FDB]"
             },
             {
               "name": "QGIS",
-              "logo": "/skills/qgis.webp",
+              "logo": "/skills/qgis.png",
               "invertDark": true,
               "gradient": "from-[#93B023] to-[#589632]"
             },
             {
               "name": "ArcGIS Pro",
-              "logo": "/skills/arcgis.webp",
+              "logo": "/skills/arcgis.png",
               "invertDark": true,
               "gradient": "from-[#007AC2] to-[#005E96]"
             },
             {
               "name": "ERDAS IMAGINE",
-              "logo": "/skills/erdas.webp",
+              "logo": "/skills/erdas.png",
               "invertDark": true,
               "gradient": "from-[#D1001C] to-[#990014]"
             },
             {
               "name": "ENVI",
-              "logo": "/skills/envi.webp",
+              "logo": "/skills/envi.png",
               "invertDark": true,
               "gradient": "from-[#006E90] to-[#005068]"
             }
@@ -222,19 +222,19 @@
           "tools": [
             {
               "name": "Pix4D Mapper",
-              "logo": "/skills/pix4d.webp",
+              "logo": "/skills/pix4d.png",
               "invertDark": true,
               "gradient": "from-[#E01E25] to-[#B0171C]"
             },
             {
               "name": "FARO Scene",
-              "logo": "/skills/scene.webp",
+              "logo": "/skills/scene.png",
               "invertDark": true,
               "gradient": "from-[#3258DB] to-[#1E40AF]"
             },
             {
               "name": "CloudCompare",
-              "logo": "/skills/cloudcompare.webp",
+              "logo": "/skills/cloudcompare.png",
               "invertDark": true,
               "gradient": "from-[#F7931E] to-[#E85D04]"
             }
@@ -245,19 +245,19 @@
           "tools": [
             {
               "name": "AutoCAD 3D",
-              "logo": "/skills/autocad.webp",
+              "logo": "/skills/autocad.png",
               "invertDark": true,
               "gradient": "from-[#E61F25] to-[#B0171C]"
             },
             {
               "name": "Revit",
-              "logo": "/skills/revit.webp",
+              "logo": "/skills/revit.png",
               "invertDark": true,
               "gradient": "from-[#0275B8] to-[#015A8E]"
             },
             {
               "name": "STAAD.Pro",
-              "logo": "/skills/stadd.webp",
+              "logo": "/skills/stadd.jpg",
               "invertDark": true,
               "gradient": "from-[#17468C] to-[#12366D]"
             }
