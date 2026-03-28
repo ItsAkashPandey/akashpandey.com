@@ -19,7 +19,6 @@ import skillsData from "@/data/skills.json";
 import ImageWithSkeleton from "@/components/ImageWithSkeleton";
 import LazySection from "@/components/LazySection";
 import { cn } from "@/lib/utils";
-import { getImagesFromFolder } from "@/lib/imageResolver";
 
 const LocationMap = dynamic(() => import("@/components/LocationMap"), {
   loading: () => (
@@ -47,9 +46,6 @@ const ChatPromptButton = dynamic(() => import("@/components/ChatPromptButton"), 
 
 const AKASH_BIRTH_YEAR = 1998;
 const LIMIT = 2; // max show 2
-
-// Resolve photos for SwipeCards from public/img
-const homeImages = getImagesFromFolder("img");
 
 // Derive featured skills from centralized skills data to ensure consistent brand colors/gradients
 const featuredSkillNames = [
@@ -86,7 +82,7 @@ export default function Home() {
         <LocationMap />
 
         <div className="mt-[22px] flex flex-row-reverse items-center justify-between gap-1 px-2 sm:gap-8 sm:px-0 md:items-center">
-          <SwipeCards images={homeImages} className="shrink-0 origin-right scale-[0.5] sm:scale-100" />
+          <SwipeCards className="shrink-0 origin-right scale-[0.5] sm:scale-100" />
 
           <div className="flex flex-1 flex-col sm:max-w-3xl min-w-0">
             <h1 className="title text-balance text-2xl sm:text-5xl leading-tight">

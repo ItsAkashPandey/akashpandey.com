@@ -2,7 +2,8 @@ import data from "@/data/activities.json";
 import { activitySchema } from "@/lib/schemas";
 import LazyActivity from "./LazyActivity";
 import ProgressiveActivitiesList from "./ProgressiveActivitiesList";
-import { getImagesFromFolder } from "@/lib/imageResolver";
+import fs from "fs";
+import path from "path";
 
 interface Props {
   limit?: number;
@@ -15,6 +16,20 @@ export default function Activities({ limit }: Props) {
   activities = activities.sort((a, b) =>
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
+
+  const getImagesFromFolder = (folderName: string | undefined): string[] => {
+    if (!folderName) return [];
+    try {
+      const publicPath = path.join(process.cwd(), "public", folderName);
+      if (!fs.existsSync(publicPath)) return [];
+      const files = fs.readdirSync(publicPath);
+      return files
+        .filter((file) => /\.(png|jpe?g|webp|gif|svg)$/i.test(file))
+        .map((file) => `/${folderName}/${file}`);
+    } catch {
+      return [];
+    }
+  };
 
   // Resolve images dynamically from folder, fallback to JSON array
   const normalizeActivities = (source: typeof activities) =>

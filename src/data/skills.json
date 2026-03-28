@@ -5,37 +5,74 @@
       "mainCategory": "instrument handling",
       "description": "During my PhD at IIT Roorkee, I got the chance to work with many different field surveying instruments. I learned how to handle both traditional surveying tools and newer technologies like UAVs, GPS, and ground sensors through regular and extensive fieldworks.",
       "image": "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop",
-      "imageFolder": "skills/MySkillPhotos",
+      "images": [
+        "/skills/MySkillPhotos/20230926_111450.webp",
+        "/skills/MySkillPhotos/20230926_112133.webp",
+        "/skills/MySkillPhotos/IMG-20230402-WA0023.webp",
+        "/skills/MySkillPhotos/IMG-20230525-WA0003.webp",
+        "/skills/MySkillPhotos/IMG-20230909-WA0015.webp",
+        "/skills/MySkillPhotos/IMG-20230909-WA0017.webp",
+        "/skills/MySkillPhotos/IMG-20230909-WA0026.webp",
+        "/skills/MySkillPhotos/IMG_20240415_131338952_HDR_AE.webp",
+        "/skills/MySkillPhotos/IMG_20240415_131345685_HDR_AE.webp",
+        "/skills/MySkillPhotos/IMG_20240415_131406021_HDR_AE.webp",
+        "/skills/MySkillPhotos/IMG_20240415_131415649_HDR_AE.webp",
+        "/skills/MySkillPhotos/IMG_20240416_163042120_HDR.webp",
+        "/skills/MySkillPhotos/IMG_20240416_164528440_HDR_AE.webp",
+        "/skills/MySkillPhotos/IMG_20240501_135316762_HDR_AE.webp",
+        "/skills/MySkillPhotos/IMG_20240501_135319264_HDR_AE.webp"
+      ],
       "subcategories": [
         {
           "name": "UAVs",
           "tools": [
             {
               "name": "IdeaForge Q6",
-              "logo": "/skills/ideaforge.",
+              "logo": "/skills/ideaforge.webp",
               "invertDark": true,
               "gradient": "from-[#F7931E] to-[#E85D04]",
-              "imageFolder": "skills/ideaforge"
+              "popupImages": [
+                "/skills/ideaforge/IMG-20240405-WA0025.webp",
+                "/skills/ideaforge/IMG20231025113457.webp",
+                "/skills/ideaforge/IMG_20240423_113314558_HDR_AE.webp",
+                "/skills/ideaforge/IMG_20240423_113325976_HDR_AE.webp",
+                "/skills/ideaforge/IMG_20240423_115044144_HDR_AE.webp",
+                "/skills/ideaforge/IMG_20240423_130344577_HDR_AE.webp"
+              ]
             },
             {
               "name": "Trinity F90+",
-              "logo": "/skills/trinity.png",
+              "logo": "/skills/trinity.webp",
               "invertLight": true,
               "gradient": "from-[#0010ED] to-[#4361EE]"
             },
             {
               "name": "DJI Matrice 100",
-              "logo": "/skills/dji.png",
+              "logo": "/skills/dji.webp",
               "invertDark": true,
               "gradient": "from-[#00B4DB] to-[#0083B0]",
-              "imageFolder": "skills/DJI_Drone"
+              "popupImages": [
+                "/skills/DJI_Drone/IMG-20230909-WA0022.webp",
+                "/skills/DJI_Drone/IMG20220827093637.webp",
+                "/skills/DJI_Drone/IMG20220827093803.webp",
+                "/skills/DJI_Drone/IMG20230127125351.webp",
+                "/skills/DJI_Drone/IMG20231025113437.webp",
+                "/skills/DJI_Drone/IMG20231025113606.webp"
+              ]
             },
             {
               "name": "Agri-Spray Drone",
-              "logo": "/skills/agridrone.",
+              "logo": "/skills/agridrone.webp",
               "invertDark": true,
               "gradient": "from-[#93B023] to-[#589632]",
-              "imageFolder": "skills/agridrone"
+              "popupImages": [
+                "/skills/agridrone/IMG-20231119-WA0002.webp",
+                "/skills/agridrone/IMG20231126155609.webp",
+                "/skills/agridrone/IMG20240404160834_01.webp",
+                "/skills/agridrone/IMG_20240415_131420806_HDR_AE.webp",
+                "/skills/agridrone/IMG_20240415_131528801_HDR_AE.webp",
+                "/skills/agridrone/IMG_20240417_122514986_HDR_AE.webp"
+              ]
             }
           ]
         },
@@ -44,25 +81,25 @@
           "tools": [
             {
               "name": "PhenoCam",
-              "logo": "/skills/phenocam.png",
+              "logo": "/skills/phenocam.webp",
               "invertDark": true,
               "gradient": "from-[#2D6A4F] to-[#40916C]"
             },
             {
               "name": "AWS",
-              "logo": "/skills/aws.png",
+              "logo": "/skills/aws.webp",
               "invertDark": true,
               "gradient": "from-[#FF9900] to-[#E65100]"
             },
             {
               "name": "Spectroradiometer SVC",
-              "logo": "/skills/spectroradiometer.png",
+              "logo": "/skills/spectroradiometer.webp",
               "invertLight": true,
               "gradient": "from-[#FF5F6D] to-[#FFC371]"
             },
             {
               "name": "FARO TLS",
-              "logo": "/skills/tls.png",
+              "logo": "/skills/tls.webp",
               "invertDark": true,
               "gradient": "from-[#3258DB] to-[#1E40AF]"
             }
@@ -73,19 +110,19 @@
           "tools": [
             {
               "name": "Trimble DA2",
-              "logo": "/skills/trimble.png",
+              "logo": "/skills/trimble.webp",
               "invertDark": true,
               "gradient": "from-[#FBC02D] to-[#F57F17]"
             },
             {
               "name": "Emlid Reach RS2/RS3",
-              "logo": "/skills/emlid.png",
+              "logo": "/skills/emlid.webp",
               "invertDark": true,
               "gradient": "from-[#2196F3] to-[#1976D2]"
             },
             {
               "name": "Sokkia GRX2",
-              "logo": "/skills/sokkia.png",
+              "logo": "/skills/sokkia.webp",
               "invertDark": true,
               "gradient": "from-[#D32F2F] to-[#B71C1C]"
             }
@@ -96,19 +133,19 @@
           "tools": [
             {
               "name": "Total Station",
-              "logo": "/skills/ts.png",
+              "logo": "/skills/ts.webp",
               "invertDark": true,
               "gradient": "from-[#607D8B] to-[#455A64]"
             },
             {
               "name": "Analytical Theodolite",
-              "logo": "/skills/theodolite.png",
+              "logo": "/skills/theodolite.webp",
               "invertLight": true,
               "gradient": "from-[#795548] to-[#5D4037]"
             },
             {
               "name": "Digital Level",
-              "logo": "/skills/digitallevel.png",
+              "logo": "/skills/digitallevel.webp",
               "invertDark": true,
               "gradient": "from-[#212121] to-[#000000]"
             }
@@ -127,19 +164,19 @@
           "tools": [
             {
               "name": "Python",
-              "logo": "/skills/python.png",
+              "logo": "/skills/python.webp",
               "invertDark": true,
               "gradient": "from-[#4B8BBE] to-[#FFD43B]"
             },
             {
               "name": "R",
-              "logo": "/skills/R.png",
+              "logo": "/skills/R.webp",
               "invertDark": true,
               "gradient": "from-[#276BBE] to-[#1B5299]"
             },
             {
               "name": "LaTeX",
-              "logo": "/skills/latex.png",
+              "logo": "/skills/latex.webp",
               "invertDark": true,
               "gradient": "from-[#008080] to-[#00CED1]"
             }
@@ -150,31 +187,31 @@
           "tools": [
             {
               "name": "Google Earth Engine",
-              "logo": "/skills/gee.png",
+              "logo": "/skills/gee.webp",
               "invertDark": true,
               "gradient": "from-[#4285F4] to-[#255FDB]"
             },
             {
               "name": "QGIS",
-              "logo": "/skills/qgis.png",
+              "logo": "/skills/qgis.webp",
               "invertDark": true,
               "gradient": "from-[#93B023] to-[#589632]"
             },
             {
               "name": "ArcGIS Pro",
-              "logo": "/skills/arcgis.png",
+              "logo": "/skills/arcgis.webp",
               "invertDark": true,
               "gradient": "from-[#007AC2] to-[#005E96]"
             },
             {
               "name": "ERDAS IMAGINE",
-              "logo": "/skills/erdas.png",
+              "logo": "/skills/erdas.webp",
               "invertDark": true,
               "gradient": "from-[#D1001C] to-[#990014]"
             },
             {
               "name": "ENVI",
-              "logo": "/skills/envi.png",
+              "logo": "/skills/envi.webp",
               "invertDark": true,
               "gradient": "from-[#006E90] to-[#005068]"
             }
@@ -185,19 +222,19 @@
           "tools": [
             {
               "name": "Pix4D Mapper",
-              "logo": "/skills/pix4d.png",
+              "logo": "/skills/pix4d.webp",
               "invertDark": true,
               "gradient": "from-[#E01E25] to-[#B0171C]"
             },
             {
               "name": "FARO Scene",
-              "logo": "/skills/scene.png",
+              "logo": "/skills/scene.webp",
               "invertDark": true,
               "gradient": "from-[#3258DB] to-[#1E40AF]"
             },
             {
               "name": "CloudCompare",
-              "logo": "/skills/cloudcompare.png",
+              "logo": "/skills/cloudcompare.webp",
               "invertDark": true,
               "gradient": "from-[#F7931E] to-[#E85D04]"
             }
@@ -208,19 +245,19 @@
           "tools": [
             {
               "name": "AutoCAD 3D",
-              "logo": "/skills/autocad.png",
+              "logo": "/skills/autocad.webp",
               "invertDark": true,
               "gradient": "from-[#E61F25] to-[#B0171C]"
             },
             {
               "name": "Revit",
-              "logo": "/skills/revit.png",
+              "logo": "/skills/revit.webp",
               "invertDark": true,
               "gradient": "from-[#0275B8] to-[#015A8E]"
             },
             {
               "name": "STAAD.Pro",
-              "logo": "/skills/stadd.jpg",
+              "logo": "/skills/stadd.webp",
               "invertDark": true,
               "gradient": "from-[#17468C] to-[#12366D]"
             }
