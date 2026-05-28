@@ -3,8 +3,14 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
-import { Card, CardContent } from "@/components/ui/Card";
-import { ExternalLink, Delete, ArrowUpDown } from "lucide-react";
+import {
+  ArrowUpDown,
+  BookOpen,
+  CalendarDays,
+  ExternalLink,
+  RotateCcw,
+  Search,
+} from "lucide-react";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { Label } from "./ui/label";
@@ -49,32 +55,36 @@ export default function PublicationsWithSearch({ publications }: Props) {
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [selectedYear, setSelectedYear] = useState<string>("all");
-  const [selectedJournal, setSelectedJournal] = useState<string>("all");
+  const [selectedVenue, setSelectedVenue] = useState<string>("all");
 
-  // Get unique years and journals
+  // Get unique years and venues
   const years = useMemo(() => {
     const uniqueYears = Array.from(
-      new Set(publications.map((pub) => pub.year))
+      new Set(publications.map((pub) => pub.year)),
     ).sort((a, b) => b - a);
     return uniqueYears;
   }, [publications]);
 
-  const journals = useMemo(() => {
-    const uniqueJournals = Array.from(
+  const venues = useMemo(() => {
+    const uniqueVenues = Array.from(
       new Set(
         publications
-          .filter((pub) => pub.journal)
-          .map((pub) => pub.journal as string)
-      )
+          .map(
+            (pub) => pub.journal || pub.conference || pub.book || pub.publisher,
+          )
+          .filter(Boolean) as string[],
+      ),
     ).sort();
-    return uniqueJournals;
+    return uniqueVenues;
   }, [publications]);
 
   const filtered = useMemo(() => {
     return publications
       .filter((pub) => {
         // Search filter
-        const haystack = [pub.title, pub.authors, pub.journal || ""]
+        const venue =
+          pub.journal || pub.conference || pub.book || pub.publisher || "";
+        const haystack = [pub.title, pub.authors, venue, pub.type, pub.status]
           .join(" ")
           .toLowerCase();
 
@@ -87,8 +97,8 @@ export default function PublicationsWithSearch({ publications }: Props) {
           return false;
         }
 
-        // Journal filter
-        if (selectedJournal !== "all" && pub.journal !== selectedJournal) {
+        // Venue filter
+        if (selectedVenue !== "all" && venue !== selectedVenue) {
           return false;
         }
 
@@ -106,12 +116,12 @@ export default function PublicationsWithSearch({ publications }: Props) {
             return 0;
         }
       });
-  }, [publications, query, selectedYear, selectedJournal, sortBy]);
+  }, [publications, query, selectedYear, selectedVenue, sortBy]);
 
   const resetFilters = () => {
     setQuery("");
     setSelectedYear("all");
-    setSelectedJournal("all");
+    setSelectedVenue("all");
     setSortBy("newest");
   };
 
@@ -136,97 +146,128 @@ export default function PublicationsWithSearch({ publications }: Props) {
   const isFiltered =
     query !== "" ||
     selectedYear !== "all" ||
-    selectedJournal !== "all" ||
+    selectedVenue !== "all" ||
     sortBy !== "newest";
 
   return (
     <div className="flex flex-col gap-12">
-      <div className="space-y-4">
-        {/* Search row */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <Input
-            type="text"
-            placeholder="Search by title or author..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 min-w-0"
-          />
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={resetFilters}
-            disabled={!isFiltered}
-            className="h-10 sm:h-9"
-          >
-            Reset
-            <Delete className="ml-2 size-4" />
-          </Button>
-        </div>
+      <div className="border-border/50 bg-background/85 supports-[backdrop-filter]:bg-background/70 rounded-[1.75rem] border p-3 shadow-sm backdrop-blur-2xl sm:p-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 lg:flex-row">
+            <div className="relative min-w-0 flex-1">
+              <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+              <Input
+                type="search"
+                placeholder="Search publications..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="border-border/60 bg-background/70 h-11 rounded-2xl pl-9 text-sm shadow-none"
+              />
+            </div>
 
-        {/* Controls row */}
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-end gap-3 sm:gap-4">
-          {/* Year filter */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="year-filter" className="text-xs font-medium">
-              Year
-            </Label>
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-full sm:w-[120px]" id="year-filter">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Years</SelectItem>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:shrink-0">
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <Label
+                  htmlFor="year-filter"
+                  className="text-muted-foreground px-1 text-[11px] font-medium"
+                >
+                  Year
+                </Label>
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger
+                    className="border-border/60 bg-background/70 h-11 rounded-2xl shadow-none lg:w-[132px]"
+                    id="year-filter"
+                  >
+                    <CalendarDays className="text-muted-foreground mr-2 size-4 shrink-0" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Years</SelectItem>
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex min-w-0 flex-col gap-1.5">
+                <Label
+                  htmlFor="sort-filter"
+                  className="text-muted-foreground px-1 text-[11px] font-medium"
+                >
+                  Sort
+                </Label>
+                <Select
+                  value={sortBy}
+                  onValueChange={(val) => setSortBy(val as SortOption)}
+                >
+                  <SelectTrigger
+                    className="border-border/60 bg-background/70 h-11 rounded-2xl shadow-none lg:w-[150px]"
+                    id="sort-filter"
+                  >
+                    <ArrowUpDown className="text-muted-foreground mr-2 size-4 shrink-0" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent align="end">
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="title">By Title</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="col-span-2 flex min-w-0 flex-col gap-1.5 sm:col-span-1">
+                <Label
+                  htmlFor="venue-filter"
+                  className="text-muted-foreground px-1 text-[11px] font-medium"
+                >
+                  Venue
+                </Label>
+                <Select value={selectedVenue} onValueChange={setSelectedVenue}>
+                  <SelectTrigger
+                    className="border-border/60 bg-background/70 h-11 rounded-2xl shadow-none lg:w-[180px]"
+                    id="venue-filter"
+                  >
+                    <BookOpen className="text-muted-foreground mr-2 size-4 shrink-0" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Venues</SelectItem>
+                    {venues.map((venue) => (
+                      <SelectItem key={venue} value={venue}>
+                        {venue}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex min-w-0 flex-col justify-end gap-1.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={resetFilters}
+                  disabled={!isFiltered}
+                  className="text-muted-foreground hover:text-foreground h-11 rounded-2xl px-3"
+                >
+                  <RotateCcw className="size-4" />
+                  <span className="sr-only sm:not-sr-only">Reset</span>
+                </Button>
+              </div>
+            </div>
           </div>
 
-          {/* Sort by */}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="sort-filter" className="text-xs font-medium">
-              Sort By
-            </Label>
-            <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortOption)}>
-              <SelectTrigger className="w-full sm:w-[140px]" id="sort-filter">
-                <ArrowUpDown className="mr-2 size-4 shrink-0" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent align="end">
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="title">By Title</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="text-muted-foreground flex items-center justify-between gap-3 px-1 text-xs">
+            <span>
+              {filtered.length} publication{filtered.length !== 1 ? "s" : ""}{" "}
+              found
+            </span>
+            <span className="hidden sm:inline">
+              All years, newest first, all venues by default
+            </span>
           </div>
-
-          {/* Journal filter - Full width on very small screens or wrapped */}
-          <div className="col-span-2 flex flex-col gap-2 sm:col-auto">
-            <Label htmlFor="journal-filter" className="text-xs font-medium">
-              Journal
-            </Label>
-            <Select value={selectedJournal} onValueChange={setSelectedJournal}>
-              <SelectTrigger className="w-full sm:w-[180px]" id="journal-filter">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Journals</SelectItem>
-                {journals.map((journal) => (
-                  <SelectItem key={journal} value={journal}>
-                    {journal}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Results count */}
-        <div className="text-sm text-muted-foreground">
-          {filtered.length} publication{filtered.length !== 1 ? "s" : ""} found
         </div>
       </div>
 
@@ -242,14 +283,14 @@ export default function PublicationsWithSearch({ publications }: Props) {
           filtered.map((pub, index) => (
             <div
               key={pub.id}
-              className="group relative overflow-hidden rounded-2xl border border-border/50 bg-background/70 p-5 shadow-sm backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-border hover:shadow-md sm:p-6"
+              className="group border-border/50 bg-background/70 hover:border-border relative overflow-hidden rounded-2xl border p-5 shadow-sm backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md sm:p-6"
               style={{
                 animation: `slideIn 0.5s ease-out ${index * 0.1}s both`,
               }}
             >
               {/* Geometric number indicator */}
               <div
-                className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold text-muted-foreground/60 transition-all duration-300 group-hover:text-foreground"
+                className="text-muted-foreground/60 group-hover:text-foreground absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold transition-all duration-300"
                 style={{
                   border: "1px solid hsl(var(--muted-foreground) / 0.2)",
                   background: "hsl(var(--muted) / 0.35)",
@@ -257,11 +298,13 @@ export default function PublicationsWithSearch({ publications }: Props) {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = `rotate(${getShapeRotation(index) / 4}deg) scale(1.08)`;
-                  e.currentTarget.style.borderColor = "hsl(var(--foreground) / 0.5)";
+                  e.currentTarget.style.borderColor =
+                    "hsl(var(--foreground) / 0.5)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = `rotate(${getShapeRotation(index) / 4}deg) scale(1)`;
-                  e.currentTarget.style.borderColor = "hsl(var(--muted-foreground) / 0.2)";
+                  e.currentTarget.style.borderColor =
+                    "hsl(var(--muted-foreground) / 0.2)";
                 }}
               >
                 {index + 1}
@@ -269,16 +312,16 @@ export default function PublicationsWithSearch({ publications }: Props) {
 
               <div className="flex flex-col gap-4 pr-10">
                 {/* Title */}
-                <h2 className="text-lg font-semibold leading-tight transition-colors group-hover:text-primary">
+                <h2 className="group-hover:text-primary text-lg leading-tight font-semibold transition-colors">
                   {pub.title}
                 </h2>
 
                 {/* Authors */}
-                <p className="text-sm text-muted-foreground">{pub.authors}</p>
+                <p className="text-muted-foreground text-sm">{pub.authors}</p>
 
                 {/* Journal/Conference/Book Info - Two Column Grid */}
                 {(pub.journal || pub.conference || pub.book) && (
-                  <div className="grid grid-cols-[1fr_auto] gap-4 items-start py-2 border-t border-border/30">
+                  <div className="border-border/30 grid grid-cols-[1fr_auto] items-start gap-4 border-t py-2">
                     {/* Left Column - Logo and Journal/Conference/Book */}
                     <div>
                       {pub.journal && (
@@ -288,13 +331,17 @@ export default function PublicationsWithSearch({ publications }: Props) {
                               <img
                                 src={pub.journalLogo}
                                 alt={pub.journal}
-                                className="h-12 w-12 object-contain rounded dark:bg-white dark:p-1"
+                                className="h-12 w-12 rounded object-contain dark:bg-white dark:p-1"
                               />
                             )}
                             <div className="flex flex-col">
-                              <p className="font-semibold text-sm">{pub.journal}</p>
+                              <p className="text-sm font-semibold">
+                                {pub.journal}
+                              </p>
                               {pub.impactFactor && (
-                                <p className="text-xs text-muted-foreground">IF: {pub.impactFactor}</p>
+                                <p className="text-muted-foreground text-xs">
+                                  IF: {pub.impactFactor}
+                                </p>
                               )}
                             </div>
                           </div>
@@ -307,10 +354,12 @@ export default function PublicationsWithSearch({ publications }: Props) {
                               <img
                                 src={pub.conferenceLogo}
                                 alt={pub.conference}
-                                className="h-12 w-12 object-contain rounded dark:bg-white dark:p-1"
+                                className="h-12 w-12 rounded object-contain dark:bg-white dark:p-1"
                               />
                             )}
-                            <p className="font-semibold text-sm">{pub.conference}</p>
+                            <p className="text-sm font-semibold">
+                              {pub.conference}
+                            </p>
                           </div>
                         </div>
                       )}
@@ -321,16 +370,22 @@ export default function PublicationsWithSearch({ publications }: Props) {
                               <img
                                 src={pub.publisherLogo}
                                 alt={pub.publisher || ""}
-                                className="h-12 w-12 object-contain rounded dark:bg-white dark:p-1"
+                                className="h-12 w-12 rounded object-contain dark:bg-white dark:p-1"
                               />
                             )}
                             <div className="flex flex-col">
-                              <p className="font-semibold text-sm">{pub.book}</p>
+                              <p className="text-sm font-semibold">
+                                {pub.book}
+                              </p>
                               {pub.publisher && (
-                                <p className="text-xs text-muted-foreground">{pub.publisher}</p>
+                                <p className="text-muted-foreground text-xs">
+                                  {pub.publisher}
+                                </p>
                               )}
                               {pub.pages && (
-                                <p className="text-xs text-muted-foreground">pp. {pub.pages}</p>
+                                <p className="text-muted-foreground text-xs">
+                                  pp. {pub.pages}
+                                </p>
                               )}
                             </div>
                           </div>
@@ -341,7 +396,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
                     {/* Right Column - Quartile Badge */}
                     {pub.journalQuartile && (
                       <div>
-                        <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 text-xs font-semibold">
+                        <Badge className="bg-green-500/10 text-xs font-semibold text-green-700 dark:text-green-400">
                           {pub.journalQuartile}
                         </Badge>
                       </div>
@@ -373,7 +428,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
                     href={pub.preprint}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80 dark:hover:text-primary/60 w-fit"
+                    className="text-primary hover:text-primary/80 dark:hover:text-primary/60 inline-flex w-fit items-center gap-2 text-sm font-medium transition-colors"
                   >
                     <span>View Preprint</span>
                     <ExternalLink className="size-3.5" />
@@ -384,7 +439,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
                     href={pub.doi}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80 dark:hover:text-primary/60 w-fit"
+                    className="text-primary hover:text-primary/80 dark:hover:text-primary/60 inline-flex w-fit items-center gap-2 text-sm font-medium transition-colors"
                   >
                     <span>View Publication</span>
                     <ExternalLink className="size-3.5" />
