@@ -1,11 +1,11 @@
 {
-  "name": "Akash Kumar",
-  "short_name": "Akash",
+  "name": "Akash Kumar Pandey Portfolio",
+  "short_name": "Akash Pandey",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
-  "description": "Geospatial research, remote sensing, and precision agriculture.",
+  "description": "Geospatial research, remote sensing, UAV mapping, PhenoCam, and precision agriculture portfolio.",
   "icons": [
     {
       "src": "/favicon2.png",

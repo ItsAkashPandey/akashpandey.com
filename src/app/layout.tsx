@@ -18,8 +18,65 @@ const calistoga = Calistoga({
 });
 
 export const metadata: Metadata = {
-  title: "Akash Kumar",
-  description: "Portfolio and research work in geospatial analysis, remote sensing, and precision agriculture.",
+  metadataBase: new URL("https://www.akashpandey.com"),
+  title: {
+    default: "Akash Kumar Pandey | Geospatial Research Portfolio",
+    template: "%s | Akash Kumar Pandey",
+  },
+  description:
+    "Akash Kumar Pandey's portfolio for geospatial analysis, remote sensing, UAV mapping, PhenoCam research, vegetation phenology, and precision agriculture.",
+  applicationName: "Akash Kumar Pandey Portfolio",
+  authors: [{ name: "Akash Kumar Pandey", url: "https://www.akashpandey.com" }],
+  creator: "Akash Kumar Pandey",
+  publisher: "Akash Kumar Pandey",
+  keywords: [
+    "Akash Kumar Pandey",
+    "geospatial research",
+    "remote sensing",
+    "precision agriculture",
+    "vegetation phenology",
+    "PhenoCam",
+    "UAV mapping",
+    "IIT Roorkee",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://www.akashpandey.com",
+    siteName: "Akash Kumar Pandey",
+    title: "Akash Kumar Pandey | Geospatial Research Portfolio",
+    description:
+      "Portfolio and research work in geospatial analysis, remote sensing, PhenoCam, UAV mapping, and precision agriculture.",
+    images: [
+      {
+        url: "/img/akashpandey.com_screenshot.webp",
+        width: 1200,
+        height: 630,
+        alt: "Akash Kumar Pandey portfolio website preview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Akash Kumar Pandey | Geospatial Research Portfolio",
+    description:
+      "Geospatial analysis, remote sensing, PhenoCam, UAV mapping, and precision agriculture research portfolio.",
+    images: ["/img/akashpandey.com_screenshot.webp"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/favicon2.png", type: "image/png" },

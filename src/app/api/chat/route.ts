@@ -32,6 +32,55 @@ const FREE_FALLBACK_MODELS = [
   "liquid/lfm-2.5-1.2b-thinking:free",
 ];
 
+const MAX_MESSAGES = 20;
+const MAX_MESSAGE_LENGTH = 4000;
+
+const requestCounts = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIp(req: Request): string {
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) return forwardedFor.split(",")[0]?.trim() || "unknown";
+  return req.headers.get("x-real-ip") || "unknown";
+}
+
+function isRateLimited(key: string, limit = 20, windowMs = 60_000): boolean {
+  const now = Date.now();
+  const current = requestCounts.get(key);
+  if (!current || current.resetAt <= now) {
+    requestCounts.set(key, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+
+  current.count += 1;
+  return current.count > limit;
+}
+
+function normalizeMessages(input: unknown): IncomingMessage[] | null {
+  if (!Array.isArray(input)) return null;
+
+  const messages = input.slice(-MAX_MESSAGES);
+  const normalized: IncomingMessage[] = [];
+
+  for (const message of messages) {
+    if (
+      !message ||
+      (message.role !== "user" && message.role !== "assistant") ||
+      typeof message.content !== "string"
+    ) {
+      return null;
+    }
+
+    const content = message.content.trim();
+    if (!content || content.length > MAX_MESSAGE_LENGTH) {
+      return null;
+    }
+
+    normalized.push({ role: message.role, content });
+  }
+
+  return normalized;
+}
+
 function safeParseNameInference(text: string): NameInferenceResult | null {
   const trimmed = (text || "").trim();
   if (!trimmed) return null;
@@ -128,15 +177,31 @@ function safeLastUserMessage(messages: IncomingMessage[]): string | null {
 
 export async function POST(req: Request) {
   try {
+    const rateLimitKey = getClientIp(req);
+    if (isRateLimited(rateLimitKey)) {
+      return NextResponse.json(
+        { error: FRIENDLY_ERRORS.rateLimit },
+        { status: 429 },
+      );
+    }
+
     const {
-      messages,
+      messages: rawMessages,
       conversationId,
       visitorName,
     }: {
-      messages: IncomingMessage[];
+      messages: unknown;
       conversationId?: string;
       visitorName?: string;
     } = await req.json();
+
+    const messages = normalizeMessages(rawMessages);
+    if (!messages) {
+      return NextResponse.json(
+        { error: "Please send a shorter, valid chat message." },
+        { status: 400 },
+      );
+    }
 
     const visitorCookieName = "hal_vid";
     const cookieStore = await cookies();

@@ -46,7 +46,7 @@ const ActivitySwipeCards = ({ className, images }: ActivitySwipeCardsProps) => {
         <>
             <div
                 className={cn(
-                    "relative grid h-[220px] w-[300px] place-items-center rounded-xl",
+                    "relative grid h-[200px] w-full max-w-[280px] place-items-center rounded-xl sm:h-[220px] sm:max-w-[300px]",
                     className,
                 )}
             >
@@ -143,7 +143,7 @@ const SwipeCard = ({
 
     return (
         <motion.div
-            className="absolute h-[220px] w-[300px] origin-bottom overflow-hidden rounded-lg bg-white p-2 border border-gray-100 hover:cursor-grab active:cursor-grabbing shadow-lg"
+            className="absolute h-[200px] w-full max-w-[280px] origin-bottom overflow-hidden rounded-lg border border-gray-100 bg-white p-2 shadow-lg hover:cursor-grab active:cursor-grabbing sm:h-[220px] sm:max-w-[300px]"
             style={{
                 gridRow: 1,
                 gridColumn: 1,
@@ -180,7 +180,7 @@ const SwipeCard = ({
                         alt="Activity photo"
                         width={300}
                         height={220}
-                        sizes="300px"
+                        sizes="(max-width: 640px) min(280px, calc(100vw - 4rem)), 300px"
                         quality={75}
                         draggable={false}
                         containerClassName="h-full w-full pointer-events-none"
@@ -195,7 +195,7 @@ const SwipeCard = ({
                         alt=""
                         width={300}
                         height={220}
-                        sizes="300px"
+                        sizes="(max-width: 640px) min(280px, calc(100vw - 4rem)), 300px"
                         quality={70}
                         draggable={false}
                         containerClassName="h-full w-full pointer-events-none"

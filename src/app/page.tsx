@@ -81,11 +81,11 @@ export default function Home() {
       <section className="flex flex-col gap-1">
         <LocationMap />
 
-        <div className="mt-[22px] flex flex-row-reverse items-center justify-between gap-1 px-2 sm:gap-8 sm:px-0 md:items-center">
-          <SwipeCards className="shrink-0 origin-right scale-[0.5] sm:scale-100" />
+        <div className="mt-6 flex flex-col gap-6 px-0 sm:mt-[22px] sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-8">
+          <SwipeCards className="mx-auto shrink-0 sm:mx-0" />
 
-          <div className="flex flex-1 flex-col sm:max-w-3xl min-w-0">
-            <h1 className="title text-balance text-2xl sm:text-5xl leading-tight">
+          <div className="flex min-w-0 flex-1 flex-col text-center sm:max-w-3xl sm:text-left">
+            <h1 className="title text-balance text-3xl leading-tight sm:text-5xl">
               {homeContent.introduction.greeting.replace(' 👋', '')}
               <span className="ml-1 inline-block origin-bottom-right hover:animate-[wave_1.3s_ease-in-out]">👋</span>
             </h1>
@@ -94,13 +94,13 @@ export default function Home() {
               I work in the geospatial domain.
             </p>
 
-            <p className="mt-4 max-w-2xl text-balance text-sm sm:text-base">
+            <p className="mx-auto mt-4 max-w-2xl text-balance text-sm sm:mx-0 sm:text-base">
               focused on vegetation phenology using PhenoCam, UAV and Satellite data.
             </p>
 
             <ChatPromptButton chatPrompt={homeContent.introduction.chatPrompt} />
 
-            <section className="mt-6 flex flex-wrap items-center gap-1.5 px-0 sm:gap-4">
+            <section className="mt-6 flex flex-wrap items-center justify-center gap-2 px-0 sm:justify-start sm:gap-4">
               <Link href="/resume.pdf" target="_blank">
                 <Button variant="outline" className="h-[32px] sm:h-full py-1 px-2 sm:py-3 sm:px-4 text-[11px] sm:text-sm">
                   <span className="font-semibold">Resume</span>

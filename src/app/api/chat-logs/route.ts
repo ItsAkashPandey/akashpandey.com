@@ -5,6 +5,7 @@ export const revalidate = 0;
 
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import path from "node:path";
 import { getAdminCookieName, verifyAdminSessionCookieValue } from "@/lib/admin-auth";
 
 function shouldUsePostgresSsl(connectionString: string): boolean {
@@ -190,7 +191,9 @@ export async function GET(req: Request) {
     }
   }
 
-  const filePath = process.env.CHAT_LOG_FILE_PATH || "./logs/chat-log.jsonl";
+  const filePath = process.env.CHAT_LOG_FILE_PATH
+    ? path.resolve(process.env.CHAT_LOG_FILE_PATH)
+    : path.join(process.cwd(), "logs", "chat-log.jsonl");
 
   // Serverless / Vercel safeguard: prevent aggressive project-wide tracing
   if (process.env.VERCEL === "1" && !process.env.CHAT_LOG_FILE_PATH) {

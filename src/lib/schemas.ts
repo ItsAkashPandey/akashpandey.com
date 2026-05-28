@@ -4,13 +4,22 @@ import { z } from "zod";
 export const ContactFormSchema = z.object({
   name: z
     .string()
+    .trim()
     .min(1, { message: "Name is required." })
-    .min(2, { message: "Must be at least 2 characters." }),
+    .min(2, { message: "Must be at least 2 characters." })
+    .max(80, { message: "Name must be 80 characters or fewer." }),
   email: z
     .string()
+    .trim()
+    .toLowerCase()
     .min(1, { message: "Email is required." })
-    .email("Invalid email."),
-  message: z.string().min(1, { message: "Message is required." }),
+    .email("Invalid email.")
+    .max(160, { message: "Email must be 160 characters or fewer." }),
+  message: z
+    .string()
+    .trim()
+    .min(1, { message: "Message is required." })
+    .max(3000, { message: "Message must be 3000 characters or fewer." }),
 });
 
 const iconLink = z.object({

@@ -92,10 +92,12 @@ export default function Chat() {
             border: "1px solid rgba(255, 255, 255, 0.3)",
             boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15)",
           }}
-          className={`fixed bottom-4 right-4 rounded-[1.5rem] dark:!bg-[rgba(20,20,20,0.55)] dark:!border-[rgba(255,255,255,0.15)] overflow-hidden sm:bottom-8 sm:right-8 transition-all duration-300 ${isExpanded ? 'w-[320px] sm:w-[420px]' : 'w-auto'} shadow-2xl`}
+          className={`fixed bottom-3 overflow-hidden rounded-[1.5rem] shadow-2xl transition-all duration-300 dark:!bg-[rgba(20,20,20,0.55)] dark:!border-[rgba(255,255,255,0.15)] sm:bottom-8 sm:left-auto sm:right-8 ${isExpanded ? "left-3 right-3 w-auto sm:left-auto sm:w-[420px]" : "right-3 w-14 rounded-full sm:w-[420px] sm:rounded-[1.5rem]"}`}
         >
-          <AccordionTrigger className="border-b border-white/20 dark:border-white/10 px-6 py-4 hover:bg-white/10 dark:hover:bg-white/5 transition-colors">
-            <ChatHeader />
+          <AccordionTrigger
+            className={`border-b border-white/20 transition-colors hover:bg-white/10 dark:border-white/10 dark:hover:bg-white/5 ${isExpanded ? "px-6 py-4" : "size-14 justify-center p-0 sm:h-auto sm:w-auto sm:justify-start sm:px-6 sm:py-4"}`}
+          >
+            <ChatHeader compact={!isExpanded} />
           </AccordionTrigger>
           <AccordionContent
             forceMount={hasOpened ? true : undefined}
@@ -105,7 +107,7 @@ export default function Chat() {
               <div
                 className={
                   isExpanded
-                    ? "flex max-h-[400px] min-h-[350px] flex-col justify-between rounded-b-lg sm:max-h-[500px] sm:min-h-[400px]"
+                    ? "flex max-h-[min(420px,calc(100vh-8rem))] min-h-[340px] flex-col justify-between rounded-b-lg sm:max-h-[500px] sm:min-h-[400px]"
                     : "hidden"
                 }
               >

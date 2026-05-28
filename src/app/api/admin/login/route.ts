@@ -3,8 +3,36 @@ export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { createAdminSessionCookieValue, getAdminCookieName } from "@/lib/admin-auth";
 
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIp(req: Request): string {
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) return forwardedFor.split(",")[0]?.trim() || "unknown";
+  return req.headers.get("x-real-ip") || "unknown";
+}
+
+function isRateLimited(key: string, limit = 5, windowMs = 5 * 60_000): boolean {
+  const now = Date.now();
+  const current = loginAttempts.get(key);
+  if (!current || current.resetAt <= now) {
+    loginAttempts.set(key, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+
+  current.count += 1;
+  return current.count > limit;
+}
+
 export async function POST(req: Request) {
   try {
+    const rateLimitKey = getClientIp(req);
+    if (isRateLimited(rateLimitKey)) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Please try again later." },
+        { status: 429 },
+      );
+    }
+
     const { username, password } = (await req.json()) as {
       username?: string;
       password?: string;

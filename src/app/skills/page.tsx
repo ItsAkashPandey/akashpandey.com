@@ -56,14 +56,14 @@ export default function SkillsPage() {
           <div key={mainCat.id} className="space-y-6">
             {/* Category Header with Photo beside it */}
             {/* Category Header with Photo beside it - Side-by-side on all screens */}
-            <div className="flex flex-row-reverse items-center justify-between gap-4 sm:gap-12">
+            <div className="flex flex-col gap-4 sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-12">
               {/* Photo next to header - Right on all screens */}
-              <div className="shrink-0 scale-[0.6] sm:scale-100 origin-right transition-transform -mr-4 sm:mr-0 w-[120px] h-[200px] sm:w-[280px] sm:h-[250px]">
+              <div className="mx-auto h-[233px] w-[175px] shrink-0 sm:mx-0 sm:h-[250px] sm:w-[280px]">
                 <SwipeCards images={(mainCat as any).images} className="w-full h-full" />
               </div>
 
-              <div className="flex flex-1 flex-col gap-2 sm:gap-3 min-w-0">
-                <h2 className="title text-2xl sm:text-4xl">{mainCat.mainCategory}</h2>
+              <div className="flex min-w-0 flex-1 flex-col gap-2 text-center sm:gap-3 sm:text-left">
+                <h2 className="title text-2xl leading-tight sm:text-4xl">{mainCat.mainCategory}</h2>
                 {/* Description */}
                 <div className="prose max-w-full text-balance text-sm text-muted-foreground dark:prose-invert sm:text-base">
                   <Markdown>{mainCat.description}</Markdown>

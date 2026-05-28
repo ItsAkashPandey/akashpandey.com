@@ -35,14 +35,15 @@ export function ActivityCard({ activity, images: resolvedImages }: Props) {
                 border: "1px solid rgba(255, 255, 255, 0.6)",
                 boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.4), 0 8px 32px 0 rgba(0, 0, 0, 0.04)"
             }}
-            className="group relative rounded-3xl p-7 transition-all duration-300
+            className="group relative rounded-3xl p-4 transition-all duration-300 sm:p-7
+                       max-w-full overflow-hidden
                        dark:!bg-white/[0.08] dark:!border-white/10 dark:!shadow-[0_4px_30px_rgba(0,0,0,0.3)]
                        hover:shadow-[0_12px_48px_rgba(0,0,0,0.08)] dark:hover:shadow-primary/10"
         >
             {/* Subtle glass highlight on top edge */}
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-2xl bg-gradient-to-r from-transparent via-white/60 dark:via-white/10 to-transparent" />
 
-            <div className="grid grid-cols-1 sm:grid-cols-[300px_1fr] gap-5.5 items-center">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-[300px_1fr] sm:items-center">
                 {/* Left Column — Date, Location & Photo */}
                 <div className="flex flex-col items-center sm:items-start gap-3">
                     {/* Date & Location */}
@@ -63,7 +64,7 @@ export function ActivityCard({ activity, images: resolvedImages }: Props) {
                     {allImages.length > 0 && (
                         <ActivitySwipeCards
                             images={allImages}
-                            className="w-[280px] max-w-[280px]"
+                            className="w-full max-w-[280px] sm:max-w-[300px]"
                         />
                     )}
                 </div>
@@ -85,7 +86,7 @@ export function ActivityCard({ activity, images: resolvedImages }: Props) {
                     <div className="h-0.5 w-10 rounded-full bg-gradient-to-r from-primary/40 to-transparent" />
 
                     {/* Description & Collaborators */}
-                    <div className="prose max-w-full text-justify font-sans text-sm leading-relaxed text-muted-foreground dark:prose-invert">
+                    <div className="prose max-w-full text-left font-sans text-sm leading-relaxed text-muted-foreground dark:prose-invert sm:text-justify">
                         {(() => {
                             // Split by "With: " (allowing for newlines before it)
                             const parts = description.split(/\n+\s*With:\s*/);
