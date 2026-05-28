@@ -4,34 +4,40 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { RefreshCw } from "lucide-react";
-import { Dispatch, SetStateAction, useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import ImageWithSkeleton from "./ImageWithSkeleton";
 import ImageLightbox from "./ImageLightbox";
 
 interface ActivitySwipeCardsProps {
     className?: string;
     images: string[];
+    priority?: boolean;
 }
 
 type CardItem = {
     id: number;
     url: string;
+    offset: number;
 };
 
-const ActivitySwipeCards = ({ className, images }: ActivitySwipeCardsProps) => {
-    // We reverse the array here because elements map into the DOM in order,
-    // meaning the LAST element in the array renders on TOP of the stack.
-    // By reversing, the first image in the list is placed at the end of the
-    // DOM stack, naturally appearing as the top card.
-    const initialCards: CardItem[] = [...images].reverse().map((url, i) => ({ id: i + 1, url }));
-    const [cards, setCards] = useState<CardItem[]>(initialCards);
+const STACK_SIZE = 3;
+
+const ActivitySwipeCards = ({ className, images, priority = false }: ActivitySwipeCardsProps) => {
+    const [cursor, setCursor] = useState(0);
+
+    // Keep only a tiny thumbnail window mounted. Large activity folders can
+    // contain 50 photos, so rendering the whole stack makes the page stall.
+    const cards: CardItem[] = images
+        .slice(cursor, cursor + STACK_SIZE)
+        .map((url, offset) => ({ id: cursor + offset, url, offset }))
+        .reverse();
 
     // Lightbox state
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [lightboxIndex, setLightboxIndex] = useState(0);
 
     const resetCards = () => {
-        setCards(initialCards);
+        setCursor(0);
     };
 
     const openLightbox = useCallback((url: string) => {
@@ -50,7 +56,7 @@ const ActivitySwipeCards = ({ className, images }: ActivitySwipeCardsProps) => {
                     className,
                 )}
             >
-                {cards.length === 0 && (
+                {cursor >= images.length && (
                     <div style={{ gridRow: 1, gridColumn: 1 }} className="z-20">
                         <Button onClick={resetCards} variant={"outline"}>
                             <RefreshCw className="size-4" />
@@ -63,10 +69,11 @@ const ActivitySwipeCards = ({ className, images }: ActivitySwipeCardsProps) => {
                     return (
                         <SwipeCard
                             key={card.id}
-                            cards={cards}
-                            setCards={setCards}
                             depth={depth}
+                            isFront={card.offset === 0}
+                            onDismiss={() => setCursor((value) => Math.min(value + 1, images.length))}
                             onImageClick={openLightbox}
+                            priority={priority && card.offset === 0}
                             {...card}
                         />
                     );
@@ -89,25 +96,26 @@ const ActivitySwipeCards = ({ className, images }: ActivitySwipeCardsProps) => {
 const SwipeCard = ({
     id,
     url,
-    setCards,
-    cards,
     depth,
+    isFront,
+    onDismiss,
     onImageClick,
+    priority,
 }: {
     id: number;
     url: string;
-    setCards: Dispatch<SetStateAction<CardItem[]>>;
-    cards: CardItem[];
+    offset: number;
     depth: number;
+    isFront: boolean;
+    onDismiss: () => void;
     onImageClick: (url: string) => void;
+    priority: boolean;
 }) => {
     const x = useMotionValue(0);
     const didDrag = useRef(false);
 
     const rotateRaw = useTransform(x, [-150, 150], [-18, 18]);
     const opacity = useTransform(x, [-150, 0, 150], [0, 1, 0]);
-
-    const isFront = id === cards[cards.length - 1]?.id;
 
     const rotate = useTransform(() => {
         const offset = isFront ? 0 : id % 2 ? 6 : -6;
@@ -125,7 +133,7 @@ const SwipeCard = ({
     const handleDragEnd = (_event: any, info: { offset: { x: number } }) => {
         if (Math.abs(info.offset.x) > 100) {
             // Swiped far enough in any direction → dismiss card
-            setCards((pv) => pv.filter((v) => v.id !== id));
+            onDismiss();
         } else {
             // Snap back
             animate(x, 0, { type: "spring", stiffness: 400, damping: 40 });
@@ -185,9 +193,9 @@ const SwipeCard = ({
                         draggable={false}
                         containerClassName="h-full w-full pointer-events-none"
                         className={imgClass}
-                        fetchPriority="high"
-                        loading="eager"
-                        priority
+                        fetchPriority={priority ? "high" : "auto"}
+                        loading={priority ? "eager" : "lazy"}
+                        priority={priority}
                     />
                 ) : (
                     <ImageWithSkeleton

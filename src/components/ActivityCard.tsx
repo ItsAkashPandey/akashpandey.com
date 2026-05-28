@@ -11,9 +11,10 @@ import { Calendar, MapPin, Users } from "lucide-react";
 interface Props {
     activity: Activity;
     images?: string[];
+    priorityImage?: boolean;
 }
 
-export function ActivityCard({ activity, images: resolvedImages }: Props) {
+export function ActivityCard({ activity, images: resolvedImages, priorityImage = false }: Props) {
     const { name, href, description, date, location, image, images, links } = activity;
 
     // Use resolved images (from folder scan) if provided, otherwise fall back to data
@@ -64,6 +65,7 @@ export function ActivityCard({ activity, images: resolvedImages }: Props) {
                     {allImages.length > 0 && (
                         <ActivitySwipeCards
                             images={allImages}
+                            priority={priorityImage}
                             className="w-full max-w-[280px] sm:max-w-[300px]"
                         />
                     )}

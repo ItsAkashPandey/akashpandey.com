@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { ActivityCard } from "./ActivityCard";
 import { Activity } from "@/lib/schemas";
 import { Skeleton } from "./ui/skeleton";
-import { ImageIcon } from "lucide-react";
 
 interface Props {
     activity: Activity & { elementId: string; resolvedImages: string[] };
@@ -38,7 +37,7 @@ export default function LazyActivity({ activity, index, initiallyVisible }: Prop
                     }, 100);
                 }
             },
-            { rootMargin: "800px" }
+            { rootMargin: "300px" }
         );
 
         if (containerRef.current) {
@@ -55,21 +54,56 @@ export default function LazyActivity({ activity, index, initiallyVisible }: Prop
                     className="transition-opacity duration-500 ease-out"
                     style={{ opacity: hasRendered ? 1 : 0 }}
                 >
-                    <ActivityCard activity={activity} images={activity.resolvedImages} />
+                    <ActivityCard
+                        activity={activity}
+                        images={activity.resolvedImages}
+                        priorityImage={index === 0}
+                    />
                 </div>
             ) : (
-                <div className="w-full h-[300px] rounded-3xl border border-white/10 dark:border-white/5 bg-muted/40 relative overflow-hidden">
-                    {/* Shimmer skeleton */}
-                    <Skeleton className="absolute inset-0 rounded-3xl" />
-                    {/* Image placeholder icon */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground/30">
-                            <ImageIcon className="size-8" />
-                            <span className="text-xs font-medium tracking-wide">Loading activity...</span>
+                <ActivityCardSkeleton />
+            )}
+        </div>
+    );
+}
+
+function ActivityCardSkeleton() {
+    return (
+        <div
+            className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/40 p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35),0_8px_32px_rgba(0,0,0,0.04)] backdrop-blur-2xl dark:border-white/10 dark:bg-white/[0.08] sm:p-7"
+            aria-hidden
+        >
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-[300px_1fr] sm:items-center">
+                <div className="flex flex-col items-center gap-3 sm:items-start">
+                    <div className="flex w-full flex-col gap-2">
+                        <Skeleton className="h-3 w-28 rounded-full" />
+                        <Skeleton className="h-3 w-40 rounded-full" />
+                    </div>
+
+                    <div className="relative grid h-[200px] w-full max-w-[280px] place-items-center sm:h-[220px] sm:max-w-[300px]">
+                        <Skeleton className="absolute h-[200px] w-[86%] rotate-[-6deg] rounded-xl bg-muted/50 shadow-lg sm:h-[220px]" />
+                        <Skeleton className="absolute h-[200px] w-[90%] rotate-[5deg] rounded-xl bg-muted/60 shadow-lg sm:h-[220px]" />
+                        <div className="absolute h-[200px] w-full max-w-[280px] overflow-hidden rounded-xl border border-white/60 bg-white p-2 shadow-xl sm:h-[220px] sm:max-w-[300px]">
+                            <Skeleton className="h-full w-full rounded-lg bg-muted/70" />
                         </div>
                     </div>
                 </div>
-            )}
+
+                <div className="flex min-w-0 flex-col gap-3">
+                    <Skeleton className="h-6 w-4/5 rounded-full" />
+                    <Skeleton className="h-0.5 w-10 rounded-full" />
+                    <div className="flex flex-col gap-2">
+                        <Skeleton className="h-3.5 w-full rounded-full" />
+                        <Skeleton className="h-3.5 w-[92%] rounded-full" />
+                        <Skeleton className="h-3.5 w-[86%] rounded-full" />
+                        <Skeleton className="h-3.5 w-[64%] rounded-full" />
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                        <Skeleton className="h-6 w-20 rounded-full" />
+                        <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

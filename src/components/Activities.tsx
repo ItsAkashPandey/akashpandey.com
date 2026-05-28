@@ -61,7 +61,7 @@ export default function Activities({ limit }: Props) {
   return (
     <ProgressiveActivitiesList
       allActivities={allActivities}
-      initialVisibleCount={5}
+      initialVisibleCount={2}
     />
   );
 }
