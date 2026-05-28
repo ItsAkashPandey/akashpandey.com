@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 /* ── types ─────────────────────────────────────────────────────────── */
 
@@ -57,7 +57,7 @@ function buildGroups(entries: TimelineEntry[]): { flat: MonthStop[]; groups: Yea
 /* ── component ─────────────────────────────────────────────────────── */
 
 export default function TimelineBar({ entries }: Props) {
-    const { flat, groups } = buildGroups(entries);
+    const { flat, groups } = useMemo(() => buildGroups(entries), [entries]);
     const N = flat.length;
 
     /* refs for DOM-direct updates (zero React re-renders during scroll) */
@@ -72,6 +72,7 @@ export default function TimelineBar({ entries }: Props) {
     const prevActive = useRef(-1);
     const prevYearIdx = useRef(-1);
     const suppressClick = useRef(false);
+    const lastMeasureAt = useRef(0);
 
     /* Smooth lerp state for pill */
     const currentPillY = useRef(0);
@@ -80,11 +81,18 @@ export default function TimelineBar({ entries }: Props) {
     const lerpRunning = useRef(false);
 
     /* ── measure card positions ── */
-    const measureCards = useCallback(() => {
-        cardTops.current = flat.map((s) => {
+    const measureCards = useCallback((force = false) => {
+        const now = performance.now();
+        if (!force && now - lastMeasureAt.current < 120) return;
+        lastMeasureAt.current = now;
+
+        const nextTops = flat.map((s, index) => {
             const el = document.getElementById(s.id);
-            return el ? el.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.25 : 0;
+            if (!el) return cardTops.current[index] ?? 0;
+            return el.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.28;
         });
+
+        cardTops.current = nextTops.every((top) => top === 0) ? cardTops.current : nextTops;
     }, [flat]);
 
     /* ── float index from scrollY ── */
@@ -93,8 +101,16 @@ export default function TimelineBar({ entries }: Props) {
         if (N <= 1) return 0;
         if (scrollY <= t[0]) return 0;
         if (scrollY >= t[N - 1]) return N - 1;
-        let i = 0;
-        while (i < N - 1 && scrollY > t[i + 1]) i++;
+
+        let lo = 0;
+        let hi = N - 1;
+        while (lo < hi - 1) {
+            const mid = Math.floor((lo + hi) / 2);
+            if (scrollY >= t[mid]) lo = mid;
+            else hi = mid;
+        }
+
+        const i = lo;
         const range = t[i + 1] - t[i];
         return i + (range > 0 ? Math.max(0, Math.min(1, (scrollY - t[i]) / range)) : 0);
     }, [N]);
@@ -177,18 +193,18 @@ export default function TimelineBar({ entries }: Props) {
             startLerp();
         }
 
-        const rounded = Math.round(floatIdx);
-        const activeYear = flat[rounded]?.year ?? 0;
+        const activeIdx = Math.max(0, Math.min(N - 1, Math.floor(floatIdx + 0.08)));
+        const activeYear = flat[activeIdx]?.year ?? 0;
         const activeYearGroupIdx = groups.findIndex(g => g.year === activeYear);
 
         // Update month labels + dots (always update to avoid stuck states)
-        if (rounded !== prevActive.current) {
-            prevActive.current = rounded;
+        if (activeIdx !== prevActive.current) {
+            prevActive.current = activeIdx;
             for (let i = 0; i < N; i++) {
                 const btn = monthRefs.current[i];
                 const dot = dotRefs.current[i];
                 if (!btn || !dot) continue;
-                const isActive = i === rounded;
+                const isActive = i === activeIdx;
                 btn.dataset.state = isActive ? "active" : "idle";
                 dot.dataset.state = isActive ? "active" : "idle";
             }
@@ -207,10 +223,10 @@ export default function TimelineBar({ entries }: Props) {
 
     /* ── scroll listener (rAF-throttled) ── */
     useEffect(() => {
-        measureCards();
+        measureCards(true);
 
         const onResize = () => {
-            measureCards();
+            measureCards(true);
             // Re-apply visuals after remeasure to fix stuck pill
             requestAnimationFrame(() => {
                 const f = getFloat(window.scrollY);
@@ -221,10 +237,17 @@ export default function TimelineBar({ entries }: Props) {
         window.addEventListener("resize", onResize);
         window.addEventListener("timeline-measure", onResize);
 
+        const resizeObserver = new ResizeObserver(() => onResize());
+        flat.forEach((stop) => {
+            const el = document.getElementById(stop.id);
+            if (el) resizeObserver.observe(el);
+        });
+
         const onScroll = () => {
             if (isDragging.current) return;
             cancelAnimationFrame(rafId.current);
             rafId.current = requestAnimationFrame(() => {
+                measureCards();
                 applyVisuals(getFloat(window.scrollY));
             });
         };
@@ -244,7 +267,7 @@ export default function TimelineBar({ entries }: Props) {
             applyVisuals(f);
         });
         const t = setTimeout(() => {
-            measureCards();
+            measureCards(true);
             const f = getFloat(window.scrollY);
             applyVisuals(f);
         }, 600);
@@ -253,6 +276,7 @@ export default function TimelineBar({ entries }: Props) {
             window.removeEventListener("scroll", onScroll);
             window.removeEventListener("resize", onResize);
             window.removeEventListener("timeline-measure", onResize);
+            resizeObserver.disconnect();
             clearTimeout(t);
             cancelAnimationFrame(rafId.current);
             cancelAnimationFrame(lerpRafId.current);
@@ -288,12 +312,13 @@ export default function TimelineBar({ entries }: Props) {
     const dragStartY = useRef(0);
 
     const onPointerDown = useCallback((e: React.PointerEvent) => {
+        if ((e.target as HTMLElement).closest("button")) return;
         e.preventDefault();
         (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
         isDragging.current = true;
         suppressClick.current = false;
         dragStartY.current = e.clientY;
-        measureCards();
+        measureCards(true);
         const idx = getIdxFromY(e.clientY);
         scrollToFloat(idx);
         applyVisuals(idx);
@@ -311,6 +336,7 @@ export default function TimelineBar({ entries }: Props) {
     }, [getIdxFromY, scrollToFloat, applyVisuals]);
 
     const onPointerUp = useCallback((e: React.PointerEvent) => {
+        if (!isDragging.current) return;
         (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
         isDragging.current = false;
         // After drag ends, re-sync from current scroll position
@@ -327,12 +353,13 @@ export default function TimelineBar({ entries }: Props) {
         }
         const el = document.getElementById(id);
         if (el) {
+            measureCards(true);
             window.scrollTo({
-                top: el.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.25,
+                top: el.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.28,
                 behavior: "smooth",
             });
         }
-    }, []);
+    }, [measureCards]);
 
     if (N === 0) return null;
 

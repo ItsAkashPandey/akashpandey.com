@@ -17,6 +17,15 @@ export default function LazyActivity({ activity, index, initiallyVisible }: Prop
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        if (!initiallyVisible) return;
+        setIsIntersecting(true);
+        setHasRendered(true);
+        requestAnimationFrame(() => {
+            window.dispatchEvent(new Event("timeline-measure"));
+        });
+    }, [initiallyVisible]);
+
+    useEffect(() => {
         if (isIntersecting) {
             // Small delay for fade-in effect
             const t = requestAnimationFrame(() => setHasRendered(true));
