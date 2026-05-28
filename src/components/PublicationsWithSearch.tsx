@@ -21,7 +21,7 @@ interface Publication {
   title: string;
   authors: string;
   year: number;
-  type: "Journal" | "Conference" | "Book";
+  type: "Journal" | "Conference" | "Book" | "Book Chapter" | "Manuscript";
   journal?: string;
   journalLogo?: string;
   journalQuartile?: string;
@@ -242,33 +242,32 @@ export default function PublicationsWithSearch({ publications }: Props) {
           filtered.map((pub, index) => (
             <div
               key={pub.id}
-              className="group relative overflow-visible rounded-lg border border-border/50 p-6 transition-all duration-300 hover:border-border hover:shadow-sm"
+              className="group relative overflow-hidden rounded-2xl border border-border/50 bg-background/70 p-5 shadow-sm backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-border hover:shadow-md sm:p-6"
               style={{
                 animation: `slideIn 0.5s ease-out ${index * 0.1}s both`,
               }}
             >
-              {/* Geometric number indicator - Rotated Square */}
+              {/* Geometric number indicator */}
               <div
-                className="absolute -right-6 -top-6 flex items-center justify-center w-16 h-16 text-sm font-bold text-muted-foreground transition-all duration-300 group-hover:text-foreground cursor-default"
+                className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold text-muted-foreground/60 transition-all duration-300 group-hover:text-foreground"
                 style={{
-                  border: "1.5px solid hsl(var(--muted-foreground) / 0.3)",
-                  transform: `rotate(${getShapeRotation(index)}deg) scale(1)`,
-                  transitionProperty: "transform, border-color",
-                  transitionDuration: "300ms",
+                  border: "1px solid hsl(var(--muted-foreground) / 0.2)",
+                  background: "hsl(var(--muted) / 0.35)",
+                  transform: `rotate(${getShapeRotation(index) / 4}deg)`,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = `rotate(${getShapeRotation(index)}deg) scale(1.15)`;
+                  e.currentTarget.style.transform = `rotate(${getShapeRotation(index) / 4}deg) scale(1.08)`;
                   e.currentTarget.style.borderColor = "hsl(var(--foreground) / 0.5)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = `rotate(${getShapeRotation(index)}deg) scale(1)`;
-                  e.currentTarget.style.borderColor = "hsl(var(--muted-foreground) / 0.3)";
+                  e.currentTarget.style.transform = `rotate(${getShapeRotation(index) / 4}deg) scale(1)`;
+                  e.currentTarget.style.borderColor = "hsl(var(--muted-foreground) / 0.2)";
                 }}
               >
                 {index + 1}
               </div>
 
-              <div className="flex flex-col gap-4 pr-8">
+              <div className="flex flex-col gap-4 pr-10">
                 {/* Title */}
                 <h2 className="text-lg font-semibold leading-tight transition-colors group-hover:text-primary">
                   {pub.title}
@@ -361,6 +360,11 @@ export default function PublicationsWithSearch({ publications }: Props) {
                   <Badge variant="outline" className="text-xs">
                     {pub.type}
                   </Badge>
+                  {pub.article && (
+                    <Badge variant="outline" className="text-xs">
+                      Article {pub.article}
+                    </Badge>
+                  )}
                 </div>
 
                 {/* DOI Link */}

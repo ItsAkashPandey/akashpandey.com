@@ -67,7 +67,7 @@ Behavior rules:
 - 2023 (CRC Press book chapter): Smart agriculture platforms: case studies.
 - 2026 (Under review): Stage-specific climatic impacts on rice phenology using PhenoCam + AWS data.
 - 2026 (In preparation): Deep learning field segmentation + multitemporal Sentinel‑2 for crop yield estimation (smallholder systems, India).
-- 2026 (Under review): PlanetScope/Sentinel‑2 wheat phenology using IR-enabled PhenoCam + field observations.
+- 2026 (Journal, Ecological Informatics, Q1): PlanetScope/Sentinel‑2 wheat phenology using IR-enabled PhenoCam + field observations. DOI: 10.1016/j.ecoinf.2026.103821.
 
 ## Skills & tools
 ### Instruments / field systems

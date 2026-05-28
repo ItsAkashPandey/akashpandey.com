@@ -13,8 +13,8 @@ export default function TimelineItem({ experience }: Props) {
   const logoArray = logos || (logo ? [logo] : []);
 
   return (
-    <li className="relative ml-6 sm:ml-10 py-4">
-      <div className="absolute -left-12 sm:-left-16 top-4 flex flex-col">
+    <li className="relative ml-5 py-5 sm:ml-8 sm:py-6">
+      <div className="absolute -left-[3.1rem] top-5 flex flex-col sm:-left-[4rem] sm:top-6">
         {logoArray.map((logoSrc, idx) => {
           return (
             <Link
@@ -22,9 +22,9 @@ export default function TimelineItem({ experience }: Props) {
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center border bg-white rounded-full size-12"
+              className="flex size-11 items-center justify-center rounded-full border bg-white shadow-sm transition-transform duration-300 hover:scale-105 sm:size-12"
             >
-              <Avatar className="size-12 border rounded-full">
+              <Avatar className="size-11 rounded-full border sm:size-12">
                 <AvatarImage
                   src={logoSrc}
                   alt={name}
@@ -38,29 +38,29 @@ export default function TimelineItem({ experience }: Props) {
           );
         })}
       </div>
-      <div className="flex flex-1 flex-col justify-start gap-2">
+      <div className="flex min-w-0 flex-1 flex-col justify-start gap-2">
         <Link href={href} target="_blank" rel="noreferrer" className="w-fit">
-          <h2 className="text-base font-semibold leading-none">{name}</h2>
+          <h2 className="text-base font-semibold leading-tight tracking-normal">{name}</h2>
         </Link>
         <div className="flex flex-col gap-2">
           {positions.map((position) => (
             <div key={`${position.title}-${position.start}`}>
-              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1 sm:gap-x-4">
-                <p className="text-sm font-medium leading-tight text-muted-foreground">
+              <div className="grid gap-1 sm:grid-cols-[minmax(0,1fr)_max-content] sm:items-baseline sm:gap-x-4">
+                <p className="min-w-0 text-sm font-medium leading-tight text-muted-foreground">
                   {position.title}
                 </p>
-                <time className="whitespace-nowrap text-[10px] sm:text-xs tabular-nums text-muted-foreground/80">
+                <time className="justify-self-start rounded-full bg-muted/45 px-2 py-0.5 text-[10px] tabular-nums text-muted-foreground/80 sm:justify-self-end sm:text-xs">
                   <span>{position.start}</span>
                   <span>{" - "}</span>
                   <span>{position.end ?? "Present"}</span>
                 </time>
               </div>
               {position.description && (
-                <ul className="ml-4 mt-2 list-outside list-disc">
+                <ul className="ml-4 mt-2 list-outside list-disc space-y-1">
                   {position.description.map((desc, i) => (
                     <li
                       key={i}
-                      className="prose pr-8 text-sm dark:prose-invert"
+                      className="prose max-w-none pr-0 text-sm leading-relaxed text-muted-foreground dark:prose-invert sm:pr-2"
                     >
                       {desc}
                     </li>
