@@ -37,12 +37,12 @@ export default function ImageWithSkeleton({
               aria-hidden
               className={cn(
                 "pointer-events-none h-full w-full rounded-none",
-                skeletonClassName
+                skeletonClassName,
               )}
             />
             {/* Image icon hint so users know content is loading */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <ImageIcon className="size-5 text-muted-foreground/20" />
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <ImageIcon className="text-muted-foreground/20 size-5" />
             </div>
           </motion.div>
         )}
@@ -50,12 +50,13 @@ export default function ImageWithSkeleton({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: isLoaded ? 1 : 0 }}
-        transition={{ duration: 0.4 }}
-        className="h-full w-full flex items-center justify-center"
+        transition={{ duration: 0.22 }}
+        className="flex h-full w-full items-center justify-center"
       >
         <Image
           alt={alt}
           {...props}
+          decoding={props.decoding ?? "async"}
           className={cn("relative z-0", className)}
           onLoad={(event) => {
             setIsLoaded(true);

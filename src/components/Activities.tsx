@@ -13,8 +13,8 @@ export default function Activities({ limit }: Props) {
   let activities = activitySchema.parse(data).activities;
 
   // Sort by date (newest first)
-  activities = activities.sort((a, b) =>
-    new Date(b.date).getTime() - new Date(a.date).getTime()
+  activities = activities.sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 
   const getImagesFromFolder = (folderName: string | undefined): string[] => {
@@ -25,6 +25,12 @@ export default function Activities({ limit }: Props) {
       const files = fs.readdirSync(publicPath);
       return files
         .filter((file) => /\.(png|jpe?g|webp|gif|svg)$/i.test(file))
+        .sort((a, b) =>
+          a.localeCompare(b, undefined, {
+            numeric: true,
+            sensitivity: "base",
+          }),
+        )
         .map((file) => `/${folderName}/${file}`);
     } catch {
       return [];
@@ -37,7 +43,10 @@ export default function Activities({ limit }: Props) {
       const dynamicImages = getImagesFromFolder(activity.imageFolder);
       return {
         ...activity,
-        resolvedImages: dynamicImages.length > 0 ? dynamicImages : (activity.resolvedImages || []),
+        resolvedImages:
+          dynamicImages.length > 0
+            ? dynamicImages
+            : activity.resolvedImages || [],
         elementId: `activity-${idx}`,
       };
     });
@@ -51,7 +60,12 @@ export default function Activities({ limit }: Props) {
       <div className="relative">
         <section className="flex flex-col gap-8">
           {limitedActivities.map((activity, index) => (
-            <LazyActivity key={activity.elementId} activity={activity} index={index} initiallyVisible={true} />
+            <LazyActivity
+              key={activity.elementId}
+              activity={activity}
+              index={index}
+              initiallyVisible={true}
+            />
           ))}
         </section>
       </div>
@@ -65,4 +79,3 @@ export default function Activities({ limit }: Props) {
     />
   );
 }
-

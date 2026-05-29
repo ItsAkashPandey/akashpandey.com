@@ -211,28 +211,23 @@ export default function TimelineBar({ entries }: Props) {
     (floatIdx: number) => {
       if (!pillRef.current || N === 0) return;
 
-      // Always update pill target position (fixes stuck pill on scroll direction change)
-      const newPillY = getPillY(floatIdx);
+      const activeIdx = Math.max(
+        0,
+        Math.min(N - 1, Math.floor(floatIdx + 0.5)),
+      );
+      const activeYear = flat[activeIdx]?.year ?? 0;
+      const activeYearGroupIdx = groups.findIndex((g) => g.year === activeYear);
+      const newPillY = getPillY(activeIdx);
       targetPillY.current = newPillY;
 
-      // Always ensure lerp is running when target changes
       if (
         !lerpRunning.current &&
         Math.abs(newPillY - currentPillY.current) > 0.3
       ) {
         startLerp();
-      } else if (lerpRunning.current) {
-        // Lerp is already running, it'll pick up the new target
-      } else {
+      } else if (!lerpRunning.current) {
         startLerp();
       }
-
-      const activeIdx = Math.max(
-        0,
-        Math.min(N - 1, Math.floor(floatIdx + 0.08)),
-      );
-      const activeYear = flat[activeIdx]?.year ?? 0;
-      const activeYearGroupIdx = groups.findIndex((g) => g.year === activeYear);
 
       // Update month labels + dots (always update to avoid stuck states)
       if (activeIdx !== prevActive.current) {
@@ -461,10 +456,10 @@ export default function TimelineBar({ entries }: Props) {
 
         /* ── Hover popup effect ── */
         .tl-root {
-          opacity: 0.75;
+          opacity: 0.92;
           transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
                       filter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          filter: blur(0.1px);
+          filter: blur(0px);
         }
         .tl-root:hover {
           opacity: 1;
@@ -507,7 +502,7 @@ export default function TimelineBar({ entries }: Props) {
         ref={rootRef}
         className="tl-root fixed top-28 right-4 z-20 hidden cursor-grab touch-none flex-col items-end select-none active:cursor-grabbing lg:flex"
         style={{
-          width: 210,
+          width: 240,
           height: isCompact ? compactHeight : "calc(100vh - 200px)",
           minHeight: isCompact ? compactHeight : 400,
           maxHeight: "calc(100vh - 200px)",
@@ -522,9 +517,9 @@ export default function TimelineBar({ entries }: Props) {
           ref={pillRef}
           className="pointer-events-none absolute"
           style={{
-            right: 8,
-            width: 150,
-            height: 34,
+            right: 4,
+            width: 184,
+            height: 36,
             background: "var(--tl-pill-bg)",
             backdropFilter: "blur(var(--tl-backdrop-blur)) saturate(1.8)",
             WebkitBackdropFilter: "blur(var(--tl-backdrop-blur)) saturate(1.8)",
