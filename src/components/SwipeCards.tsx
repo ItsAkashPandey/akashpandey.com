@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { RefreshCw } from "lucide-react";
-import { Dispatch, SetStateAction, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import ImageWithSkeleton from "./ImageWithSkeleton";
 
 interface SwipeCardsProps {
@@ -13,13 +13,29 @@ interface SwipeCardsProps {
 }
 
 const SwipeCards = ({ className, images }: SwipeCardsProps) => {
-  const initialCards: Card[] = images?.length
-    ? images.map((url, i) => ({ id: i + 1, url }))
-    : cardData;
-  const [cards, setCards] = useState<Card[]>(initialCards);
+  const sourceCards: Card[] = useMemo(
+    () =>
+      images?.length ? images.map((url, i) => ({ id: i + 1, url })) : cardData,
+    [images],
+  );
+  const [cursor, setCursor] = useState(0);
+
+  const cards = useMemo(() => {
+    const visibleCount = Math.min(4, sourceCards.length);
+    return Array.from({ length: visibleCount }, (_, offset) => {
+      const index = (cursor + offset) % sourceCards.length;
+      return { ...sourceCards[index], offset };
+    }).reverse();
+  }, [cursor, sourceCards]);
 
   const resetCards = () => {
-    setCards(initialCards);
+    setCursor(0);
+  };
+
+  const moveStack = (direction: 1 | -1) => {
+    setCursor(
+      (value) => (value + direction + sourceCards.length) % sourceCards.length,
+    );
   };
 
   return (
@@ -29,7 +45,7 @@ const SwipeCards = ({ className, images }: SwipeCardsProps) => {
         className,
       )}
     >
-      {cards.length === 0 && (
+      {sourceCards.length === 0 && (
         <div style={{ gridRow: 1, gridColumn: 1 }} className="z-20">
           <Button onClick={resetCards} variant={"outline"}>
             <RefreshCw className="size-4" />
@@ -41,10 +57,11 @@ const SwipeCards = ({ className, images }: SwipeCardsProps) => {
         const depth = cards.length - 1 - index;
         return (
           <Card
-            key={card.id}
-            cards={cards}
-            setCards={setCards}
+            key={`${cursor}-${card.id}-${card.offset}`}
             depth={depth}
+            imageCount={sourceCards.length}
+            isFront={card.offset === 0}
+            onSwipe={moveStack}
             {...card}
           />
         );
@@ -56,69 +73,127 @@ const SwipeCards = ({ className, images }: SwipeCardsProps) => {
 const Card = ({
   id,
   url,
-  setCards,
-  cards,
   depth,
+  imageCount,
+  isFront,
+  onSwipe,
 }: {
   id: number;
   url: string;
-  setCards: Dispatch<SetStateAction<Card[]>>;
-  cards: Card[];
+  offset: number;
   depth: number;
+  imageCount: number;
+  isFront: boolean;
+  onSwipe: (direction: 1 | -1) => void;
 }) => {
   const x = useMotionValue(0);
+  const pointerStartX = useRef<number | null>(null);
+  const swipeInFlight = useRef(false);
 
-  const rotateRaw = useTransform(x, [-150, 150], [-18, 18]);
-  const opacity = useTransform(x, [-100, 0, 100], [0, 1, 0]);
-
-  const isFront = id === cards[cards.length - 1]?.id;
+  const rotateRaw = useTransform(x, [-180, 180], [-16, 16]);
+  const opacity = useTransform(x, [-180, 0, 180], [0.35, 1, 0.35]);
 
   const rotate = useTransform(() => {
-    const offset = isFront ? 0 : id % 2 ? 6 : -6;
+    const offset = isFront ? 0 : id % 2 ? 5 : -5;
     return `${rotateRaw.get() + offset}deg`;
   });
 
-  const handleDragEnd = (event: any, info: { offset: { x: number } }) => {
-    if (Math.abs(info.offset.x) > 100) {
-      // If swiped far enough, remove the card
-      setCards((pv) => pv.filter((v) => v.id !== id));
-    } else {
-      // Otherwise, animate the card back to the center
-      animate(x, 0, {
-        type: "spring",
-        stiffness: 400,
-        damping: 40,
-      });
+  const commitSwipe = (direction: 1 | -1) => {
+    if (swipeInFlight.current) return;
+    swipeInFlight.current = true;
+    animate(x, direction > 0 ? 360 : -360, {
+      type: "spring",
+      stiffness: 520,
+      damping: 42,
+      mass: 0.6,
+    }).then(() => {
+      x.set(0);
+      swipeInFlight.current = false;
+      onSwipe(direction);
+    });
+  };
+
+  const handlePointerDown = (event: React.PointerEvent) => {
+    pointerStartX.current = event.clientX;
+  };
+
+  const handlePointerUp = (event: React.PointerEvent) => {
+    if (pointerStartX.current === null) return;
+    const finalDx = event.clientX - pointerStartX.current;
+    pointerStartX.current = null;
+
+    if (Math.abs(finalDx) > 90 && imageCount > 1) {
+      commitSwipe(finalDx > 0 ? 1 : -1);
     }
+  };
+
+  const handlePointerCancel = () => {
+    pointerStartX.current = null;
+  };
+
+  const handleMouseDown = (event: React.MouseEvent) => {
+    pointerStartX.current = event.clientX;
+  };
+
+  const handleMouseUp = (event: React.MouseEvent) => {
+    if (pointerStartX.current === null) return;
+    const finalDx = event.clientX - pointerStartX.current;
+    pointerStartX.current = null;
+
+    if (Math.abs(finalDx) > 90 && imageCount > 1) {
+      commitSwipe(finalDx > 0 ? 1 : -1);
+    }
+  };
+
+  const handleDragEnd = (_event: any, info: { offset: { x: number } }) => {
+    if (Math.abs(info.offset.x) > 90 && imageCount > 1) {
+      commitSwipe(info.offset.x > 0 ? 1 : -1);
+      return;
+    }
+
+    animate(x, 0, {
+      type: "spring",
+      stiffness: 520,
+      damping: 42,
+      mass: 0.65,
+    });
   };
 
   return (
     <motion.div
-      className="absolute h-[233px] w-[175px] origin-bottom overflow-hidden rounded-lg hover:cursor-grab active:cursor-grabbing shadow-lg"
+      className="absolute h-[233px] w-[175px] origin-bottom overflow-hidden rounded-lg shadow-lg hover:cursor-grab active:cursor-grabbing"
       style={{
         gridRow: 1,
         gridColumn: 1,
         x,
         opacity,
         rotate,
+        willChange: "transform",
         boxShadow: isFront
           ? "0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3)"
           : undefined,
       }}
       animate={{
-        // Ensure the top card is always the largest paint candidate.
-        scale: isFront ? 1 : Math.max(0.85, 0.94 - depth * 0.04),
+        y: depth * 4,
+        scale: isFront ? 1 : Math.max(0.86, 0.95 - depth * 0.045),
       }}
-      drag={isFront ? "x" : false}
+      transition={{ type: "spring", stiffness: 520, damping: 44, mass: 0.7 }}
+      drag={isFront && imageCount > 1 ? "x" : false}
       dragConstraints={{
-        left: -150,
-        right: 150,
+        left: -170,
+        right: 170,
         top: 0,
         bottom: 0,
       }}
+      dragElastic={0.55}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
       onDragEnd={handleDragEnd}
     >
-      <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
+      <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
         {isFront ? (
           <ImageWithSkeleton
             src={url}
@@ -129,7 +204,7 @@ const Card = ({
             quality={75}
             draggable={false}
             containerClassName="h-full w-full pointer-events-none"
-            className="h-full w-full select-none object-cover"
+            className="h-full w-full object-cover select-none"
             fetchPriority="high"
             priority
           />
@@ -143,7 +218,7 @@ const Card = ({
             quality={70}
             draggable={false}
             containerClassName="h-full w-full pointer-events-none"
-            className="h-full w-full select-none object-cover"
+            className="h-full w-full object-cover select-none"
             fetchPriority="low"
             loading="lazy"
           />

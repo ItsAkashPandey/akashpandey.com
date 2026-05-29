@@ -12,6 +12,20 @@
       "impactFactor": 7.3,
       "article": "103821",
       "doi": "https://doi.org/10.1016/j.ecoinf.2026.103821",
+      "media": [
+        {
+          "label": "Graphical abstract",
+          "image": "/publications/wheat-phenology/graphical-abstract.webp",
+          "fullImage": "/publications/wheat-phenology/graphical-abstract-full.webp",
+          "alt": "Graphical abstract for wheat crop phenology using PhenoCam, Sentinel-2, and PlanetScope"
+        },
+        {
+          "label": "Paper front page",
+          "image": "/publications/wheat-phenology/front-page.webp",
+          "fullImage": "/publications/wheat-phenology/front-page-full.webp",
+          "alt": "First page preview of the wheat crop phenology paper"
+        }
+      ],
       "status": "Published"
     },
     {
@@ -31,6 +45,20 @@
       "type": "Conference",
       "conference": "EGU General Assembly 2026",
       "doi": "https://doi.org/10.5194/egusphere-egu26-14674",
+      "media": [
+        {
+          "label": "Conference poster",
+          "image": "/publications/egu-2026/poster.webp",
+          "fullImage": "/publications/egu-2026/poster-full.webp",
+          "alt": "EGU 2026 poster preview for PhenoCam-based wheat and rice phenology monitoring"
+        },
+        {
+          "label": "Poster session",
+          "image": "/publications/egu-2026/poster-session.webp",
+          "fullImage": "/publications/egu-2026/poster-session-full.webp",
+          "alt": "Akash Kumar standing in front of the EGU 2026 poster"
+        }
+      ],
       "status": "Published"
     },
     {
@@ -67,6 +95,20 @@
       "volume": 88,
       "article": "103134",
       "doi": "https://doi.org/10.1016/j.ecoinf.2025.103134",
+      "media": [
+        {
+          "label": "Graphical abstract",
+          "image": "/publications/phenoai-framework/graphical-abstract.webp",
+          "fullImage": "/publications/phenoai-framework/graphical-abstract-full.webp",
+          "alt": "Graphical abstract for the PhenoAI deep learning Python framework paper"
+        },
+        {
+          "label": "Paper front page",
+          "image": "/publications/phenoai-framework/front-page.webp",
+          "fullImage": "/publications/phenoai-framework/front-page-full.webp",
+          "alt": "First page preview of the PhenoAI paper"
+        }
+      ],
       "status": "Published"
     },
     {
@@ -82,6 +124,14 @@
       "volume": 88,
       "article": "103137",
       "doi": "https://doi.org/10.1016/j.ecoinf.2025.103137",
+      "media": [
+        {
+          "label": "Paper front page",
+          "image": "/publications/black-spruce-phenology/front-page.webp",
+          "fullImage": "/publications/black-spruce-phenology/front-page-full.webp",
+          "alt": "First page preview of the black spruce PhenoCam and satellite phenology paper"
+        }
+      ],
       "status": "Published"
     },
     {
@@ -93,6 +143,14 @@
       "conference": "2024 IEEE India Geoscience and Remote Sensing Symposium (InGARSS)",
       "conferenceLogo": "/img/logos/ingarss.webp",
       "doi": "https://doi.org/10.1109/InGARSS61818.2024.10984047",
+      "media": [
+        {
+          "label": "Paper front page",
+          "image": "/publications/ingarss-evergreen-forest/front-page.webp",
+          "fullImage": "/publications/ingarss-evergreen-forest/front-page-full.webp",
+          "alt": "First page preview of the InGARSS evergreen forest PhenoCam paper"
+        }
+      ],
       "status": "Published"
     },
     {
@@ -106,6 +164,14 @@
       "publisherLogo": "/img/logos/crc.png",
       "pages": "169-176",
       "doi": "https://doi.org/10.1201/9781003324720-15",
+      "media": [
+        {
+          "label": "Chapter front page",
+          "image": "/publications/smart-agriculture-platforms/front-page.webp",
+          "fullImage": "/publications/smart-agriculture-platforms/front-page-full.webp",
+          "alt": "First page preview of the smart agriculture platforms book chapter"
+        }
+      ],
       "status": "Published"
     }
   ]
