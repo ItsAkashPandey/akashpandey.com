@@ -2,11 +2,17 @@
 
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { animate, motion, useMotionValue, useTransform } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useTransform,
+  type PanInfo,
+} from "framer-motion";
 import { RefreshCw } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
-import ImageWithSkeleton from "./ImageWithSkeleton";
 import ImageLightbox from "./ImageLightbox";
+import ImageWithSkeleton from "./ImageWithSkeleton";
 
 interface ActivitySwipeCardsProps {
   className?: string;
@@ -29,9 +35,10 @@ const ActivitySwipeCards = ({
   priority = false,
 }: ActivitySwipeCardsProps) => {
   const [cursor, setCursor] = useState(0);
+  const [swipeDirection, setSwipeDirection] = useState<1 | -1>(1);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  // Keep only a tiny cyclic thumbnail window mounted. Large activity folders can
-  // contain 50 photos, so rendering the whole stack makes the page stall.
   const cards: CardItem[] = useMemo(() => {
     if (images.length === 0) return [];
 
@@ -42,16 +49,15 @@ const ActivitySwipeCards = ({
     }).reverse();
   }, [cursor, images]);
 
-  // Lightbox state
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-
   const resetCards = () => {
     setCursor(0);
+    setSwipeDirection(1);
   };
 
   const moveStack = useCallback(
     (direction: 1 | -1) => {
+      if (images.length <= 1) return;
+      setSwipeDirection(direction);
       setCursor((value) => (value + direction + images.length) % images.length);
     },
     [images.length],
@@ -78,27 +84,37 @@ const ActivitySwipeCards = ({
       >
         {images.length === 0 && (
           <div style={{ gridRow: 1, gridColumn: 1 }} className="z-20">
-            <Button onClick={resetCards} variant={"outline"}>
+            <Button onClick={resetCards} variant="outline">
               <RefreshCw className="size-4" />
               Again
             </Button>
           </div>
         )}
-        {cards.map((card, index) => {
-          const depth = cards.length - 1 - index;
-          return (
-            <SwipeCard
-              key={`${cursor}-${card.id}-${card.offset}`}
-              depth={depth}
-              imageCount={images.length}
-              isFront={card.offset === 0}
-              onSwipe={moveStack}
-              onImageClick={openLightbox}
-              priority={priority && card.offset === 0}
-              {...card}
-            />
-          );
-        })}
+
+        <AnimatePresence initial={false} custom={swipeDirection}>
+          {cards.map((card, index) => {
+            const depth = cards.length - 1 - index;
+            const isFront = card.offset === 0;
+
+            return (
+              <SwipeCard
+                key={
+                  isFront
+                    ? `front-${card.id}`
+                    : `back-${card.id}-${card.offset}`
+                }
+                depth={depth}
+                imageCount={images.length}
+                isFront={isFront}
+                onSwipe={moveStack}
+                onImageClick={openLightbox}
+                priority={priority && isFront}
+                swipeDirection={swipeDirection}
+                {...card}
+              />
+            );
+          })}
+        </AnimatePresence>
       </div>
 
       {lightboxOpen && (
@@ -122,6 +138,7 @@ const SwipeCard = ({
   onSwipe,
   onImageClick,
   priority,
+  swipeDirection,
 }: {
   id: number;
   url: string;
@@ -132,95 +149,36 @@ const SwipeCard = ({
   onSwipe: (direction: 1 | -1) => void;
   onImageClick: (url: string) => void;
   priority: boolean;
+  swipeDirection: 1 | -1;
 }) => {
   const x = useMotionValue(0);
   const didDrag = useRef(false);
-  const pointerStartX = useRef<number | null>(null);
-  const swipeInFlight = useRef(false);
+  const baseRotate = isFront ? 0 : id % 2 ? 5 : -5;
+  const rotateRaw = useTransform(x, [-180, 180], [-14, 14]);
+  const rotate = useTransform(() => `${rotateRaw.get() + baseRotate}deg`);
 
-  const rotateRaw = useTransform(x, [-180, 180], [-16, 16]);
-  const opacity = useTransform(x, [-180, 0, 180], [0.35, 1, 0.35]);
-
-  const rotate = useTransform(() => {
-    const offset = isFront ? 0 : id % 2 ? 5 : -5;
-    return `${rotateRaw.get() + offset}deg`;
-  });
-
-  const commitSwipe = (direction: 1 | -1) => {
-    if (swipeInFlight.current) return;
-    swipeInFlight.current = true;
-    animate(x, direction > 0 ? 420 : -420, {
-      type: "spring",
-      stiffness: 520,
-      damping: 42,
-      mass: 0.6,
-    }).then(() => {
-      x.set(0);
-      swipeInFlight.current = false;
-      onSwipe(direction);
-    });
-  };
-
-  const handlePointerDown = (event: React.PointerEvent) => {
-    pointerStartX.current = event.clientX;
+  const handleDragStart = () => {
     didDrag.current = false;
   };
 
-  const handlePointerMove = (event: React.PointerEvent) => {
-    if (pointerStartX.current === null) return;
-    if (Math.abs(event.clientX - pointerStartX.current) > 5) {
+  const handleDrag = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ) => {
+    if (Math.abs(info.offset.x) > 4) {
       didDrag.current = true;
     }
   };
 
-  const handlePointerUp = (event: React.PointerEvent) => {
-    if (pointerStartX.current === null) return;
-    const finalDx = event.clientX - pointerStartX.current;
-    pointerStartX.current = null;
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ) => {
+    const projectedX = info.offset.x + info.velocity.x * 0.16;
 
-    if (Math.abs(finalDx) > SWIPE_THRESHOLD && imageCount > 1) {
-      commitSwipe(finalDx > 0 ? 1 : -1);
+    if (Math.abs(projectedX) > SWIPE_THRESHOLD && imageCount > 1) {
+      onSwipe(projectedX > 0 ? 1 : -1);
     }
-  };
-
-  const handlePointerCancel = () => {
-    pointerStartX.current = null;
-  };
-
-  const handleMouseDown = (event: React.MouseEvent) => {
-    pointerStartX.current = event.clientX;
-    didDrag.current = false;
-  };
-
-  const handleMouseMove = (event: React.MouseEvent) => {
-    if (pointerStartX.current === null) return;
-    if (Math.abs(event.clientX - pointerStartX.current) > 5) {
-      didDrag.current = true;
-    }
-  };
-
-  const handleMouseUp = (event: React.MouseEvent) => {
-    if (pointerStartX.current === null) return;
-    const finalDx = event.clientX - pointerStartX.current;
-    pointerStartX.current = null;
-
-    if (Math.abs(finalDx) > SWIPE_THRESHOLD && imageCount > 1) {
-      commitSwipe(finalDx > 0 ? 1 : -1);
-    }
-  };
-
-  const handleDragEnd = (_event: any, info: { offset: { x: number } }) => {
-    if (Math.abs(info.offset.x) > SWIPE_THRESHOLD && imageCount > 1) {
-      commitSwipe(info.offset.x > 0 ? 1 : -1);
-      return;
-    }
-
-    animate(x, 0, {
-      type: "spring",
-      stiffness: 520,
-      damping: 42,
-      mass: 0.65,
-    });
   };
 
   const handleClick = () => {
@@ -229,46 +187,53 @@ const SwipeCard = ({
     }
   };
 
+  const scale = isFront ? 1 : Math.max(0.86, 0.95 - depth * 0.045);
+  const y = depth * 4;
   const imgClass = "h-full w-full select-none object-contain";
 
   return (
     <motion.div
-      className="absolute h-[200px] w-full max-w-[280px] origin-bottom overflow-hidden rounded-lg border border-gray-100 bg-white p-2 shadow-lg hover:cursor-grab active:cursor-grabbing sm:h-[220px] sm:max-w-[300px]"
+      className="absolute h-[200px] w-full max-w-[280px] origin-bottom overflow-hidden rounded-lg border border-gray-100 bg-white p-2 shadow-lg will-change-transform hover:cursor-grab active:cursor-grabbing sm:h-[220px] sm:max-w-[300px]"
       style={{
         gridRow: 1,
         gridColumn: 1,
-        x,
-        opacity,
-        rotate,
-        willChange: "transform",
-        boxShadow: isFront
-          ? "0 14px 24px -14px rgb(0 0 0 / 0.38), 0 8px 18px -18px rgb(0 0 0 / 0.35)"
-          : undefined,
+        x: isFront ? x : 0,
+        rotate: isFront ? rotate : `${baseRotate}deg`,
+        zIndex: isFront ? 30 : 20 - depth,
         backgroundColor: "#ffffff",
         backgroundImage:
           "linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)",
         backgroundSize: "20px 20px",
       }}
+      initial={
+        isFront
+          ? { x: -swipeDirection * 24, opacity: 0.88, scale: 0.98, y }
+          : { opacity: 0.88, scale, y }
+      }
       animate={{
-        y: depth * 4,
-        scale: isFront ? 1 : Math.max(0.86, 0.95 - depth * 0.045),
+        x: 0,
+        y,
+        scale,
+        opacity: isFront ? 1 : Math.max(0.72, 0.94 - depth * 0.08),
       }}
-      transition={{ type: "spring", stiffness: 520, damping: 44, mass: 0.7 }}
+      exit={{
+        x: isFront ? swipeDirection * 460 : 0,
+        y,
+        scale: isFront ? 0.96 : scale,
+        opacity: 0,
+      }}
+      transition={{
+        type: "spring",
+        stiffness: 720,
+        damping: 48,
+        mass: 0.55,
+      }}
       drag={isFront && imageCount > 1 ? "x" : false}
-      dragConstraints={{
-        left: -170,
-        right: 170,
-        top: 0,
-        bottom: 0,
-      }}
-      dragElastic={0.55}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.72}
+      dragMomentum={false}
+      onDragStart={handleDragStart}
+      onDrag={handleDrag}
       onDragEnd={handleDragEnd}
       onClick={handleClick}
     >

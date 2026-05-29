@@ -80,6 +80,14 @@
       "journalQuartile": "Q1",
       "impactFactor": 4.5,
       "preprint": "https://dx.doi.org/10.2139/ssrn.6087391",
+      "media": [
+        {
+          "label": "SSRN preprint page",
+          "image": "/publications/rice-phenology/ssrn-preprint.webp",
+          "fullImage": "/publications/rice-phenology/ssrn-preprint-full.webp",
+          "alt": "SSRN preprint page preview for the rice phenology paper"
+        }
+      ],
       "status": "Under Review"
     },
     {
@@ -166,7 +174,13 @@
       "doi": "https://doi.org/10.1201/9781003324720-15",
       "media": [
         {
-          "label": "Chapter front page",
+          "label": "Chapter start",
+          "image": "/publications/smart-agriculture-platforms/chapter-start.webp",
+          "fullImage": "/publications/smart-agriculture-platforms/chapter-start-full.webp",
+          "alt": "Chapter start page for the smart agriculture platforms book chapter"
+        },
+        {
+          "label": "Publisher front page",
           "image": "/publications/smart-agriculture-platforms/front-page.webp",
           "fullImage": "/publications/smart-agriculture-platforms/front-page-full.webp",
           "alt": "First page preview of the smart agriculture platforms book chapter"
