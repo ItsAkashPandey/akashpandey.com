@@ -78,9 +78,7 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: [
-      { url: "/favicon2.png", type: "image/png" },
-    ],
+    icon: [{ url: "/favicon2.png", type: "image/png" }],
     apple: "/favicon1.png",
   },
   manifest: "/manifest.json",
@@ -100,7 +98,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased",
+          "bg-background min-h-screen font-sans antialiased",
           inter.variable,
           calistoga.variable,
         )}

@@ -17,10 +17,13 @@ import {
 import {
   ArrowUpDown,
   CalendarDays,
+  GraduationCap,
   Layers2,
   RotateCcw,
+  Rocket,
   Search,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type ActivityWithMeta = Activity & {
   elementId: string;
@@ -44,6 +47,31 @@ const STARTUP_KEYWORDS = [
   "startup",
   "tides",
 ];
+
+const activityTypeStyles = {
+  all: {
+    label: "All activities",
+    Icon: Layers2,
+    soft: "bg-slate-500/10 text-slate-700 dark:text-slate-300",
+  },
+  academics: {
+    label: "Academics",
+    Icon: GraduationCap,
+    soft: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  },
+  startups: {
+    label: "Startups",
+    Icon: Rocket,
+    soft: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  },
+} satisfies Record<
+  ActivityTypeFilter,
+  {
+    label: string;
+    Icon: typeof Layers2;
+    soft: string;
+  }
+>;
 
 function getActivityType(
   activity: ActivityWithMeta,
@@ -83,6 +111,16 @@ export default function ProgressiveActivitiesList({
       ).sort((a, b) => b - a),
     [allActivities],
   );
+
+  const activityTypeCounts = useMemo(() => {
+    return allActivities.reduce(
+      (counts, activity) => {
+        counts[getActivityType(activity)]++;
+        return counts;
+      },
+      { academics: 0, startups: 0 },
+    );
+  }, [allActivities]);
 
   const filteredActivities = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -181,126 +219,145 @@ export default function ProgressiveActivitiesList({
 
   return (
     <div className="relative flex flex-col gap-8">
-      <div className="border-border/50 bg-background/85 supports-[backdrop-filter]:bg-background/70 sticky top-16 z-30 rounded-[1.75rem] border p-3 shadow-sm backdrop-blur-2xl sm:p-4">
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-3 lg:flex-row">
-            <div className="relative min-w-0 flex-1">
-              <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input
-                type="search"
-                placeholder="Search activities..."
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                className="border-border/60 bg-background/70 h-11 rounded-2xl pl-9 text-sm shadow-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:shrink-0">
-              <div className="flex min-w-0 flex-col gap-1.5">
-                <Label
-                  htmlFor="activity-year-filter"
-                  className="text-muted-foreground px-1 text-[11px] font-medium"
-                >
-                  Year
-                </Label>
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger
-                    id="activity-year-filter"
-                    className="border-border/60 bg-background/70 h-11 rounded-2xl shadow-none lg:w-[132px]"
-                  >
-                    <CalendarDays className="text-muted-foreground mr-2 size-4 shrink-0" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Years</SelectItem>
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex min-w-0 flex-col gap-1.5">
-                <Label
-                  htmlFor="activity-sort-filter"
-                  className="text-muted-foreground px-1 text-[11px] font-medium"
-                >
-                  Sort
-                </Label>
-                <Select
-                  value={sortBy}
-                  onValueChange={(value) => setSortBy(value as ActivitySort)}
-                >
-                  <SelectTrigger
-                    id="activity-sort-filter"
-                    className="border-border/60 bg-background/70 h-11 rounded-2xl shadow-none lg:w-[150px]"
-                  >
-                    <ArrowUpDown className="text-muted-foreground mr-2 size-4 shrink-0" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="oldest">Oldest First</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="col-span-2 flex min-w-0 flex-col gap-1.5 sm:col-span-1">
-                <Label
-                  htmlFor="activity-type-filter"
-                  className="text-muted-foreground px-1 text-[11px] font-medium"
-                >
-                  Type
-                </Label>
-                <Select
-                  value={selectedType}
-                  onValueChange={(value) =>
-                    setSelectedType(value as ActivityTypeFilter)
-                  }
-                >
-                  <SelectTrigger
-                    id="activity-type-filter"
-                    className="border-border/60 bg-background/70 h-11 rounded-2xl shadow-none lg:w-[150px]"
-                  >
-                    <Layers2 className="text-muted-foreground mr-2 size-4 shrink-0" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Type</SelectItem>
-                    <SelectItem value="academics">Academics</SelectItem>
-                    <SelectItem value="startups">Startups</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex min-w-0 flex-col justify-end gap-1.5">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={resetFilters}
-                  disabled={!isFiltered}
-                  className="text-muted-foreground hover:text-foreground h-11 rounded-2xl px-3"
-                >
-                  <RotateCcw className="size-4" />
-                  <span className="sr-only sm:not-sr-only">Reset</span>
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="text-muted-foreground flex items-center justify-between gap-3 px-1 text-xs">
-            <span>
+      <section className="border-border/60 bg-background/85 supports-[backdrop-filter]:bg-background/70 z-30 rounded-2xl border p-3 shadow-sm backdrop-blur-2xl sm:p-4 lg:sticky lg:top-20">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-muted-foreground text-sm">
               {filteredActivities.length} activit
               {filteredActivities.length === 1 ? "y" : "ies"} found
-            </span>
-            <span className="hidden sm:inline">
-              All years, newest first, all type by default
-            </span>
+            </p>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={resetFilters}
+              disabled={!isFiltered}
+              className="text-muted-foreground hover:text-foreground h-10 rounded-xl px-3 sm:w-auto"
+            >
+              <RotateCcw className="size-4" />
+              <span>Reset</span>
+            </Button>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            {(["all", "academics", "startups"] as ActivityTypeFilter[]).map(
+              (type) => {
+                const config = activityTypeStyles[type];
+                const Icon = config.Icon;
+                const count =
+                  type === "all"
+                    ? allActivities.length
+                    : activityTypeCounts[type];
+
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setSelectedType(type)}
+                    className={cn(
+                      "group bg-background/75 flex min-h-[78px] items-center gap-3 rounded-xl border p-3 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm",
+                      selectedType === type
+                        ? "border-foreground/30 ring-foreground/10 ring-2"
+                        : "border-border/60 hover:border-border",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-105",
+                        config.soft,
+                      )}
+                    >
+                      <Icon className="size-5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm leading-tight font-semibold">
+                        {config.label}
+                      </span>
+                      <span className="text-muted-foreground mt-1 block text-xs">
+                        {count} item{count === 1 ? "" : "s"}
+                      </span>
+                    </span>
+                  </button>
+                );
+              },
+            )}
+          </div>
+
+          <div className="grid items-end gap-3 lg:grid-cols-[minmax(280px,1fr)_140px_160px]">
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <Label
+                htmlFor="activity-search"
+                className="text-muted-foreground px-1 text-[11px] font-medium"
+              >
+                Search
+              </Label>
+              <div className="relative min-w-0">
+                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
+                  <Search className="text-muted-foreground size-4" />
+                </span>
+                <Input
+                  id="activity-search"
+                  type="search"
+                  placeholder="Search activities..."
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  className="border-border/60 bg-background/70 h-11 rounded-xl pl-11 text-sm shadow-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <Label
+                htmlFor="activity-year-filter"
+                className="text-muted-foreground px-1 text-[11px] font-medium"
+              >
+                Year
+              </Label>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger
+                  id="activity-year-filter"
+                  className="border-border/60 bg-background/70 h-11 rounded-xl shadow-none"
+                >
+                  <CalendarDays className="text-muted-foreground mr-2 size-4 shrink-0" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  {years.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <Label
+                htmlFor="activity-sort-filter"
+                className="text-muted-foreground px-1 text-[11px] font-medium"
+              >
+                Sort
+              </Label>
+              <Select
+                value={sortBy}
+                onValueChange={(value) => setSortBy(value as ActivitySort)}
+              >
+                <SelectTrigger
+                  id="activity-sort-filter"
+                  className="border-border/60 bg-background/70 h-11 rounded-xl shadow-none"
+                >
+                  <ArrowUpDown className="text-muted-foreground mr-2 size-4 shrink-0" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <section className="relative z-10 flex flex-col gap-8">
         {filteredActivities.length === 0 ? (
@@ -314,6 +371,7 @@ export default function ProgressiveActivitiesList({
               activity={activity}
               index={index}
               initiallyVisible={index < visibleCount}
+              searchQuery={query.trim()}
             />
           ))
         )}
