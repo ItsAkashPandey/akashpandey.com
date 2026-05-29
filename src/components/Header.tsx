@@ -28,11 +28,11 @@ export default function Header() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-background/75 backdrop-blur-md border-b border-border/10">
-      <div className="mx-auto max-w-4xl px-6 sm:px-8 py-4">
+    <header className="border-border/10 bg-background/75 sticky top-0 z-50 border-b backdrop-blur-md">
+      <div className="mx-auto max-w-4xl px-6 py-4 sm:px-8">
         <nav className="flex items-center justify-between">
           {/* Desktop Navigation */}
-          <ul className="hidden md:flex gap-8">
+          <ul className="hidden gap-8 md:flex">
             {navLinks.map((nav, id) => (
               <li key={id} className="link font-medium">
                 <Link href={nav.href} title={nav.title}>
@@ -46,11 +46,15 @@ export default function Header() {
           <div className="md:hidden">
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="hover:bg-accent/50 transition-all active:scale-95">
-                  <Menu className="size-6 text-foreground/80" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-accent/50 transition-all active:scale-95"
+                >
+                  <Menu className="text-foreground/80 size-6" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-xs border-none bg-background/95 backdrop-blur-xl h-screen flex flex-col pt-20 shadow-2xl">
+              <DialogContent className="bg-background/95 flex h-screen flex-col border-none pt-20 shadow-2xl backdrop-blur-xl sm:max-w-xs">
                 <DialogHeader className="hidden">
                   <DialogTitle>Navigation</DialogTitle>
                 </DialogHeader>
@@ -60,14 +64,16 @@ export default function Header() {
                       key={id}
                       href={nav.href}
                       onClick={() => setOpen(false)}
-                      className="text-3xl font-serif tracking-tight text-foreground/90 hover:text-primary transition-all hover:translate-x-2"
+                      className="text-foreground/90 hover:text-primary font-serif text-3xl tracking-tight transition-all hover:translate-x-2"
                     >
                       {nav.name}.
                     </Link>
                   ))}
                 </nav>
-                <div className="mt-auto pb-12 px-4 border-t border-border/10 pt-8 flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">Connect</p>
+                <div className="border-border/10 mt-auto flex items-center justify-between border-t px-4 pt-8 pb-12">
+                  <p className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
+                    Connect
+                  </p>
                   <div className="flex gap-4">
                     {/* Standard toggles inside mobile menu for convenience */}
                   </div>

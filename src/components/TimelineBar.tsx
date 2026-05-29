@@ -4,368 +4,433 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 
 /* ── types ─────────────────────────────────────────────────────────── */
 
-interface TimelineEntry { id: string; date: string }
-interface Props { entries: TimelineEntry[] }
+interface TimelineEntry {
+  id: string;
+  date: string;
+}
+interface Props {
+  entries: TimelineEntry[];
+}
 
 interface MonthStop {
-    id: string;
-    month: string;
-    count: number;
-    year: number;
-    flatIdx: number;
+  id: string;
+  month: string;
+  count: number;
+  year: number;
+  flatIdx: number;
 }
 
 interface YearGroup {
-    year: number;
-    months: MonthStop[];
+  year: number;
+  months: MonthStop[];
 }
 
 /* ── data helpers ──────────────────────────────────────────────────── */
 
-function buildGroups(entries: TimelineEntry[]): { flat: MonthStop[]; groups: YearGroup[] } {
-    const flat: MonthStop[] = [];
-    let prev = "";
+function buildGroups(entries: TimelineEntry[]): {
+  flat: MonthStop[];
+  groups: YearGroup[];
+} {
+  const flat: MonthStop[] = [];
+  let prev = "";
 
-    for (const e of entries) {
-        const d = new Date(e.date);
-        const month = d.toLocaleDateString("en-US", { month: "short" });
-        const year = d.getFullYear();
-        const key = `${month}-${year}`;
+  for (const e of entries) {
+    const d = new Date(e.date);
+    const month = d.toLocaleDateString("en-US", { month: "short" });
+    const year = d.getFullYear();
+    const key = `${month}-${year}`;
 
-        if (key === prev) {
-            flat[flat.length - 1].count++;
-        } else {
-            flat.push({ id: e.id, month, year, count: 1, flatIdx: flat.length });
-            prev = key;
-        }
+    if (key === prev) {
+      flat[flat.length - 1].count++;
+    } else {
+      flat.push({ id: e.id, month, year, count: 1, flatIdx: flat.length });
+      prev = key;
     }
+  }
 
-    const map = new Map<number, MonthStop[]>();
-    for (const s of flat) {
-        if (!map.has(s.year)) map.set(s.year, []);
-        map.get(s.year)!.push(s);
-    }
+  const map = new Map<number, MonthStop[]>();
+  for (const s of flat) {
+    if (!map.has(s.year)) map.set(s.year, []);
+    map.get(s.year)!.push(s);
+  }
 
-    const groups: YearGroup[] = [];
-    for (const [year, months] of map) {
-        groups.push({ year, months });
-    }
+  const groups: YearGroup[] = [];
+  for (const [year, months] of map) {
+    groups.push({ year, months });
+  }
 
-    return { flat, groups };
+  return { flat, groups };
 }
 
 /* ── component ─────────────────────────────────────────────────────── */
 
 export default function TimelineBar({ entries }: Props) {
-    const { flat, groups } = useMemo(() => buildGroups(entries), [entries]);
-    const N = flat.length;
+  const { flat, groups } = useMemo(() => buildGroups(entries), [entries]);
+  const N = flat.length;
+  const isCompact = N <= 8;
+  const compactHeight = Math.max(
+    150,
+    Math.min(420, groups.length * 34 + N * 36),
+  );
 
-    /* refs for DOM-direct updates (zero React re-renders during scroll) */
-    const rootRef = useRef<HTMLDivElement>(null);
-    const pillRef = useRef<HTMLDivElement>(null);
-    const monthRefs = useRef<(HTMLButtonElement | null)[]>([]);
-    const yearRefs = useRef<(HTMLDivElement | null)[]>([]);
-    const dotRefs = useRef<(HTMLDivElement | null)[]>([]);
-    const isDragging = useRef(false);
-    const rafId = useRef(0);
-    const cardTops = useRef<number[]>([]);
-    const prevActive = useRef(-1);
-    const prevYearIdx = useRef(-1);
-    const suppressClick = useRef(false);
-    const lastMeasureAt = useRef(0);
+  /* refs for DOM-direct updates (zero React re-renders during scroll) */
+  const rootRef = useRef<HTMLDivElement>(null);
+  const pillRef = useRef<HTMLDivElement>(null);
+  const monthRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const yearRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const dotRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const isDragging = useRef(false);
+  const rafId = useRef(0);
+  const cardTops = useRef<number[]>([]);
+  const prevActive = useRef(-1);
+  const prevYearIdx = useRef(-1);
+  const suppressClick = useRef(false);
+  const lastMeasureAt = useRef(0);
 
-    /* Smooth lerp state for pill */
-    const currentPillY = useRef(0);
-    const targetPillY = useRef(0);
-    const lerpRafId = useRef(0);
-    const lerpRunning = useRef(false);
+  /* Smooth lerp state for pill */
+  const currentPillY = useRef(0);
+  const targetPillY = useRef(0);
+  const lerpRafId = useRef(0);
+  const lerpRunning = useRef(false);
 
-    /* ── measure card positions ── */
-    const measureCards = useCallback((force = false) => {
-        const now = performance.now();
-        if (!force && now - lastMeasureAt.current < 120) return;
-        lastMeasureAt.current = now;
+  /* ── measure card positions ── */
+  const measureCards = useCallback(
+    (force = false) => {
+      const now = performance.now();
+      if (!force && now - lastMeasureAt.current < 120) return;
+      lastMeasureAt.current = now;
 
-        const nextTops = flat.map((s, index) => {
-            const el = document.getElementById(s.id);
-            if (!el) return cardTops.current[index] ?? 0;
-            return el.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.28;
-        });
+      const nextTops = flat.map((s, index) => {
+        const el = document.getElementById(s.id);
+        if (!el) return cardTops.current[index] ?? 0;
+        return (
+          el.getBoundingClientRect().top +
+          window.scrollY -
+          window.innerHeight * 0.28
+        );
+      });
 
-        cardTops.current = nextTops.every((top) => top === 0) ? cardTops.current : nextTops;
-    }, [flat]);
+      cardTops.current = nextTops.every((top) => top === 0)
+        ? cardTops.current
+        : nextTops;
+    },
+    [flat],
+  );
 
-    /* ── float index from scrollY ── */
-    const getFloat = useCallback((scrollY: number) => {
-        const t = cardTops.current;
-        if (N <= 1) return 0;
-        if (scrollY <= t[0]) return 0;
-        if (scrollY >= t[N - 1]) return N - 1;
+  /* ── float index from scrollY ── */
+  const getFloat = useCallback(
+    (scrollY: number) => {
+      const t = cardTops.current;
+      if (N <= 1) return 0;
+      if (scrollY <= t[0]) return 0;
+      if (scrollY >= t[N - 1]) return N - 1;
 
-        let lo = 0;
-        let hi = N - 1;
-        while (lo < hi - 1) {
-            const mid = Math.floor((lo + hi) / 2);
-            if (scrollY >= t[mid]) lo = mid;
-            else hi = mid;
-        }
+      let lo = 0;
+      let hi = N - 1;
+      while (lo < hi - 1) {
+        const mid = Math.floor((lo + hi) / 2);
+        if (scrollY >= t[mid]) lo = mid;
+        else hi = mid;
+      }
 
-        const i = lo;
-        const range = t[i + 1] - t[i];
-        return i + (range > 0 ? Math.max(0, Math.min(1, (scrollY - t[i]) / range)) : 0);
-    }, [N]);
+      const i = lo;
+      const range = t[i + 1] - t[i];
+      return (
+        i + (range > 0 ? Math.max(0, Math.min(1, (scrollY - t[i]) / range)) : 0)
+      );
+    },
+    [N],
+  );
 
-    /* ── get pill Y from float index using actual button positions ── */
-    const getPillY = useCallback((floatIdx: number): number => {
-        const btns = monthRefs.current;
-        if (N === 0) return 0;
-        if (N === 1) {
-            const btn = btns[0];
-            if (!btn || !rootRef.current) return 0;
-            const rRect = rootRef.current.getBoundingClientRect();
-            const bRect = btn.getBoundingClientRect();
-            return (bRect.top - rRect.top) + bRect.height / 2;
-        }
-
-        const clamped = Math.max(0, Math.min(N - 1, floatIdx));
-        const lo = Math.floor(clamped);
-        const hi = Math.min(lo + 1, N - 1);
-        const frac = clamped - lo;
-
-        const btnLo = btns[lo];
-        const btnHi = btns[hi];
-        if (!btnLo || !btnHi || !rootRef.current) return 0;
-
+  /* ── get pill Y from float index using actual button positions ── */
+  const getPillY = useCallback(
+    (floatIdx: number): number => {
+      const btns = monthRefs.current;
+      if (N === 0) return 0;
+      if (N === 1) {
+        const btn = btns[0];
+        if (!btn || !rootRef.current) return 0;
         const rRect = rootRef.current.getBoundingClientRect();
-        const loRect = btnLo.getBoundingClientRect();
-        const hiRect = btnHi.getBoundingClientRect();
+        const bRect = btn.getBoundingClientRect();
+        return bRect.top - rRect.top + bRect.height / 2;
+      }
 
-        const yLo = (loRect.top - rRect.top) + loRect.height / 2;
-        const yHi = (hiRect.top - rRect.top) + hiRect.height / 2;
-        return yLo + frac * (yHi - yLo);
-    }, [N]);
+      const clamped = Math.max(0, Math.min(N - 1, floatIdx));
+      const lo = Math.floor(clamped);
+      const hi = Math.min(lo + 1, N - 1);
+      const frac = clamped - lo;
 
-    /* ── lerp animation loop for buttery-smooth pill ── */
-    const startLerp = useCallback(() => {
-        if (lerpRunning.current) return;
-        lerpRunning.current = true;
+      const btnLo = btns[lo];
+      const btnHi = btns[hi];
+      if (!btnLo || !btnHi || !rootRef.current) return 0;
 
-        const tick = () => {
-            const diff = targetPillY.current - currentPillY.current;
-            // Lerp factor — higher = more responsive
-            const factor = 0.22;
+      const rRect = rootRef.current.getBoundingClientRect();
+      const loRect = btnLo.getBoundingClientRect();
+      const hiRect = btnHi.getBoundingClientRect();
 
-            if (Math.abs(diff) < 0.3) {
-                // Snap when close enough
-                currentPillY.current = targetPillY.current;
-                if (pillRef.current) {
-                    pillRef.current.style.transform = `translateY(${currentPillY.current}px) translateY(-50%)`;
-                }
-                lerpRunning.current = false;
-                return;
-            }
+      const yLo = loRect.top - rRect.top + loRect.height / 2;
+      const yHi = hiRect.top - rRect.top + hiRect.height / 2;
+      return yLo + frac * (yHi - yLo);
+    },
+    [N],
+  );
 
-            currentPillY.current += diff * factor;
-            if (pillRef.current) {
-                pillRef.current.style.transform = `translateY(${currentPillY.current}px) translateY(-50%)`;
-            }
+  /* ── lerp animation loop for buttery-smooth pill ── */
+  const startLerp = useCallback(() => {
+    if (lerpRunning.current) return;
+    lerpRunning.current = true;
 
-            lerpRafId.current = requestAnimationFrame(tick);
-        };
+    const tick = () => {
+      const diff = targetPillY.current - currentPillY.current;
+      // Lerp factor — higher = more responsive
+      const factor = 0.22;
 
-        lerpRafId.current = requestAnimationFrame(tick);
-    }, []);
-
-    /* ── apply visuals directly to DOM ── */
-    const applyVisuals = useCallback((floatIdx: number) => {
-        if (!pillRef.current || N === 0) return;
-
-        // Always update pill target position (fixes stuck pill on scroll direction change)
-        const newPillY = getPillY(floatIdx);
-        targetPillY.current = newPillY;
-
-        // Always ensure lerp is running when target changes
-        if (!lerpRunning.current && Math.abs(newPillY - currentPillY.current) > 0.3) {
-            startLerp();
-        } else if (lerpRunning.current) {
-            // Lerp is already running, it'll pick up the new target
-        } else {
-            startLerp();
+      if (Math.abs(diff) < 0.3) {
+        // Snap when close enough
+        currentPillY.current = targetPillY.current;
+        if (pillRef.current) {
+          pillRef.current.style.transform = `translateY(${currentPillY.current}px) translateY(-50%)`;
         }
+        lerpRunning.current = false;
+        return;
+      }
 
-        const activeIdx = Math.max(0, Math.min(N - 1, Math.floor(floatIdx + 0.08)));
-        const activeYear = flat[activeIdx]?.year ?? 0;
-        const activeYearGroupIdx = groups.findIndex(g => g.year === activeYear);
+      currentPillY.current += diff * factor;
+      if (pillRef.current) {
+        pillRef.current.style.transform = `translateY(${currentPillY.current}px) translateY(-50%)`;
+      }
 
-        // Update month labels + dots (always update to avoid stuck states)
-        if (activeIdx !== prevActive.current) {
-            prevActive.current = activeIdx;
-            for (let i = 0; i < N; i++) {
-                const btn = monthRefs.current[i];
-                const dot = dotRefs.current[i];
-                if (!btn || !dot) continue;
-                const isActive = i === activeIdx;
-                btn.dataset.state = isActive ? "active" : "idle";
-                dot.dataset.state = isActive ? "active" : "idle";
-            }
+      lerpRafId.current = requestAnimationFrame(tick);
+    };
+
+    lerpRafId.current = requestAnimationFrame(tick);
+  }, []);
+
+  /* ── apply visuals directly to DOM ── */
+  const applyVisuals = useCallback(
+    (floatIdx: number) => {
+      if (!pillRef.current || N === 0) return;
+
+      // Always update pill target position (fixes stuck pill on scroll direction change)
+      const newPillY = getPillY(floatIdx);
+      targetPillY.current = newPillY;
+
+      // Always ensure lerp is running when target changes
+      if (
+        !lerpRunning.current &&
+        Math.abs(newPillY - currentPillY.current) > 0.3
+      ) {
+        startLerp();
+      } else if (lerpRunning.current) {
+        // Lerp is already running, it'll pick up the new target
+      } else {
+        startLerp();
+      }
+
+      const activeIdx = Math.max(
+        0,
+        Math.min(N - 1, Math.floor(floatIdx + 0.08)),
+      );
+      const activeYear = flat[activeIdx]?.year ?? 0;
+      const activeYearGroupIdx = groups.findIndex((g) => g.year === activeYear);
+
+      // Update month labels + dots (always update to avoid stuck states)
+      if (activeIdx !== prevActive.current) {
+        prevActive.current = activeIdx;
+        for (let i = 0; i < N; i++) {
+          const btn = monthRefs.current[i];
+          const dot = dotRefs.current[i];
+          if (!btn || !dot) continue;
+          const isActive = i === activeIdx;
+          btn.dataset.state = isActive ? "active" : "idle";
+          dot.dataset.state = isActive ? "active" : "idle";
         }
+      }
 
-        // Update year group focus
-        if (activeYearGroupIdx !== prevYearIdx.current) {
-            prevYearIdx.current = activeYearGroupIdx;
-            for (let g = 0; g < groups.length; g++) {
-                const el = yearRefs.current[g];
-                if (!el) continue;
-                el.dataset.focus = g === activeYearGroupIdx ? "true" : "false";
-            }
+      // Update year group focus
+      if (activeYearGroupIdx !== prevYearIdx.current) {
+        prevYearIdx.current = activeYearGroupIdx;
+        for (let g = 0; g < groups.length; g++) {
+          const el = yearRefs.current[g];
+          if (!el) continue;
+          el.dataset.focus = g === activeYearGroupIdx ? "true" : "false";
         }
-    }, [N, flat, groups, getPillY, startLerp]);
+      }
+    },
+    [N, flat, groups, getPillY, startLerp],
+  );
 
-    /* ── scroll listener (rAF-throttled) ── */
-    useEffect(() => {
-        measureCards(true);
+  /* ── scroll listener (rAF-throttled) ── */
+  useEffect(() => {
+    measureCards(true);
 
-        const onResize = () => {
-            measureCards(true);
-            // Re-apply visuals after remeasure to fix stuck pill
-            requestAnimationFrame(() => {
-                const f = getFloat(window.scrollY);
-                applyVisuals(f);
-            });
-        };
+    const onResize = () => {
+      measureCards(true);
+      // Re-apply visuals after remeasure to fix stuck pill
+      requestAnimationFrame(() => {
+        const f = getFloat(window.scrollY);
+        applyVisuals(f);
+      });
+    };
 
-        window.addEventListener("resize", onResize);
-        window.addEventListener("timeline-measure", onResize);
+    window.addEventListener("resize", onResize);
+    window.addEventListener("timeline-measure", onResize);
 
-        const resizeObserver = new ResizeObserver(() => onResize());
-        flat.forEach((stop) => {
-            const el = document.getElementById(stop.id);
-            if (el) resizeObserver.observe(el);
-        });
+    const resizeObserver = new ResizeObserver(() => onResize());
+    flat.forEach((stop) => {
+      const el = document.getElementById(stop.id);
+      if (el) resizeObserver.observe(el);
+    });
 
-        const onScroll = () => {
-            if (isDragging.current) return;
-            cancelAnimationFrame(rafId.current);
-            rafId.current = requestAnimationFrame(() => {
-                measureCards();
-                applyVisuals(getFloat(window.scrollY));
-            });
-        };
+    const onScroll = () => {
+      if (isDragging.current) return;
+      cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(() => {
+        measureCards();
+        applyVisuals(getFloat(window.scrollY));
+      });
+    };
 
-        window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
 
-        // Initial paint (immediate + delayed for images)
-        requestAnimationFrame(() => {
-            const f = getFloat(window.scrollY);
-            // Set initial pill position instantly (no lerp for first paint)
-            const initialY = getPillY(f);
-            currentPillY.current = initialY;
-            targetPillY.current = initialY;
-            if (pillRef.current) {
-                pillRef.current.style.transform = `translateY(${initialY}px) translateY(-50%)`;
-            }
-            applyVisuals(f);
-        });
-        const t = setTimeout(() => {
-            measureCards(true);
-            const f = getFloat(window.scrollY);
-            applyVisuals(f);
-        }, 600);
+    // Initial paint (immediate + delayed for images)
+    requestAnimationFrame(() => {
+      const f = getFloat(window.scrollY);
+      // Set initial pill position instantly (no lerp for first paint)
+      const initialY = getPillY(f);
+      currentPillY.current = initialY;
+      targetPillY.current = initialY;
+      if (pillRef.current) {
+        pillRef.current.style.transform = `translateY(${initialY}px) translateY(-50%)`;
+      }
+      applyVisuals(f);
+    });
+    const t = setTimeout(() => {
+      measureCards(true);
+      const f = getFloat(window.scrollY);
+      applyVisuals(f);
+    }, 600);
 
-        return () => {
-            window.removeEventListener("scroll", onScroll);
-            window.removeEventListener("resize", onResize);
-            window.removeEventListener("timeline-measure", onResize);
-            resizeObserver.disconnect();
-            clearTimeout(t);
-            cancelAnimationFrame(rafId.current);
-            cancelAnimationFrame(lerpRafId.current);
-        };
-    }, [measureCards, getFloat, applyVisuals, getPillY]);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("timeline-measure", onResize);
+      resizeObserver.disconnect();
+      clearTimeout(t);
+      cancelAnimationFrame(rafId.current);
+      cancelAnimationFrame(lerpRafId.current);
+    };
+  }, [measureCards, getFloat, applyVisuals, getPillY]);
 
-    /* ── pointer / drag ── */
-    const getIdxFromY = useCallback((clientY: number): number => {
-        const btns = monthRefs.current;
-        if (!rootRef.current || !btns[0] || !btns[N - 1]) return 0;
+  /* ── pointer / drag ── */
+  const getIdxFromY = useCallback(
+    (clientY: number): number => {
+      const btns = monthRefs.current;
+      if (!rootRef.current || !btns[0] || !btns[N - 1]) return 0;
 
-        const rootRect = rootRef.current.getBoundingClientRect();
-        const firstRect = btns[0]!.getBoundingClientRect();
-        const lastRect = btns[N - 1]!.getBoundingClientRect();
+      const rootRect = rootRef.current.getBoundingClientRect();
+      const firstRect = btns[0]!.getBoundingClientRect();
+      const lastRect = btns[N - 1]!.getBoundingClientRect();
 
-        const topPx = (firstRect.top - rootRect.top) + firstRect.height / 2;
-        const botPx = (lastRect.top - rootRect.top) + lastRect.height / 2;
+      const topPx = firstRect.top - rootRect.top + firstRect.height / 2;
+      const botPx = lastRect.top - rootRect.top + lastRect.height / 2;
 
-        const localY = clientY - rootRect.top;
-        if (botPx === topPx) return 0;
-        const t = Math.max(0, Math.min(1, (localY - topPx) / (botPx - topPx)));
-        return t * (N - 1);
-    }, [N]);
+      const localY = clientY - rootRect.top;
+      if (botPx === topPx) return 0;
+      const t = Math.max(0, Math.min(1, (localY - topPx) / (botPx - topPx)));
+      return t * (N - 1);
+    },
+    [N],
+  );
 
-    const scrollToFloat = useCallback((fIdx: number) => {
-        const t = cardTops.current;
-        if (N <= 1) { window.scrollTo({ top: t[0] ?? 0, behavior: "auto" }); return; }
-        const i = Math.floor(Math.min(fIdx, N - 2));
-        const frac = fIdx - i;
-        window.scrollTo({ top: t[i] + frac * ((t[i + 1] ?? t[i]) - t[i]), behavior: "auto" });
-    }, [N]);
+  const scrollToFloat = useCallback(
+    (fIdx: number) => {
+      const t = cardTops.current;
+      if (N <= 1) {
+        window.scrollTo({ top: t[0] ?? 0, behavior: "auto" });
+        return;
+      }
+      const i = Math.floor(Math.min(fIdx, N - 2));
+      const frac = fIdx - i;
+      window.scrollTo({
+        top: t[i] + frac * ((t[i + 1] ?? t[i]) - t[i]),
+        behavior: "auto",
+      });
+    },
+    [N],
+  );
 
-    const dragStartY = useRef(0);
+  const dragStartY = useRef(0);
 
-    const onPointerDown = useCallback((e: React.PointerEvent) => {
-        if ((e.target as HTMLElement).closest("button")) return;
-        e.preventDefault();
-        (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-        isDragging.current = true;
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      e.preventDefault();
+      rootRef.current?.setPointerCapture?.(e.pointerId);
+      isDragging.current = true;
+      suppressClick.current = false;
+      dragStartY.current = e.clientY;
+      measureCards(true);
+      const idx = getIdxFromY(e.clientY);
+      scrollToFloat(idx);
+      applyVisuals(idx);
+    },
+    [measureCards, getIdxFromY, scrollToFloat, applyVisuals],
+  );
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isDragging.current) return;
+      e.preventDefault();
+      if (Math.abs(e.clientY - dragStartY.current) > 4) {
+        suppressClick.current = true;
+      }
+      const idx = getIdxFromY(e.clientY);
+      scrollToFloat(idx);
+      applyVisuals(idx);
+    },
+    [getIdxFromY, scrollToFloat, applyVisuals],
+  );
+
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      if (!isDragging.current) return;
+      rootRef.current?.releasePointerCapture?.(e.pointerId);
+      isDragging.current = false;
+      // After drag ends, re-sync from current scroll position
+      requestAnimationFrame(() => {
+        measureCards();
+        applyVisuals(getFloat(window.scrollY));
+      });
+    },
+    [measureCards, getFloat, applyVisuals],
+  );
+
+  const handleClick = useCallback(
+    (id: string) => {
+      if (suppressClick.current) {
         suppressClick.current = false;
-        dragStartY.current = e.clientY;
+        return;
+      }
+      const el = document.getElementById(id);
+      if (el) {
         measureCards(true);
-        const idx = getIdxFromY(e.clientY);
-        scrollToFloat(idx);
-        applyVisuals(idx);
-    }, [measureCards, getIdxFromY, scrollToFloat, applyVisuals]);
-
-    const onPointerMove = useCallback((e: React.PointerEvent) => {
-        if (!isDragging.current) return;
-        e.preventDefault();
-        if (Math.abs(e.clientY - dragStartY.current) > 4) {
-            suppressClick.current = true;
-        }
-        const idx = getIdxFromY(e.clientY);
-        scrollToFloat(idx);
-        applyVisuals(idx);
-    }, [getIdxFromY, scrollToFloat, applyVisuals]);
-
-    const onPointerUp = useCallback((e: React.PointerEvent) => {
-        if (!isDragging.current) return;
-        (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
-        isDragging.current = false;
-        // After drag ends, re-sync from current scroll position
-        requestAnimationFrame(() => {
-            measureCards();
-            applyVisuals(getFloat(window.scrollY));
+        window.scrollTo({
+          top:
+            el.getBoundingClientRect().top +
+            window.scrollY -
+            window.innerHeight * 0.28,
+          behavior: "smooth",
         });
-    }, [measureCards, getFloat, applyVisuals]);
+      }
+    },
+    [measureCards],
+  );
 
-    const handleClick = useCallback((id: string) => {
-        if (suppressClick.current) {
-            suppressClick.current = false;
-            return;
-        }
-        const el = document.getElementById(id);
-        if (el) {
-            measureCards(true);
-            window.scrollTo({
-                top: el.getBoundingClientRect().top + window.scrollY - window.innerHeight * 0.28,
-                behavior: "smooth",
-            });
-        }
-    }, [measureCards]);
+  if (N === 0) return null;
 
-    if (N === 0) return null;
-
-    return (
-        <>
-            <style>{`
+  return (
+    <>
+      <style>{`
         /* ── Aesthetic Glass UI ── */
         .tl-root {
           --tl-fg: #1d1d1f;
@@ -438,105 +503,129 @@ export default function TimelineBar({ entries }: Props) {
         .tl-year-group[data-focus="false"] { opacity: 0.35; }
       `}</style>
 
+      <div
+        ref={rootRef}
+        className="tl-root fixed top-28 right-4 z-20 hidden cursor-grab touch-none flex-col items-end select-none active:cursor-grabbing lg:flex"
+        style={{
+          width: 210,
+          height: isCompact ? compactHeight : "calc(100vh - 200px)",
+          minHeight: isCompact ? compactHeight : 400,
+          maxHeight: "calc(100vh - 200px)",
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
+        {/* ── Sliding glass pill highlight ── */}
+        <div
+          ref={pillRef}
+          className="pointer-events-none absolute"
+          style={{
+            right: 8,
+            width: 150,
+            height: 34,
+            background: "var(--tl-pill-bg)",
+            backdropFilter: "blur(var(--tl-backdrop-blur)) saturate(1.8)",
+            WebkitBackdropFilter: "blur(var(--tl-backdrop-blur)) saturate(1.8)",
+            border: "1px solid var(--tl-pill-border)",
+            borderRadius: 12,
+            boxShadow: "var(--tl-pill-shadow)",
+            willChange: "transform",
+          }}
+        />
+
+        {/* ── Year-grouped items (grid style) ── */}
+        <div className="relative flex h-full w-full flex-col justify-between py-5">
+          {groups.map((g, gi) => (
             <div
-                ref={rootRef}
-                className="tl-root fixed right-4 top-24 z-50 hidden lg:flex flex-col items-end select-none touch-none cursor-grab active:cursor-grabbing"
-                style={{
-                    width: 160,
-                    height: "calc(100vh - 200px)",
-                    minHeight: 400,
-                    maxHeight: "calc(100vh - 200px)",
-                }}
-                onPointerDown={onPointerDown}
-                onPointerMove={onPointerMove}
-                onPointerUp={onPointerUp}
-                onPointerCancel={onPointerUp}
+              key={g.year}
+              ref={(el) => {
+                yearRefs.current[gi] = el;
+              }}
+              className="tl-year-group tl-ease flex min-h-0 flex-col"
+              style={{ flexGrow: g.months.length || 1 }}
+              data-focus="true"
             >
-                {/* ── Sliding glass pill highlight ── */}
+              {/* Year header */}
+              <div
+                className="flex items-center justify-end pr-4"
+                style={{ gap: 10 }}
+              >
+                <span
+                  className="tl-ease"
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase" as const,
+                    color: "var(--tl-year)",
+                  }}
+                >
+                  {g.year}
+                </span>
                 <div
-                    ref={pillRef}
-                    className="absolute pointer-events-none"
-                    style={{
-                        right: 4,
-                        width: 120,
-                        height: 32,
-                        background: "var(--tl-pill-bg)",
-                        backdropFilter: "blur(var(--tl-backdrop-blur)) saturate(1.8)",
-                        WebkitBackdropFilter: "blur(var(--tl-backdrop-blur)) saturate(1.8)",
-                        border: "1px solid var(--tl-pill-border)",
-                        borderRadius: 12,
-                        boxShadow: "var(--tl-pill-shadow)",
-                        willChange: "transform",
-                    }}
+                  style={{
+                    width: "28px",
+                    height: 1,
+                    background: "var(--tl-separator)",
+                  }}
                 />
+              </div>
 
-                {/* ── Year-grouped items (grid style) ── */}
-                <div className="relative flex flex-col justify-between h-full w-full py-5">
-                    {groups.map((g, gi) => (
-                        <div
-                            key={g.year}
-                            ref={(el) => { yearRefs.current[gi] = el; }}
-                            className="tl-year-group tl-ease flex flex-col min-h-0"
-                            style={{ flexGrow: g.months.length || 1 }}
-                            data-focus="true"
-                        >
-                            {/* Year header */}
-                            <div className="flex items-center justify-end pr-3" style={{ gap: 8 }}>
-                                <span
-                                    className="tl-ease"
-                                    style={{
-                                        fontSize: 12,
-                                        fontWeight: 600,
-                                        letterSpacing: "0.1em",
-                                        textTransform: "uppercase" as const,
-                                        color: "var(--tl-year)",
-                                    }}
-                                >
-                                    {g.year}
-                                </span>
-                                <div style={{ width: "20px", height: 1, background: "var(--tl-separator)" }} />
-                            </div>
+              {/* Month entries */}
+              <div className="flex min-h-0 flex-1 flex-col justify-evenly overflow-hidden">
+                {g.months.map((m) => (
+                  <button
+                    key={m.id}
+                    ref={(el) => {
+                      monthRefs.current[m.flatIdx] = el;
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleClick(m.id);
+                    }}
+                    className="tl-month tl-ease relative flex cursor-pointer items-center justify-end pr-3"
+                    data-state="idle"
+                    style={{
+                      fontSize: "max(10px, min(1.2vh, 13px))",
+                      lineHeight: 1,
+                      padding:
+                        "max(2px, min(0.6vh, 8px)) 18px max(2px, min(0.6vh, 8px)) 0",
+                      gap: 10,
+                      background: "none",
+                      border: "none",
+                      minHeight: 0,
+                    }}
+                  >
+                    {/* Month label */}
+                    <span
+                      className="whitespace-nowrap"
+                      style={{ fontFamily: "inherit" }}
+                    >
+                      {m.month}
+                    </span>
 
-                            {/* Month entries */}
-                            <div className="flex flex-col flex-1 justify-evenly overflow-hidden min-h-0">
-                                {g.months.map((m) => (
-                                    <button
-                                        key={m.id}
-                                        ref={(el) => { monthRefs.current[m.flatIdx] = el; }}
-                                        onClick={(e) => { e.stopPropagation(); handleClick(m.id); }}
-                                        className="tl-month tl-ease relative flex items-center justify-end pr-3 cursor-pointer"
-                                        data-state="idle"
-                                        style={{
-                                            fontSize: "max(10px, min(1.2vh, 13px))",
-                                            lineHeight: 1,
-                                            padding: "max(2px, min(0.6vh, 8px)) 14px max(2px, min(0.6vh, 8px)) 0",
-                                            gap: 8,
-                                            background: "none",
-                                            border: "none",
-                                            minHeight: 0,
-                                        }}
-                                    >
-                                        {/* Month label */}
-                                        <span className="whitespace-nowrap" style={{ fontFamily: "inherit" }}>
-                                            {m.month}
-                                        </span>
+                    {/* Dot */}
+                    <div
+                      ref={(el) => {
+                        dotRefs.current[m.flatIdx] = el;
+                      }}
+                      className="tl-dot tl-ease shrink-0 rounded-full"
+                      data-state="idle"
+                    />
+                  </button>
+                ))}
+              </div>
 
-                                        {/* Dot */}
-                                        <div
-                                            ref={(el) => { dotRefs.current[m.flatIdx] = el; }}
-                                            className="tl-dot tl-ease rounded-full shrink-0"
-                                            data-state="idle"
-                                        />
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* Separator between year groups */}
-                            {gi < groups.length - 1 && <div className="shrink-0" style={{ height: "1vh" }} />}
-                        </div>
-                    ))}
-                </div>
+              {/* Separator between year groups */}
+              {gi < groups.length - 1 && (
+                <div className="shrink-0" style={{ height: "1vh" }} />
+              )}
             </div>
-        </>
-    );
+          ))}
+        </div>
+      </div>
+    </>
+  );
 }

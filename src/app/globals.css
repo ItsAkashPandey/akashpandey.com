@@ -83,7 +83,7 @@
 
   html,
   body {
-    @apply overflow-x-hidden max-w-full;
+    @apply max-w-full overflow-x-hidden;
   }
 
   body {
@@ -96,8 +96,11 @@
   body::before {
     content: "";
     @apply pointer-events-none fixed inset-0 z-[-1] opacity-20;
-    background-image:
-      radial-gradient(circle at 2px 2px, hsl(var(--primary) / 0.03) 1px, transparent 0);
+    background-image: radial-gradient(
+      circle at 2px 2px,
+      hsl(var(--primary) / 0.03) 1px,
+      transparent 0
+    );
     background-size: 48px 48px;
   }
 
@@ -112,15 +115,15 @@
   }
 
   .title {
-    @apply font-serif text-5xl sm:text-6xl tracking-tight decoration-border/75 decoration-2;
+    @apply decoration-border/75 font-serif text-5xl tracking-tight decoration-2 sm:text-6xl;
   }
 
   .link {
-    @apply text-muted-foreground transition-colors hover:text-foreground;
+    @apply text-muted-foreground hover:text-foreground transition-colors;
   }
 
   .prose pre {
-    @apply overflow-x-auto rounded-lg bg-accent px-5 py-4 text-sm;
+    @apply bg-accent overflow-x-auto rounded-lg px-5 py-4 text-sm;
   }
 
   .prose pre code {
@@ -136,12 +139,11 @@
   }
 
   .input-error {
-    @apply ml-1 mt-2 text-sm text-rose-400;
+    @apply mt-2 ml-1 text-sm text-rose-400;
   }
 }
 
 @layer components {
-
   /* Minimal prose customizations - let typography plugin handle most styling */
   .prose {
     /* Use your design system colors */
