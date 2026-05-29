@@ -8,8 +8,6 @@ import {
   BookOpen,
   CalendarDays,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   ClipboardList,
   Clock3,
   ExternalLink,
@@ -31,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { HighlightText } from "@/components/HighlightedText";
-import ImageWithSkeleton from "@/components/ImageWithSkeleton";
+import StackedImageDeck from "@/components/StackedImageDeck";
 import { cn } from "@/lib/utils";
 
 interface PublicationMedia {
@@ -443,7 +441,7 @@ function PublicationCard({
       <div
         className={cn(
           "grid gap-0",
-          hasMedia && "md:grid-cols-[minmax(0,1fr)_250px]",
+          hasMedia && "md:grid-cols-[minmax(0,1fr)_320px]",
         )}
       >
         <div className="flex min-w-0 flex-col gap-5 p-5 pl-6 sm:p-6 sm:pl-8">
@@ -552,93 +550,29 @@ function PublicationCard({
 }
 
 function PublicationMediaPreview({ media }: { media: PublicationMedia[] }) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const activeMedia = media[activeIndex] ?? media[0];
-  const targetHref = activeMedia.fullImage || activeMedia.image;
-
-  const showPrevious = () => {
-    setActiveIndex((current) => (current - 1 + media.length) % media.length);
-  };
-
-  const showNext = () => {
-    setActiveIndex((current) => (current + 1) % media.length);
+  const openVisual = (index: number) => {
+    const item = media[index];
+    if (!item) return;
+    window.open(item.fullImage || item.image, "_blank", "noopener,noreferrer");
   };
 
   return (
-    <aside className="border-border/50 bg-muted/20 flex min-h-[230px] flex-col border-t md:border-t-0 md:border-l">
-      <Link
-        href={targetHref}
-        target="_blank"
-        rel="noreferrer"
-        className="group/media relative flex min-h-[230px] flex-1 items-center justify-center overflow-hidden bg-white"
-        title="Open full visual"
-      >
-        <div
-          aria-hidden
-          className="absolute inset-0 opacity-80"
-          style={{
-            backgroundImage:
-              "linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)",
-            backgroundSize: "18px 18px",
-          }}
-        />
-        <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 p-3">
-          <span className="rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-sm backdrop-blur">
-            {activeMedia.label}
-          </span>
-        </div>
-        <ImageWithSkeleton
-          key={activeMedia.image}
-          src={activeMedia.image}
-          alt={activeMedia.alt}
-          width={900}
-          height={680}
-          sizes="(max-width: 1024px) calc(100vw - 3rem), 260px"
-          quality={85}
-          containerClassName="relative z-[1] h-full min-h-[230px] w-full"
-          className="h-full w-full object-contain p-3 transition-transform duration-500 ease-out group-hover/media:scale-[1.015]"
-          loading="lazy"
-        />
-      </Link>
-
-      {media.length > 1 && (
-        <div className="border-border/50 bg-background/85 flex items-center justify-between gap-2 border-t px-3 py-2">
-          <button
-            type="button"
-            onClick={showPrevious}
-            className="text-muted-foreground hover:bg-muted hover:text-foreground flex size-8 items-center justify-center rounded-full transition-colors"
-            aria-label="Previous publication visual"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-
-          <div className="flex min-w-0 items-center gap-1.5">
-            {media.map((item, itemIndex) => (
-              <button
-                key={item.image}
-                type="button"
-                onClick={() => setActiveIndex(itemIndex)}
-                className={cn(
-                  "h-1.5 rounded-full transition-all duration-300",
-                  itemIndex === activeIndex
-                    ? "bg-foreground w-5"
-                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-1.5",
-                )}
-                aria-label={`Show ${item.label}`}
-              />
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={showNext}
-            className="text-muted-foreground hover:bg-muted hover:text-foreground flex size-8 items-center justify-center rounded-full transition-colors"
-            aria-label="Next publication visual"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-        </div>
-      )}
+    <aside className="border-border/50 bg-muted/15 flex min-h-[290px] items-center justify-center overflow-visible border-t p-5 md:border-t-0 md:border-l">
+      <StackedImageDeck
+        images={media.map((item) => item.image)}
+        labels={media.map((item) => item.label)}
+        alt={media[0]?.alt ?? "Publication visual"}
+        imageWidth={900}
+        imageHeight={680}
+        sizes="(max-width: 1024px) calc(100vw - 3rem), 300px"
+        quality={85}
+        idleQuality={80}
+        stackSize={Math.min(3, media.length)}
+        className="h-[250px] w-full max-w-[280px] rounded-xl"
+        cardClassName="p-1.5"
+        imageClassName="object-contain"
+        onImageClick={openVisual}
+      />
     </aside>
   );
 }

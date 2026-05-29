@@ -2,26 +2,33 @@
 
 import { cn } from "@/lib/utils";
 import Image, { type ImageProps } from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Skeleton } from "./ui/skeleton";
 import { ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type ImageWithSkeletonProps = Omit<ImageProps, "onLoadingComplete"> & {
   containerClassName?: string;
+  initialLoaded?: boolean;
   skeletonClassName?: string;
 };
 
 export default function ImageWithSkeleton({
   alt,
   containerClassName,
+  initialLoaded = false,
   skeletonClassName,
   className,
   onLoad,
   onError,
+  src,
   ...props
 }: ImageWithSkeletonProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(initialLoaded);
+
+  useEffect(() => {
+    setIsLoaded(initialLoaded);
+  }, [initialLoaded, src]);
 
   return (
     <div className={cn("relative overflow-hidden", containerClassName)}>
@@ -55,6 +62,7 @@ export default function ImageWithSkeleton({
       >
         <Image
           alt={alt}
+          src={src}
           {...props}
           decoding={props.decoding ?? "async"}
           className={cn("relative z-0", className)}
