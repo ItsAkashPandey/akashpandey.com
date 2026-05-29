@@ -38,13 +38,11 @@ export default function ActivitySwipeCards({
         idleQuality={70}
         priority={priority}
         showCounter
-        gridBackground
         className={cn(
           "h-[200px] w-full max-w-[280px] rounded-xl sm:h-[220px] sm:max-w-[300px]",
           className,
         )}
-        cardClassName="p-2"
-        imageClassName="object-contain"
+        imageClassName="object-cover"
         onImageClick={openLightbox}
       />
 

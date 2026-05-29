@@ -1,12 +1,16 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { RefreshCw } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  animate,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+} from "framer-motion";
+import type { MotionValue, PanInfo } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ImageWithSkeleton from "./ImageWithSkeleton";
-
-type DeckPhase = "idle" | "dragging" | "settling";
 
 interface StackedImageDeckProps {
   images: string[];
@@ -21,21 +25,25 @@ interface StackedImageDeckProps {
   quality?: number;
   idleQuality?: number;
   showCounter?: boolean;
+  labels?: string[];
   gridBackground?: boolean;
   stackSize?: number;
   onImageClick?: (index: number) => void;
 }
 
-const SWIPE_THRESHOLD = 88;
-const MAX_DRAG = 168;
-const SETTLE_MS = 210;
+const SWIPE_THRESHOLD = 86;
+const DRAG_LIMIT = 170;
+const EXIT_DISTANCE = 430;
+
+const SPRING = {
+  type: "spring",
+  stiffness: 460,
+  damping: 42,
+  mass: 0.72,
+} as const;
 
 function wrapIndex(index: number, length: number) {
   return ((index % length) + length) % length;
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
 }
 
 export default function StackedImageDeck({
@@ -51,215 +59,482 @@ export default function StackedImageDeck({
   quality = 75,
   idleQuality = 70,
   showCounter = false,
+  labels,
   gridBackground = false,
   stackSize = 3,
   onImageClick,
 }: StackedImageDeckProps) {
   const [cursor, setCursor] = useState(0);
-  const [dragX, setDragX] = useState(0);
-  const [phase, setPhase] = useState<DeckPhase>("idle");
-  const [previewDirection, setPreviewDirection] = useState<1 | -1>(1);
-  const startXRef = useRef(0);
-  const pointerIdRef = useRef<number | null>(null);
-  const didDragRef = useRef(false);
-  const settleTimerRef = useRef<number | null>(null);
+  const [phase, setPhase] = useState<"idle" | "dragging" | "settling">("idle");
+  const [, setLoadedVersion] = useState(0);
+  const loadedImagesRef = useRef(new Set<string>());
+  const activeAnimationRef = useRef<ReturnType<typeof animate> | null>(null);
+  const x = useMotionValue(0);
+  const shouldReduceMotion = useReducedMotion();
+
+  const markLoaded = useCallback((src: string) => {
+    if (loadedImagesRef.current.has(src)) return;
+    loadedImagesRef.current.add(src);
+    setLoadedVersion((version) => version + 1);
+  }, []);
+
+  useEffect(() => {
+    if (!images.length) return;
+
+    const preloadOffsets = [0, 1, -1, 2];
+    const urls = Array.from(
+      new Set(
+        preloadOffsets.map(
+          (offset) => images[wrapIndex(cursor + offset, images.length)],
+        ),
+      ),
+    );
+    let cancelled = false;
+
+    urls.forEach((src) => {
+      if (loadedImagesRef.current.has(src)) return;
+      const image = new window.Image();
+      image.decoding = "async";
+      image.onload = () => {
+        if (!cancelled) markLoaded(src);
+      };
+      image.onerror = () => {
+        if (!cancelled) markLoaded(src);
+      };
+      image.src = src;
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cursor, images, markLoaded]);
 
   useEffect(() => {
     return () => {
-      if (settleTimerRef.current) {
-        window.clearTimeout(settleTimerRef.current);
-      }
+      activeAnimationRef.current?.stop();
     };
   }, []);
 
-  const visibleCards = useMemo(() => {
-    if (images.length === 0) return [];
+  const nextCards = useMemo(() => {
+    if (images.length <= 1) return [];
 
-    const visibleCount = Math.min(stackSize, images.length);
-    return Array.from({ length: visibleCount }, (_, offset) => {
-      const index = wrapIndex(
-        cursor + previewDirection * offset,
-        images.length,
-      );
-      return { index, url: images[index], offset };
-    }).reverse();
-  }, [cursor, images, previewDirection, stackSize]);
-
-  const reset = () => {
-    setCursor(0);
-    setDragX(0);
-    setPhase("idle");
-    setPreviewDirection(1);
-  };
-
-  const completeSwipe = (direction: 1 | -1) => {
-    setPreviewDirection(direction);
-    setPhase("settling");
-    setDragX(direction * 420);
-
-    if (settleTimerRef.current) {
-      window.clearTimeout(settleTimerRef.current);
-    }
-
-    settleTimerRef.current = window.setTimeout(() => {
-      setCursor((value) => wrapIndex(value + direction, images.length));
-      setDragX(0);
-      setPhase("idle");
-    }, SETTLE_MS);
-  };
-
-  const snapBack = () => {
-    setPhase("settling");
-    setDragX(0);
-
-    if (settleTimerRef.current) {
-      window.clearTimeout(settleTimerRef.current);
-    }
-
-    settleTimerRef.current = window.setTimeout(() => {
-      setPhase("idle");
-    }, SETTLE_MS);
-  };
-
-  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (images.length <= 1 || phase === "settling") return;
-
-    pointerIdRef.current = event.pointerId;
-    startXRef.current = event.clientX;
-    didDragRef.current = false;
-    setPhase("dragging");
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (pointerIdRef.current !== event.pointerId || phase === "settling") {
-      return;
-    }
-
-    const nextDragX = clamp(
-      event.clientX - startXRef.current,
-      -MAX_DRAG,
-      MAX_DRAG,
+    const visibleCount = Math.min(
+      Math.max(stackSize - 1, 1),
+      images.length - 1,
     );
-    if (Math.abs(nextDragX) > 4) {
-      didDragRef.current = true;
-      setPreviewDirection(nextDragX >= 0 ? 1 : -1);
-    }
-    setDragX(nextDragX);
+
+    return Array.from({ length: visibleCount }, (_, offset) => {
+      const depth = offset + 1;
+      const index = wrapIndex(cursor + depth, images.length);
+      return { depth, index, src: images[index] };
+    }).reverse();
+  }, [cursor, images, stackSize]);
+
+  const previousCard = useMemo(() => {
+    if (images.length <= 1) return null;
+    const index = wrapIndex(cursor - 1, images.length);
+    return { depth: 1, index, src: images[index] };
+  }, [cursor, images]);
+
+  const frontRotate = useTransform(x, [-DRAG_LIMIT, 0, DRAG_LIMIT], [-7, 0, 7]);
+  const frontScale = useTransform(
+    x,
+    [-DRAG_LIMIT, 0, DRAG_LIMIT],
+    [0.965, 1, 0.965],
+  );
+  const frontOpacity = useTransform(
+    x,
+    [-EXIT_DISTANCE, -SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD, EXIT_DISTANCE],
+    [0, 0.95, 1, 0.95, 0],
+  );
+
+  const currentLabel = labels?.[cursor];
+  const currentSrc = images[cursor];
+  const knownLoaded = Boolean(
+    currentSrc && loadedImagesRef.current.has(currentSrc),
+  );
+  const animationOptions = shouldReduceMotion
+    ? ({ duration: 0.12 } as const)
+    : SPRING;
+
+  const settleToCenter = useCallback(() => {
+    activeAnimationRef.current?.stop();
+    activeAnimationRef.current = animate(x, 0, animationOptions);
+    void activeAnimationRef.current.then(() => setPhase("idle"));
+  }, [animationOptions, x]);
+
+  const completeSwipe = useCallback(
+    (direction: 1 | -1, velocity: number) => {
+      activeAnimationRef.current?.stop();
+      setPhase("settling");
+
+      activeAnimationRef.current = animate(
+        x,
+        direction * EXIT_DISTANCE,
+        shouldReduceMotion
+          ? { duration: 0.12 }
+          : {
+              ...SPRING,
+              velocity,
+            },
+      );
+
+      void activeAnimationRef.current.then(() => {
+        setCursor((value) => wrapIndex(value + direction, images.length));
+        x.set(0);
+        setPhase("idle");
+      });
+    },
+    [images.length, shouldReduceMotion, x],
+  );
+
+  const handleDragStart = () => {
+    if (phase === "settling") return;
+    activeAnimationRef.current?.stop();
+    setPhase("dragging");
   };
 
-  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (pointerIdRef.current !== event.pointerId || phase === "settling") {
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo,
+  ) => {
+    if (phase === "settling") return;
+
+    const finalX = x.get();
+    const hasSwipeIntent =
+      Math.abs(finalX) >= SWIPE_THRESHOLD || Math.abs(info.velocity.x) > 620;
+
+    if (hasSwipeIntent && images.length > 1) {
+      completeSwipe(finalX >= 0 ? 1 : -1, info.velocity.x);
       return;
     }
 
-    pointerIdRef.current = null;
-    event.currentTarget.releasePointerCapture(event.pointerId);
-
-    if (Math.abs(dragX) >= SWIPE_THRESHOLD) {
-      completeSwipe(dragX > 0 ? 1 : -1);
-      return;
-    }
-
-    if (!didDragRef.current) {
-      onImageClick?.(cursor);
-      setPhase("idle");
-      return;
-    }
-
-    snapBack();
+    settleToCenter();
   };
 
-  const handlePointerCancel = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (pointerIdRef.current === event.pointerId) {
-      pointerIdRef.current = null;
-      snapBack();
-    }
+  const openCurrentImage = () => {
+    if (phase !== "idle") return;
+    onImageClick?.(cursor);
   };
 
-  const progress = Math.min(Math.abs(dragX) / SWIPE_THRESHOLD, 1);
-  const activeDirection = dragX === 0 ? previewDirection : dragX > 0 ? 1 : -1;
+  if (images.length === 0) {
+    return (
+      <div className={cn("grid place-items-center", className)}>
+        <div className="border-border/60 bg-muted/30 text-muted-foreground rounded-2xl border border-dashed px-4 py-6 text-center text-xs">
+          No images
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
+      data-stacked-deck
       className={cn(
         "relative grid place-items-center overflow-visible",
         className,
       )}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
     >
-      {images.length === 0 && (
-        <div style={{ gridRow: 1, gridColumn: 1 }} className="z-20">
-          <Button onClick={reset} variant="outline">
-            <RefreshCw className="size-4" />
-            Again
-          </Button>
-        </div>
+      {nextCards.map((card) => (
+        <NextLayerCard
+          key={`next-${card.depth}-${card.index}`}
+          cardClassName={cardClassName}
+          depth={card.depth}
+          dragX={x}
+          gridBackground={gridBackground}
+          idleQuality={idleQuality}
+          imageClassName={imageClassName}
+          imageHeight={imageHeight}
+          imageWidth={imageWidth}
+          isLoaded={loadedImagesRef.current.has(card.src)}
+          markLoaded={markLoaded}
+          sizes={sizes}
+          src={card.src}
+        />
+      ))}
+
+      {previousCard && (
+        <PreviousLayerCard
+          key={`previous-${previousCard.index}`}
+          cardClassName={cardClassName}
+          dragX={x}
+          gridBackground={gridBackground}
+          idleQuality={idleQuality}
+          imageClassName={imageClassName}
+          imageHeight={imageHeight}
+          imageWidth={imageWidth}
+          isLoaded={loadedImagesRef.current.has(previousCard.src)}
+          markLoaded={markLoaded}
+          sizes={sizes}
+          src={previousCard.src}
+        />
       )}
 
-      {visibleCards.map((card) => {
-        const isFront = card.offset === 0;
-        const depth = card.offset;
-        const transform = isFront
-          ? `translate3d(${dragX}px, 0, 0) rotate(${dragX * 0.045}deg) scale(${1 - progress * 0.018})`
-          : `translate3d(${-activeDirection * depth * 10}px, ${depth * 10 - progress * depth * 4}px, 0) rotate(${activeDirection * depth * -3.4}deg) scale(${Math.min(0.98, 0.93 - depth * 0.045 + progress * 0.055)})`;
-        const opacity = isFront
-          ? Math.max(
-              0.12,
-              1 - Math.max(0, Math.abs(dragX) - SWIPE_THRESHOLD) / 250,
-            )
-          : Math.max(0.5, 0.9 - depth * 0.16 + progress * 0.08);
+      <motion.div
+        data-deck-card="front"
+        data-deck-index={cursor}
+        key={`front-${cursor}`}
+        drag={images.length > 1 && phase !== "settling" ? "x" : false}
+        dragConstraints={{ left: -DRAG_LIMIT, right: DRAG_LIMIT }}
+        dragElastic={0.18}
+        dragMomentum={false}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onTap={openCurrentImage}
+        className={cn(
+          "absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.18)] will-change-transform",
+          "cursor-grab touch-pan-y active:cursor-grabbing",
+          cardClassName,
+        )}
+        style={{
+          x,
+          rotate: frontRotate,
+          scale: frontScale,
+          opacity: frontOpacity,
+          zIndex: 30,
+          backgroundImage: gridBackground
+            ? "linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)"
+            : undefined,
+          backgroundSize: gridBackground ? "20px 20px" : undefined,
+        }}
+      >
+        <DeckImage
+          alt={alt}
+          imageClassName={imageClassName}
+          imageHeight={imageHeight}
+          imageWidth={imageWidth}
+          isLoaded={knownLoaded}
+          loading={priority ? "eager" : "lazy"}
+          markLoaded={markLoaded}
+          priority={priority}
+          quality={quality}
+          sizes={sizes}
+          src={currentSrc}
+        />
+      </motion.div>
 
-        return (
-          <div
-            key={`${card.index}-${card.offset}-${previewDirection}`}
-            className={cn(
-              "absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.18)] will-change-transform",
-              isFront
-                ? "z-30 cursor-grab touch-pan-y active:cursor-grabbing"
-                : "pointer-events-none",
-              cardClassName,
-            )}
-            style={{
-              opacity,
-              transform,
-              zIndex: isFront ? 30 : 30 - depth,
-              transition:
-                phase === "dragging"
-                  ? "none"
-                  : "transform 210ms cubic-bezier(0.22, 1, 0.36, 1), opacity 170ms ease-out",
-              backgroundImage: gridBackground
-                ? "linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)"
-                : undefined,
-              backgroundSize: gridBackground ? "20px 20px" : undefined,
-            }}
-          >
-            <ImageWithSkeleton
-              src={card.url}
-              alt={isFront ? alt : ""}
-              width={imageWidth}
-              height={imageHeight}
-              sizes={sizes}
-              quality={isFront ? quality : idleQuality}
-              draggable={false}
-              containerClassName="h-full w-full pointer-events-none"
-              className={cn("h-full w-full select-none", imageClassName)}
-              fetchPriority={priority && isFront ? "high" : "low"}
-              loading={priority && isFront ? "eager" : "lazy"}
-              priority={priority && isFront}
-            />
-          </div>
-        );
-      })}
-
-      {showCounter && images.length > 1 && (
-        <div className="pointer-events-none absolute right-2 bottom-2 z-40 rounded-full bg-black/45 px-2 py-1 text-[10px] font-semibold text-white/90 backdrop-blur-md">
-          {cursor + 1}/{images.length}
+      {(currentLabel || (showCounter && images.length > 1)) && (
+        <div className="pointer-events-none absolute right-2 bottom-2 left-2 z-40 flex items-center justify-between gap-2">
+          {currentLabel && (
+            <span className="truncate rounded-full bg-black/45 px-2 py-1 text-[10px] font-semibold text-white/90 backdrop-blur-md">
+              {currentLabel}
+            </span>
+          )}
+          {showCounter && images.length > 1 && (
+            <span className="ml-auto rounded-full bg-black/45 px-2 py-1 text-[10px] font-semibold text-white/90 backdrop-blur-md">
+              {cursor + 1}/{images.length}
+            </span>
+          )}
         </div>
       )}
     </div>
+  );
+}
+
+function NextLayerCard({
+  cardClassName,
+  depth,
+  dragX,
+  gridBackground,
+  idleQuality,
+  imageClassName,
+  imageHeight,
+  imageWidth,
+  isLoaded,
+  markLoaded,
+  sizes,
+  src,
+}: {
+  cardClassName?: string;
+  depth: number;
+  dragX: MotionValue<number>;
+  gridBackground: boolean;
+  idleQuality: number;
+  imageClassName?: string;
+  imageHeight: number;
+  imageWidth: number;
+  isLoaded: boolean;
+  markLoaded: (src: string) => void;
+  sizes: string;
+  src: string;
+}) {
+  const x = useTransform(
+    dragX,
+    [0, SWIPE_THRESHOLD],
+    [-depth * 10, -Math.max(depth - 1, 0) * 8],
+  );
+  const y = useTransform(
+    dragX,
+    [0, SWIPE_THRESHOLD],
+    [depth * 10, Math.max(depth - 1, 0) * 8],
+  );
+  const rotate = useTransform(
+    dragX,
+    [0, SWIPE_THRESHOLD],
+    [-depth * 3.2, -Math.max(depth - 1, 0) * 2.4],
+  );
+  const scale = useTransform(
+    dragX,
+    [0, SWIPE_THRESHOLD],
+    [0.92 - depth * 0.035, 0.96 - depth * 0.018],
+  );
+  const opacity = useTransform(
+    dragX,
+    [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD],
+    [0.12, 0.88 - depth * 0.13, 0.96 - depth * 0.07],
+  );
+
+  return (
+    <motion.div
+      data-deck-card="next"
+      className={cn(
+        "pointer-events-none absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] will-change-transform",
+        cardClassName,
+      )}
+      style={{
+        x,
+        y,
+        rotate,
+        scale,
+        opacity,
+        zIndex: 20 - depth,
+        backgroundImage: gridBackground
+          ? "linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)"
+          : undefined,
+        backgroundSize: gridBackground ? "20px 20px" : undefined,
+      }}
+    >
+      <DeckImage
+        alt=""
+        imageClassName={imageClassName}
+        imageHeight={imageHeight}
+        imageWidth={imageWidth}
+        isLoaded={isLoaded}
+        loading="lazy"
+        markLoaded={markLoaded}
+        priority={false}
+        quality={idleQuality}
+        sizes={sizes}
+        src={src}
+      />
+    </motion.div>
+  );
+}
+
+function PreviousLayerCard({
+  cardClassName,
+  dragX,
+  gridBackground,
+  idleQuality,
+  imageClassName,
+  imageHeight,
+  imageWidth,
+  isLoaded,
+  markLoaded,
+  sizes,
+  src,
+}: {
+  cardClassName?: string;
+  dragX: MotionValue<number>;
+  gridBackground: boolean;
+  idleQuality: number;
+  imageClassName?: string;
+  imageHeight: number;
+  imageWidth: number;
+  isLoaded: boolean;
+  markLoaded: (src: string) => void;
+  sizes: string;
+  src: string;
+}) {
+  const x = useTransform(dragX, [-SWIPE_THRESHOLD, 0], [0, 10]);
+  const y = useTransform(dragX, [-SWIPE_THRESHOLD, 0], [4, 10]);
+  const rotate = useTransform(dragX, [-SWIPE_THRESHOLD, 0], [1.2, 3.2]);
+  const scale = useTransform(dragX, [-SWIPE_THRESHOLD, 0], [0.97, 0.92]);
+  const opacity = useTransform(
+    dragX,
+    [-SWIPE_THRESHOLD, -12, 0, SWIPE_THRESHOLD],
+    [0.94, 0.45, 0.02, 0.02],
+  );
+
+  return (
+    <motion.div
+      data-deck-card="previous"
+      className={cn(
+        "pointer-events-none absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] will-change-transform",
+        cardClassName,
+      )}
+      style={{
+        x,
+        y,
+        rotate,
+        scale,
+        opacity,
+        zIndex: 26,
+        backgroundImage: gridBackground
+          ? "linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)"
+          : undefined,
+        backgroundSize: gridBackground ? "20px 20px" : undefined,
+      }}
+    >
+      <DeckImage
+        alt=""
+        imageClassName={imageClassName}
+        imageHeight={imageHeight}
+        imageWidth={imageWidth}
+        isLoaded={isLoaded}
+        loading="lazy"
+        markLoaded={markLoaded}
+        priority={false}
+        quality={idleQuality}
+        sizes={sizes}
+        src={src}
+      />
+    </motion.div>
+  );
+}
+
+function DeckImage({
+  alt,
+  imageClassName,
+  imageHeight,
+  imageWidth,
+  isLoaded,
+  loading,
+  markLoaded,
+  priority,
+  quality,
+  sizes,
+  src,
+}: {
+  alt: string;
+  imageClassName?: string;
+  imageHeight: number;
+  imageWidth: number;
+  isLoaded: boolean;
+  loading: "eager" | "lazy";
+  markLoaded: (src: string) => void;
+  priority: boolean;
+  quality: number;
+  sizes: string;
+  src: string;
+}) {
+  return (
+    <ImageWithSkeleton
+      src={src}
+      alt={alt}
+      width={imageWidth}
+      height={imageHeight}
+      sizes={sizes}
+      quality={quality}
+      draggable={false}
+      containerClassName="pointer-events-none h-full w-full"
+      className={cn("h-full w-full select-none", imageClassName)}
+      fetchPriority={priority ? "high" : "low"}
+      initialLoaded={isLoaded}
+      loading={loading}
+      priority={priority}
+      onLoad={() => markLoaded(src)}
+      onError={() => markLoaded(src)}
+    />
   );
 }
