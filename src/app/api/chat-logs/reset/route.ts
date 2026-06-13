@@ -4,19 +4,14 @@ export const revalidate = 0;
 
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getAdminCookieName, verifyAdminSessionCookieValue } from "@/lib/admin-auth";
+import {
+  getAdminCookieName,
+  getAdminSessionSecret,
+  verifyAdminSessionCookieValue,
+} from "@/lib/admin-auth";
 
 async function requireAdminSession(): Promise<NextResponse | null> {
-  const secret = process.env.ADMIN_SESSION_SECRET;
-  if (!secret) {
-    return NextResponse.json(
-      {
-        error: "Admin auth is not configured",
-        hint: "Set ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_SESSION_SECRET in .env.local",
-      },
-      { status: 500 },
-    );
-  }
+  const secret = getAdminSessionSecret();
 
   const cookieStore = await cookies();
   const session = cookieStore.get(getAdminCookieName())?.value;
@@ -79,7 +74,8 @@ export async function POST() {
     { ok: true },
     {
       headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Cache-Control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
         Pragma: "no-cache",
         Expires: "0",
       },

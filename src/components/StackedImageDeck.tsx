@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  isBrowserImageCached,
+  markBrowserImageLoaded,
+  preloadBrowserImage,
+} from "@/lib/browser-image-cache";
 import { cn } from "@/lib/utils";
 import {
   animate,
@@ -10,7 +15,6 @@ import {
 } from "framer-motion";
 import type { MotionValue, PanInfo } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ImageWithSkeleton from "./ImageWithSkeleton";
 
 interface StackedImageDeckProps {
   images: string[];
@@ -69,10 +73,12 @@ export default function StackedImageDeck({
   const [, setLoadedVersion] = useState(0);
   const loadedImagesRef = useRef(new Set<string>());
   const activeAnimationRef = useRef<ReturnType<typeof animate> | null>(null);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const x = useMotionValue(0);
   const shouldReduceMotion = useReducedMotion();
 
   const markLoaded = useCallback((src: string) => {
+    markBrowserImageLoaded(src);
     if (loadedImagesRef.current.has(src)) return;
     loadedImagesRef.current.add(src);
     setLoadedVersion((version) => version + 1);
@@ -81,33 +87,41 @@ export default function StackedImageDeck({
   useEffect(() => {
     if (!images.length) return;
 
-    const preloadOffsets = [0, 1, -1, 2];
-    const urls = Array.from(
+    const nearUrls = Array.from(
       new Set(
-        preloadOffsets.map(
+        [0, 1, -1, 2, -2].map(
           (offset) => images[wrapIndex(cursor + offset, images.length)],
         ),
       ),
     );
+    const restUrls = images.filter((src) => !nearUrls.includes(src));
     let cancelled = false;
 
-    urls.forEach((src) => {
-      if (loadedImagesRef.current.has(src)) return;
-      const image = new window.Image();
-      image.decoding = "async";
-      image.onload = () => {
+    const warm = (src: string) => {
+      preloadBrowserImage(src).then(() => {
         if (!cancelled) markLoaded(src);
-      };
-      image.onerror = () => {
-        if (!cancelled) markLoaded(src);
-      };
-      image.src = src;
-    });
+      });
+    };
+
+    nearUrls.forEach(warm);
+
+    const timeoutId = window.setTimeout(() => {
+      restUrls.forEach(warm);
+    }, 180);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timeoutId);
     };
   }, [cursor, images, markLoaded]);
+
+  useEffect(() => {
+    images.forEach((src) => {
+      if (isBrowserImageCached(src)) {
+        markLoaded(src);
+      }
+    });
+  }, [images, markLoaded]);
 
   useEffect(() => {
     return () => {
@@ -151,7 +165,9 @@ export default function StackedImageDeck({
   const currentLabel = labels?.[cursor];
   const currentSrc = images[cursor];
   const knownLoaded = Boolean(
-    currentSrc && loadedImagesRef.current.has(currentSrc),
+    currentSrc &&
+    (loadedImagesRef.current.has(currentSrc) ||
+      isBrowserImageCached(currentSrc)),
   );
   const animationOptions = shouldReduceMotion
     ? ({ duration: 0.12 } as const)
@@ -217,6 +233,22 @@ export default function StackedImageDeck({
     onImageClick?.(cursor);
   };
 
+  const handlePointerDownCapture = (event: React.PointerEvent) => {
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+  };
+
+  const handlePointerUpCapture = (event: React.PointerEvent) => {
+    const start = pointerStartRef.current;
+    pointerStartRef.current = null;
+    if (!start || phase !== "idle") return;
+
+    const dx = Math.abs(event.clientX - start.x);
+    const dy = Math.abs(event.clientY - start.y);
+    if (dx <= 6 && dy <= 6) {
+      openCurrentImage();
+    }
+  };
+
   if (images.length === 0) {
     return (
       <div className={cn("grid place-items-center", className)}>
@@ -280,9 +312,21 @@ export default function StackedImageDeck({
         dragMomentum={false}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onPointerDownCapture={handlePointerDownCapture}
+        onPointerUpCapture={handlePointerUpCapture}
+        onClick={openCurrentImage}
         onTap={openCurrentImage}
+        role="button"
+        tabIndex={0}
+        aria-label={`Open ${alt}`}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openCurrentImage();
+          }
+        }}
         className={cn(
-          "absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.18)] will-change-transform",
+          "absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-zinc-200 shadow-[0_18px_45px_rgba(15,23,42,0.18)] will-change-transform dark:border-white/10 dark:bg-zinc-900",
           "cursor-grab touch-pan-y active:cursor-grabbing",
           cardClassName,
         )}
@@ -388,7 +432,7 @@ function NextLayerCard({
     <motion.div
       data-deck-card="next"
       className={cn(
-        "pointer-events-none absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] will-change-transform",
+        "pointer-events-none absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-zinc-200 shadow-[0_18px_45px_rgba(15,23,42,0.16)] will-change-transform dark:border-white/10 dark:bg-zinc-900",
         cardClassName,
       )}
       style={{
@@ -460,7 +504,7 @@ function PreviousLayerCard({
     <motion.div
       data-deck-card="previous"
       className={cn(
-        "pointer-events-none absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] will-change-transform",
+        "pointer-events-none absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-zinc-200 shadow-[0_18px_45px_rgba(15,23,42,0.16)] will-change-transform dark:border-white/10 dark:bg-zinc-900",
         cardClassName,
       )}
       style={{
@@ -519,22 +563,26 @@ function DeckImage({
   src: string;
 }) {
   return (
-    <ImageWithSkeleton
+    <img
       src={src}
       alt={alt}
       width={imageWidth}
       height={imageHeight}
       sizes={sizes}
-      quality={quality}
       draggable={false}
-      containerClassName="pointer-events-none h-full w-full"
-      className={cn("h-full w-full select-none", imageClassName)}
+      data-loaded={isLoaded ? "true" : "false"}
+      className={cn(
+        "pointer-events-none h-full w-full bg-zinc-200 select-none dark:bg-zinc-900",
+        imageClassName,
+      )}
       fetchPriority={priority ? "high" : "low"}
-      initialLoaded={isLoaded}
       loading={loading}
-      priority={priority}
       onLoad={() => markLoaded(src)}
       onError={() => markLoaded(src)}
+      decoding="async"
+      style={{
+        imageOrientation: "from-image",
+      }}
     />
   );
 }
