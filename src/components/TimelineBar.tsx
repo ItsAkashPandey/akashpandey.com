@@ -86,6 +86,7 @@ export default function TimelineBar({ entries }: Props) {
   const prevYearIdx = useRef(-1);
   const suppressClick = useRef(false);
   const lastMeasureAt = useRef(0);
+  const measureRetryCount = useRef(0);
 
   /* Smooth lerp state for pill */
   const currentPillY = useRef(0);
@@ -100,9 +101,11 @@ export default function TimelineBar({ entries }: Props) {
       if (!force && now - lastMeasureAt.current < 120) return;
       lastMeasureAt.current = now;
 
+      let foundCount = 0;
       const nextTops = flat.map((s, index) => {
         const el = document.getElementById(s.id);
         if (!el) return cardTops.current[index] ?? 0;
+        foundCount++;
         return (
           el.getBoundingClientRect().top +
           window.scrollY -
@@ -110,9 +113,10 @@ export default function TimelineBar({ entries }: Props) {
         );
       });
 
-      cardTops.current = nextTops.every((top) => top === 0)
-        ? cardTops.current
-        : nextTops;
+      cardTops.current =
+        foundCount === 0 || nextTops.every((top) => top === 0)
+          ? cardTops.current
+          : nextTops;
     },
     [flat],
   );
@@ -122,6 +126,7 @@ export default function TimelineBar({ entries }: Props) {
     (scrollY: number) => {
       const t = cardTops.current;
       if (N <= 1) return 0;
+      if (t.length < N || t.some((top) => !Number.isFinite(top))) return 0;
       if (scrollY <= t[0]) return 0;
       if (scrollY >= t[N - 1]) return N - 1;
 
@@ -218,6 +223,18 @@ export default function TimelineBar({ entries }: Props) {
       const activeYear = flat[activeIdx]?.year ?? 0;
       const activeYearGroupIdx = groups.findIndex((g) => g.year === activeYear);
       const newPillY = getPillY(activeIdx);
+
+      if (
+        newPillY === 0 &&
+        monthRefs.current[activeIdx] &&
+        measureRetryCount.current < 4
+      ) {
+        measureRetryCount.current += 1;
+        requestAnimationFrame(() => applyVisuals(floatIdx));
+      } else {
+        measureRetryCount.current = 0;
+      }
+
       targetPillY.current = newPillY;
 
       if (
@@ -299,6 +316,12 @@ export default function TimelineBar({ entries }: Props) {
         pillRef.current.style.transform = `translateY(${initialY}px) translateY(-50%)`;
       }
       applyVisuals(f);
+    });
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        measureCards(true);
+        applyVisuals(getFloat(window.scrollY));
+      });
     });
     const t = setTimeout(() => {
       measureCards(true);
@@ -540,7 +563,7 @@ export default function TimelineBar({ entries }: Props) {
               }}
               className="tl-year-group tl-ease flex min-h-0 flex-col"
               style={{ flexGrow: g.months.length || 1 }}
-              data-focus="true"
+              data-focus={gi === 0 ? "true" : "false"}
             >
               {/* Year header */}
               <div
@@ -581,7 +604,7 @@ export default function TimelineBar({ entries }: Props) {
                       handleClick(m.id);
                     }}
                     className="tl-month tl-ease relative flex cursor-pointer items-center justify-end pr-3"
-                    data-state="idle"
+                    data-state={m.flatIdx === 0 ? "active" : "idle"}
                     style={{
                       fontSize: "max(10px, min(1.2vh, 13px))",
                       lineHeight: 1,
@@ -607,7 +630,7 @@ export default function TimelineBar({ entries }: Props) {
                         dotRefs.current[m.flatIdx] = el;
                       }}
                       className="tl-dot tl-ease shrink-0 rounded-full"
-                      data-state="idle"
+                      data-state={m.flatIdx === 0 ? "active" : "idle"}
                     />
                   </button>
                 ))}

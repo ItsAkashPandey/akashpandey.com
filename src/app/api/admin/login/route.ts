@@ -1,7 +1,13 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { createAdminSessionCookieValue, getAdminCookieName } from "@/lib/admin-auth";
+import {
+  createAdminSessionCookieValue,
+  getAdminCookieName,
+  getAdminUsername,
+  getAdminSessionSecret,
+  verifyAdminCredentials,
+} from "@/lib/admin-auth";
 
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
 
@@ -38,30 +44,25 @@ export async function POST(req: Request) {
       password?: string;
     };
 
-    const expectedUsername = process.env.ADMIN_USERNAME;
-    const expectedPassword = process.env.ADMIN_PASSWORD;
-    const sessionSecret = process.env.ADMIN_SESSION_SECRET;
-
-    if (!expectedUsername || !expectedPassword || !sessionSecret) {
+    if (!username || !password) {
       return NextResponse.json(
-        {
-          error: "Admin auth is not configured",
-          hint: "Set ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_SESSION_SECRET in .env.local",
-        },
-        { status: 500 },
+        { error: "Missing username or password" },
+        { status: 400 },
       );
     }
 
-    if (!username || !password) {
-      return NextResponse.json({ error: "Missing username or password" }, { status: 400 });
-    }
-
-    if (username !== expectedUsername || password !== expectedPassword) {
-      return NextResponse.json({ error: "Invalid username or password" }, { status: 401 });
+    if (!verifyAdminCredentials(username, password)) {
+      return NextResponse.json(
+        { error: "Invalid username or password" },
+        { status: 401 },
+      );
     }
 
     const cookieName = getAdminCookieName();
-    const cookieValue = createAdminSessionCookieValue(username, sessionSecret);
+    const cookieValue = createAdminSessionCookieValue(
+      getAdminUsername(),
+      getAdminSessionSecret(),
+    );
 
     const res = NextResponse.json({ ok: true });
     res.cookies.set(cookieName, cookieValue, {

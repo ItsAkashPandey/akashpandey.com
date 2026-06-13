@@ -1,16 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import {
-  motion,
+  isBrowserImageCached,
+  markBrowserImageLoaded,
+  preloadBrowserImage,
+} from "@/lib/browser-image-cache";
+import { cn } from "@/lib/utils";
+import {
   AnimatePresence,
   animate,
+  motion,
   useMotionValue,
-  useTransform,
 } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import ImageWithSkeleton from "./ImageWithSkeleton";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ImageLightboxProps {
   images: string[];
@@ -20,12 +24,18 @@ interface ImageLightboxProps {
   imageClassName?: string;
 }
 
-const LIGHTBOX_IMAGE_WIDTH = 1200;
-const LIGHTBOX_IMAGE_QUALITY = 85;
+function wrapIndex(index: number, length: number) {
+  return ((index % length) + length) % length;
+}
 
-function getOptimizedImageSrc(src: string) {
-  if (/\.(svg|gif)$/i.test(src)) return src;
-  return `/_next/image?url=${encodeURIComponent(src)}&w=${LIGHTBOX_IMAGE_WIDTH}&q=${LIGHTBOX_IMAGE_QUALITY}`;
+function getVisibleIndexes(currentIndex: number, total: number) {
+  if (total <= 1) return [currentIndex];
+  const indexes = [
+    wrapIndex(currentIndex - 1, total),
+    currentIndex,
+    wrapIndex(currentIndex + 1, total),
+  ];
+  return Array.from(new Set(indexes));
 }
 
 export default function ImageLightbox({
@@ -35,15 +45,15 @@ export default function ImageLightbox({
   onNavigate,
   imageClassName = "",
 }: ImageLightboxProps) {
-  const directionRef = useRef(0);
-  const preloadedImagesRef = useRef(new Set<string>());
-  const [, setPreloadVersion] = useState(0);
-
-  // ── Drag state — on the outer wrapper, separate from transitions ──
+  const directionRef = useRef(1);
   const dragX = useMotionValue(0);
-  const dragOpacity = useTransform(dragX, [-300, 0, 300], [0.5, 1, 0.5]);
-  const dragStartRef = useRef<number | null>(null);
-  const didDragRef = useRef(false);
+  const [, setLoadedVersion] = useState(0);
+  const clickStartPosRef = useRef<{ x: number; y: number } | null>(null);
+
+  const markLoaded = useCallback((src: string) => {
+    markBrowserImageLoaded(src);
+    setLoadedVersion((version) => version + 1);
+  }, []);
 
   const goNext = useCallback(() => {
     directionRef.current = 1;
@@ -64,361 +74,293 @@ export default function ImageLightbox({
     [currentIndex, onNavigate],
   );
 
-  const markPreloaded = useCallback((src: string) => {
-    if (preloadedImagesRef.current.has(src)) return;
-    preloadedImagesRef.current.add(src);
-    setPreloadVersion((version) => version + 1);
-  }, []);
-
-  // Keyboard
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") goNext();
-      if (e.key === "ArrowLeft") goPrev();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+      if (event.key === "ArrowRight" && images.length > 1) goNext();
+      if (event.key === "ArrowLeft" && images.length > 1) goPrev();
     };
+
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [onClose, goNext, goPrev]);
+  }, [goNext, goPrev, images.length, onClose]);
 
-  // ── Preload the active image and nearby optimized images ──
   useEffect(() => {
     if (!images.length) return;
 
-    for (const offset of [0, -1, 1, -2, 2]) {
-      const idx = (currentIndex + offset + images.length) % images.length;
-      const src = images[idx];
-      if (!src || preloadedImagesRef.current.has(src)) continue;
-      const img = new Image();
-      img.decoding = "async";
-      img.onload = () => markPreloaded(src);
-      img.onerror = () => markPreloaded(src);
-      img.src = getOptimizedImageSrc(src);
+    const nearIndexes = [0, -1, 1, -2, 2].map((offset) =>
+      wrapIndex(currentIndex + offset, images.length),
+    );
+    const nearSources = Array.from(
+      new Set(nearIndexes.map((idx) => images[idx])),
+    );
+    const restSources = images.filter((src) => !nearSources.includes(src));
+    let cancelled = false;
+
+    const warm = (src: string) => {
+      preloadBrowserImage(src).then(() => {
+        if (!cancelled) setLoadedVersion((version) => version + 1);
+      });
+    };
+
+    nearSources.forEach(warm);
+    const timeoutId = window.setTimeout(() => restSources.forEach(warm), 120);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [currentIndex, images]);
+
+  const visibleIndexes = useMemo(
+    () => getVisibleIndexes(currentIndex, images.length),
+    [currentIndex, images.length],
+  );
+
+  const getSlideOffset = useCallback(
+    (index: number) => {
+      if (index === currentIndex) return 0;
+      if (images.length === 2) return directionRef.current < 0 ? -1 : 1;
+      if (index === wrapIndex(currentIndex + 1, images.length)) return 1;
+      return -1;
+    },
+    [currentIndex, images.length],
+  );
+
+  const handleBackdropPointerDown = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => {
+    if (event.target === event.currentTarget) {
+      clickStartPosRef.current = { x: event.clientX, y: event.clientY };
     }
-  }, [currentIndex, images, markPreloaded]);
-
-  // ── Drag handlers ──
-  const handlePointerDown = (e: React.PointerEvent) => {
-    dragStartRef.current = e.clientX;
-    didDragRef.current = false;
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (dragStartRef.current === null) return;
-    const dx = e.clientX - dragStartRef.current;
-    if (Math.abs(dx) > 5) didDragRef.current = true;
-    dragX.set(dx);
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (dragStartRef.current === null) return;
-    const finalDx = e.clientX - dragStartRef.current;
-    dragStartRef.current = null;
-    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-
-    if (Math.abs(finalDx) > 80 && images.length > 1) {
-      finalDx > 0 ? goNext() : goPrev();
-    }
-    animate(dragX, 0, { type: "spring", stiffness: 300, damping: 30 });
-  };
-
-  // ── Click-outside-to-close ──
-  const clickStartPosRef = useRef<{ x: number; y: number } | null>(null);
-
-  const handleBackdropPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      clickStartPosRef.current = { x: e.clientX, y: e.clientY };
-    }
-  };
-
-  const handleBackdropPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+  const handleBackdropPointerUp = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => {
     if (!clickStartPosRef.current) return;
-    const dx = Math.abs(e.clientX - clickStartPosRef.current.x);
-    const dy = Math.abs(e.clientY - clickStartPosRef.current.y);
+    const dx = Math.abs(event.clientX - clickStartPosRef.current.x);
+    const dy = Math.abs(event.clientY - clickStartPosRef.current.y);
     clickStartPosRef.current = null;
     if (dx < 10 && dy < 10) onClose();
   };
 
-  const slideVariants = {
-    enter: (d: number) => ({
-      x: d > 0 ? 280 : -280,
-      opacity: 0,
-    }),
-    center: {
-      x: 0,
-      opacity: 1,
-    },
-    exit: (d: number) => ({
-      x: d > 0 ? -280 : 280,
-      opacity: 0,
-    }),
-  };
-
-  const springTransition = {
-    x: { type: "spring" as const, stiffness: 300, damping: 30, mass: 0.8 },
-    opacity: { duration: 0.2, ease: "easeOut" as const },
-  };
-
-  const dir = directionRef.current;
+  if (!images.length) return null;
 
   return createPortal(
     <motion.div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-8"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.12, ease: "easeOut" }}
+      onPointerDown={handleBackdropPointerDown}
+      onPointerUp={handleBackdropPointerUp}
     >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: "rgba(0, 0, 0, 0.45)",
-          backdropFilter: "blur(16px) saturate(1.2)",
-          WebkitBackdropFilter: "blur(16px) saturate(1.2)",
-        }}
-        onPointerDown={handleBackdropPointerDown}
-        onPointerUp={handleBackdropPointerUp}
-      />
+      <div className="absolute inset-0 bg-zinc-950/85 backdrop-blur-2xl" />
 
-      {/* ── Popup card ── */}
       <motion.div
-        className="relative z-10 flex w-full max-w-[820px] flex-col"
-        initial={{ scale: 0.92, y: 20 }}
+        className="relative z-10 flex h-[min(92vh,860px)] w-[min(96vw,1120px)] flex-col overflow-hidden rounded-[28px] border border-white/10 bg-zinc-950/82 shadow-[0_30px_90px_rgba(0,0,0,0.55)]"
+        initial={{ scale: 0.985, y: 8 }}
         animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.92, y: 20 }}
-        transition={{ type: "spring", stiffness: 400, damping: 32 }}
-        onPointerDown={(e) => e.stopPropagation()}
+        exit={{ scale: 0.985, y: 8 }}
+        transition={{ type: "spring", stiffness: 520, damping: 42, mass: 0.7 }}
+        onPointerDown={(event) => event.stopPropagation()}
       >
-        <div
-          className="relative overflow-hidden rounded-2xl"
-          style={{
-            background: "rgba(255, 255, 255, 0.08)",
-            backdropFilter: "blur(12px) saturate(1.5)",
-            WebkitBackdropFilter: "blur(12px) saturate(1.5)",
-            border: "1px solid rgba(255, 255, 255, 0.15)",
-            boxShadow:
-              "0 24px 48px -12px rgba(0, 0, 0, 0.35), 0 0 0 0.5px rgba(255, 255, 255, 0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.15)",
-          }}
-        >
-          {/* Close button */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-24 bg-gradient-to-b from-black/50 to-transparent" />
+        <div className="absolute top-3 right-3 left-3 z-40 flex items-center justify-between gap-3">
+          <div className="rounded-full border border-white/10 bg-black/35 px-3 py-1 text-xs font-semibold text-white/80 shadow-lg backdrop-blur-xl">
+            {currentIndex + 1} / {images.length}
+          </div>
           <button
+            type="button"
             onClick={onClose}
-            className="absolute top-3 right-3 z-30 flex h-7 w-7 items-center justify-center rounded-full transition-all duration-200"
-            style={{
-              background: "rgba(0, 0, 0, 0.3)",
-              backdropFilter: "blur(10px)",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background =
-                "rgba(0, 0, 0, 0.5)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background =
-                "rgba(0, 0, 0, 0.3)";
-            }}
+            className="grid size-9 place-items-center rounded-full border border-white/10 bg-black/35 text-white/90 shadow-lg backdrop-blur-xl transition hover:bg-white/15"
             aria-label="Close"
           >
-            <X className="h-3.5 w-3.5 text-white/90" strokeWidth={2.5} />
+            <X className="size-4" strokeWidth={2.5} />
           </button>
+        </div>
 
-          {/* ── Image area — container with fixed background grid ── */}
-          <div
-            className="relative h-[65vh] max-h-[560px] w-full overflow-hidden rounded-t-xl"
-            style={{
-              backgroundColor: "white",
-              backgroundImage:
-                "linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)",
-              backgroundSize: "20px 20px",
+        <div className="relative min-h-0 flex-1 overflow-hidden bg-[radial-gradient(circle_at_50%_15%,rgba(255,255,255,0.12),transparent_30%),#07070a]">
+          <motion.div
+            className="absolute inset-0 cursor-grab touch-none select-none active:cursor-grabbing"
+            style={{ x: dragX }}
+            drag={images.length > 1 ? "x" : false}
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.16}
+            dragMomentum={false}
+            onDragEnd={(_, info) => {
+              if (info.offset.x > 80 && images.length > 1) {
+                goNext();
+              } else if (info.offset.x < -80 && images.length > 1) {
+                goPrev();
+              }
+              animate(dragX, 0, {
+                type: "spring",
+                stiffness: 560,
+                damping: 42,
+                mass: 0.68,
+              });
             }}
           >
-            {/* ── Draggable wrapper ── */}
-            <motion.div
-              className="absolute inset-0 cursor-grab touch-none select-none active:cursor-grabbing"
-              style={{
-                x: dragX,
-                opacity: dragOpacity,
-              }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.8}
-              onDragEnd={(e, info) => {
-                // Match the stack behavior: right = next, left = previous.
-                if (info.offset.x > 100 && images.length > 1) {
-                  goNext();
-                } else if (info.offset.x < -100 && images.length > 1) {
-                  goPrev();
-                }
-                // Always snap container back to center regardless of goNext/goPrev
-                animate(dragX, 0, {
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 30,
-                });
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-              {/* Inner — slide transitions only, no drag values */}
-              <AnimatePresence initial={false} custom={dir} mode="popLayout">
-                <motion.div
-                  key={currentIndex}
-                  custom={directionRef.current}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={springTransition}
-                  className="absolute inset-0 flex items-center justify-center will-change-transform"
-                >
-                  <ImageWithSkeleton
-                    src={images[currentIndex]}
-                    alt={`Image ${currentIndex + 1} of ${images.length}`}
-                    width={1200}
-                    height={900}
-                    sizes="(max-width: 820px) 90vw, 820px"
-                    quality={85}
-                    containerClassName={`h-full w-full flex items-center justify-center pointer-events-none`}
-                    className={`h-auto max-h-[95%] w-auto max-w-[95%] object-contain sm:max-h-[92%] sm:max-w-[92%] ${imageClassName}`}
-                    initialLoaded={preloadedImagesRef.current.has(
-                      images[currentIndex],
-                    )}
-                    priority
-                  />
-                </motion.div>
-              </AnimatePresence>
-            </motion.div>
+            <AnimatePresence initial={false}>
+              {visibleIndexes.map((index) => {
+                const offset = getSlideOffset(index);
+                const src = images[index];
 
-            {/* Nav arrows — stop propagation so they don't trigger drag */}
-            {images.length > 1 && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    goPrev();
-                  }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  className="absolute top-1/2 left-2.5 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full transition-all duration-200"
-                  style={{
-                    background: "rgba(0, 0, 0, 0.25)",
-                    backdropFilter: "blur(8px)",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.background =
-                      "rgba(0, 0, 0, 0.45)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.background =
-                      "rgba(0, 0, 0, 0.25)";
-                  }}
-                  aria-label="Previous"
-                >
-                  <ChevronLeft
-                    className="h-4 w-4 text-white/90"
-                    strokeWidth={2.5}
-                  />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    goNext();
-                  }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  className="absolute top-1/2 right-2.5 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full transition-all duration-200"
-                  style={{
-                    background: "rgba(0, 0, 0, 0.25)",
-                    backdropFilter: "blur(8px)",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.background =
-                      "rgba(0, 0, 0, 0.45)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.background =
-                      "rgba(0, 0, 0, 0.25)";
-                  }}
-                  aria-label="Next"
-                >
-                  <ChevronRight
-                    className="h-4 w-4 text-white/90"
-                    strokeWidth={2.5}
-                  />
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* ── Bottom bar ── */}
-          {images.length > 1 && (
-            <div
-              className="flex items-center justify-center gap-3 px-4 py-3"
-              style={{
-                background: "rgba(0, 0, 0, 0.12)",
-                borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-              }}
-            >
-              <div className="flex flex-wrap items-center justify-center gap-1.5">
-                {images.length <= 20 ? (
-                  images.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => goTo(i)}
-                      className="rounded-full transition-all duration-300 ease-out"
-                      style={{
-                        width: i === currentIndex ? 20 : 6,
-                        height: 6,
-                        background:
-                          i === currentIndex
-                            ? "rgba(255, 255, 255, 0.9)"
-                            : "rgba(255, 255, 255, 0.25)",
-                      }}
-                      aria-label={`Go to image ${i + 1}`}
+                return (
+                  <motion.div
+                    key={`${index}-${src}`}
+                    className="absolute inset-0 grid place-items-center px-3 py-10 sm:px-8 sm:py-12"
+                    initial={false}
+                    animate={{
+                      x: `${offset * 100}%`,
+                      scale: offset === 0 ? 1 : 0.985,
+                    }}
+                    exit={{
+                      x: `${directionRef.current > 0 ? -100 : 100}%`,
+                      scale: 0.985,
+                    }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 560,
+                      damping: 44,
+                      mass: 0.72,
+                    }}
+                  >
+                    <LightboxImage
+                      src={src}
+                      alt={`Image ${index + 1} of ${images.length}`}
+                      active={offset === 0}
+                      className={imageClassName}
+                      onReady={() => markLoaded(src)}
                     />
-                  ))
-                ) : (
-                  <div className="flex items-center gap-[3px]">
-                    {Array.from({ length: 7 }, (_, i) => {
-                      const half = 3;
-                      let idx = currentIndex - half + i;
-                      if (idx < 0) idx += images.length;
-                      if (idx >= images.length) idx -= images.length;
-                      const isCurrent = idx === currentIndex;
-                      const dist = Math.abs(i - half);
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => goTo(idx)}
-                          className="rounded-full transition-all duration-300 ease-out"
-                          style={{
-                            width: isCurrent ? 18 : 5,
-                            height: 5,
-                            background: isCurrent
-                              ? "rgba(255,255,255,0.9)"
-                              : `rgba(255,255,255,${0.3 - dist * 0.05})`,
-                            transform: `scale(${isCurrent ? 1 : 1 - dist * 0.06})`,
-                          }}
-                          aria-label={`Image ${idx + 1}`}
-                        />
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-              <span
-                className="shrink-0 text-sm font-medium tabular-nums"
-                style={{ color: "rgba(255, 255, 255, 0.5)" }}
-              >
-                {currentIndex + 1} / {images.length}
-              </span>
-            </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </motion.div>
+
+          {images.length > 1 && (
+            <>
+              <NavButton direction="prev" onClick={goPrev} />
+              <NavButton direction="next" onClick={goNext} />
+            </>
           )}
         </div>
+
+        {images.length > 1 && (
+          <div className="border-t border-white/10 bg-black/32 px-3 py-3 backdrop-blur-xl">
+            <div className="flex items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
+              {images.map((src, index) => {
+                const active = index === currentIndex;
+                return (
+                  <button
+                    key={`${src}-${index}`}
+                    type="button"
+                    onClick={() => goTo(index)}
+                    className={cn(
+                      "relative h-14 w-16 shrink-0 overflow-hidden rounded-xl border bg-zinc-900 transition",
+                      active
+                        ? "border-white/85 shadow-[0_0_0_2px_rgba(255,255,255,0.18)]"
+                        : "border-white/10 opacity-65 hover:opacity-100",
+                    )}
+                    aria-label={`Go to image ${index + 1}`}
+                  >
+                    <img
+                      src={src}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      loading={index < 8 ? "eager" : "lazy"}
+                      decoding="async"
+                      draggable={false}
+                      onLoad={() => markLoaded(src)}
+                      style={{ imageOrientation: "from-image" }}
+                    />
+                    {active && (
+                      <span className="absolute inset-x-2 bottom-1 h-0.5 rounded-full bg-white" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </motion.div>
     </motion.div>,
     document.body,
+  );
+}
+
+function LightboxImage({
+  src,
+  alt,
+  active,
+  className,
+  onReady,
+}: {
+  src: string;
+  alt: string;
+  active: boolean;
+  className?: string;
+  onReady: () => void;
+}) {
+  const loaded = isBrowserImageCached(src);
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={cn(
+        "max-h-full max-w-full rounded-[18px] object-contain shadow-[0_24px_80px_rgba(0,0,0,0.45)] select-none",
+        active ? "will-change-transform" : "opacity-90",
+        className,
+      )}
+      data-loaded={loaded ? "true" : "false"}
+      loading={active ? "eager" : "lazy"}
+      decoding="async"
+      draggable={false}
+      fetchPriority={active ? "high" : "low"}
+      onLoad={onReady}
+      onError={onReady}
+      style={{ imageOrientation: "from-image" }}
+    />
+  );
+}
+
+function NavButton({
+  direction,
+  onClick,
+}: {
+  direction: "prev" | "next";
+  onClick: () => void;
+}) {
+  const isPrev = direction === "prev";
+
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
+      onPointerDown={(event) => event.stopPropagation()}
+      className={cn(
+        "absolute top-1/2 z-30 grid size-11 -translate-y-1/2 place-items-center rounded-full border border-white/10 bg-black/35 text-white/90 shadow-xl backdrop-blur-xl transition hover:bg-white/15",
+        isPrev ? "left-3 sm:left-5" : "right-3 sm:right-5",
+      )}
+      aria-label={isPrev ? "Previous" : "Next"}
+    >
+      {isPrev ? (
+        <ChevronLeft className="size-5" strokeWidth={2.5} />
+      ) : (
+        <ChevronRight className="size-5" strokeWidth={2.5} />
+      )}
+    </button>
   );
 }

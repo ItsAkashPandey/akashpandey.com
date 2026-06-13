@@ -4,14 +4,12 @@ import ChatLogsClient from "./chat-logs/ChatLogsClient";
 import {
   decodeAdminSessionCookieValue,
   getAdminCookieName,
+  getAdminSessionSecret,
   verifyAdminSessionCookieValue,
 } from "@/lib/admin-auth";
 
 export default async function AdminPage() {
-  const secret = process.env.ADMIN_SESSION_SECRET;
-  if (!secret) {
-    redirect("/admin/login?next=%2Fadmin");
-  }
+  const secret = getAdminSessionSecret();
 
   const cookieStore = await cookies();
   const session = cookieStore.get(getAdminCookieName())?.value;

@@ -2,11 +2,14 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import path from "node:path";
-import { getAdminCookieName, verifyAdminSessionCookieValue } from "@/lib/admin-auth";
+import {
+  getAdminCookieName,
+  getAdminSessionSecret,
+  verifyAdminSessionCookieValue,
+} from "@/lib/admin-auth";
 
 function shouldUsePostgresSsl(connectionString: string): boolean {
   try {
@@ -24,16 +27,7 @@ function shouldUsePostgresSsl(connectionString: string): boolean {
 }
 
 async function requireAdminSession(): Promise<NextResponse | null> {
-  const secret = process.env.ADMIN_SESSION_SECRET;
-  if (!secret) {
-    return NextResponse.json(
-      {
-        error: "Admin auth is not configured",
-        hint: "Set ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_SESSION_SECRET in .env.local",
-      },
-      { status: 500 },
-    );
-  }
+  const secret = getAdminSessionSecret();
 
   const cookieStore = await cookies();
   const session = cookieStore.get(getAdminCookieName())?.value;
@@ -76,13 +70,15 @@ export async function GET(req: Request) {
       const webhook = new URL(webhookUrl);
       webhook.searchParams.set("limit", String(limit));
       if (visitorId) webhook.searchParams.set("visitorId", visitorId);
-      if (conversationId) webhook.searchParams.set("conversationId", conversationId);
+      if (conversationId)
+        webhook.searchParams.set("conversationId", conversationId);
       if (webhookToken) webhook.searchParams.set("token", webhookToken);
 
       const response = await fetch(webhook.toString(), {
         method: "GET",
         headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          "Cache-Control":
+            "no-store, no-cache, must-revalidate, proxy-revalidate",
           Pragma: "no-cache",
         },
       });
@@ -94,9 +90,10 @@ export async function GET(req: Request) {
         );
       }
 
-      const json = (await response.json().catch(() => null)) as
-        | { rows?: any[]; viewUrl?: string }
-        | null;
+      const json = (await response.json().catch(() => null)) as {
+        rows?: any[];
+        viewUrl?: string;
+      } | null;
       const rawRows = Array.isArray(json?.rows) ? json!.rows : [];
 
       const rows = rawRows
@@ -108,7 +105,9 @@ export async function GET(req: Request) {
           role: r.role === "assistant" ? "assistant" : "user",
           message: String(r.message || ""),
         }))
-        .filter((r) => r.timestamp && r.visitorId && r.conversationId && r.message);
+        .filter(
+          (r) => r.timestamp && r.visitorId && r.conversationId && r.message,
+        );
 
       return NextResponse.json(
         {
@@ -119,15 +118,17 @@ export async function GET(req: Request) {
         },
         {
           headers: {
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "Cache-Control":
+              "no-store, no-cache, must-revalidate, proxy-revalidate",
             Pragma: "no-cache",
             Expires: "0",
           },
         },
       );
     } catch (error) {
-      readWarning = `Webhook read failed; falling back. ${error instanceof Error ? error.message : "Unknown error"
-        }`;
+      readWarning = `Webhook read failed; falling back. ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`;
     }
   }
 
@@ -164,8 +165,9 @@ export async function GET(req: Request) {
       params.push(limit);
       const limitParam = `$${params.length}`;
 
-      const sql = `select id, timestamp, visitor_id as "visitorId", visitor_name as "visitorName", conversation_id as "conversationId", role, message from chat_logs${where.length ? ` where ${where.join(" and ")}` : ""
-        } order by timestamp desc, id desc limit ${limitParam}`;
+      const sql = `select id, timestamp, visitor_id as "visitorId", visitor_name as "visitorName", conversation_id as "conversationId", role, message from chat_logs${
+        where.length ? ` where ${where.join(" and ")}` : ""
+      } order by timestamp desc, id desc limit ${limitParam}`;
 
       const result = await pool.query(sql, params);
       const rows = (result.rows || []).slice().reverse();
@@ -179,15 +181,17 @@ export async function GET(req: Request) {
         },
         {
           headers: {
-            "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+            "Cache-Control":
+              "no-store, no-cache, must-revalidate, proxy-revalidate",
             Pragma: "no-cache",
             Expires: "0",
           },
         },
       );
     } catch (error) {
-      readWarning = `${readWarning ? `${readWarning} ` : ""}Postgres read failed; falling back. ${error instanceof Error ? error.message : "Unknown error"
-        }`;
+      readWarning = `${readWarning ? `${readWarning} ` : ""}Postgres read failed; falling back. ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`;
     }
   }
 
@@ -197,13 +201,20 @@ export async function GET(req: Request) {
 
   // Serverless / Vercel safeguard: prevent aggressive project-wide tracing
   if (process.env.VERCEL === "1" && !process.env.CHAT_LOG_FILE_PATH) {
-    return NextResponse.json({
-      rows: [],
-      storage: "none",
-      message: "Local file logging is disabled on Vercel by default to prevent build bloat. Use Google Sheets or Postgres."
-    }, {
-      headers: { "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate" },
-    });
+    return NextResponse.json(
+      {
+        rows: [],
+        storage: "none",
+        message:
+          "Local file logging is disabled on Vercel by default to prevent build bloat. Use Google Sheets or Postgres.",
+      },
+      {
+        headers: {
+          "Cache-Control":
+            "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      },
+    );
   }
 
   let text = "";
@@ -222,7 +233,8 @@ export async function GET(req: Request) {
       {
         status: 200,
         headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          "Cache-Control":
+            "no-store, no-cache, must-revalidate, proxy-revalidate",
           Pragma: "no-cache",
           Expires: "0",
         },
@@ -231,9 +243,9 @@ export async function GET(req: Request) {
   }
 
   const lines = text.split("\n");
-  const parsed = lines
-    .map(safeParseJsonLine)
-    .filter(Boolean) as Array<Record<string, any>>;
+  const parsed = lines.map(safeParseJsonLine).filter(Boolean) as Array<
+    Record<string, any>
+  >;
 
   const filtered = parsed.filter((row) => {
     if (visitorId && row.visitorId !== visitorId) return false;
@@ -253,7 +265,8 @@ export async function GET(req: Request) {
     },
     {
       headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Cache-Control":
+          "no-store, no-cache, must-revalidate, proxy-revalidate",
         Pragma: "no-cache",
         Expires: "0",
       },

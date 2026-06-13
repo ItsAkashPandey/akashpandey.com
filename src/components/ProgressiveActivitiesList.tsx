@@ -161,7 +161,10 @@ export default function ProgressiveActivitiesList({
   }, [allActivities, query, selectedYear, selectedType, sortBy]);
 
   const hasMore = visibleCount < filteredActivities.length;
-  const visibleActivities = filteredActivities.slice(0, visibleCount);
+  const visibleActivities = useMemo(
+    () => filteredActivities.slice(0, visibleCount),
+    [filteredActivities, visibleCount],
+  );
   const isFiltered =
     query.trim() !== "" ||
     selectedYear !== "all" ||
@@ -229,11 +232,11 @@ export default function ProgressiveActivitiesList({
 
   const timelineEntries = useMemo(
     () =>
-      filteredActivities.map((activity) => ({
+      visibleActivities.map((activity) => ({
         id: activity.elementId,
         date: activity.date,
       })),
-    [filteredActivities],
+    [visibleActivities],
   );
 
   return (
