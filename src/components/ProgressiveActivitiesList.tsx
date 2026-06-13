@@ -161,6 +161,7 @@ export default function ProgressiveActivitiesList({
   }, [allActivities, query, selectedYear, selectedType, sortBy]);
 
   const hasMore = visibleCount < filteredActivities.length;
+  const visibleActivities = filteredActivities.slice(0, visibleCount);
   const isFiltered =
     query.trim() !== "" ||
     selectedYear !== "all" ||
@@ -206,6 +207,24 @@ export default function ProgressiveActivitiesList({
 
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
+  }, [hasMore, loadMore]);
+
+  useEffect(() => {
+    if (!hasMore) return;
+
+    const handleScroll = () => {
+      const remaining =
+        document.documentElement.scrollHeight -
+        window.scrollY -
+        window.innerHeight;
+      if (remaining < 900) {
+        loadMore();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [hasMore, loadMore]);
 
   const timelineEntries = useMemo(
@@ -365,19 +384,28 @@ export default function ProgressiveActivitiesList({
             No activities found matching your filters.
           </div>
         ) : (
-          filteredActivities.map((activity, index) => (
+          visibleActivities.map((activity, index) => (
             <LazyActivity
               key={activity.elementId}
               activity={activity}
               index={index}
-              initiallyVisible={index < visibleCount}
+              initiallyVisible
               searchQuery={query.trim()}
             />
           ))
         )}
 
         {filteredActivities.length > 0 && hasMore ? (
-          <div ref={sentinelRef} className="h-16" aria-hidden="true" />
+          <div ref={sentinelRef} className="flex justify-center py-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={loadMore}
+              className="rounded-xl"
+            >
+              Load more
+            </Button>
+          </div>
         ) : filteredActivities.length > 0 ? (
           /* End-of-list indicator */
           <div className="flex flex-col items-center gap-3 py-8">

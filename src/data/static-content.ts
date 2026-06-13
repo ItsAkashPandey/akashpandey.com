@@ -53,7 +53,7 @@ Behavior rules:
 - **DK Architects** — Architectural Design Intern (Apr 2016 – Oct 2016): CAD + site management exposure; assisted in design and documentation.
 
 ## Education
-- **PhD — Geospatial Engineering**, IIT Roorkee (2022 – Present)
+- **PhD — Geospatial Engineering**, IIT Roorkee (2022 – 2026)
   - Thesis: Multi‑scale analysis of crop phenology using PhenoCam & satellite data.
 - **M.Tech — Geoinformatics**, MANIT Bhopal (2020 – 2022)
   - Thesis: Web‑GIS approach to mapping rice residue burning and generated pollutants over Punjab.

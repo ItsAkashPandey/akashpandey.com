@@ -25,12 +25,7 @@ export default function Activities({ limit }: Props) {
       const files = fs.readdirSync(publicPath);
       return files
         .filter((file) => /\.(png|jpe?g|webp|gif|svg)$/i.test(file))
-        .sort((a, b) =>
-          a.localeCompare(b, undefined, {
-            numeric: true,
-            sensitivity: "base",
-          }),
-        )
+        .sort(compareActivityImageNames)
         .map((file) => `/${folderName}/${file}`);
     } catch {
       return [];
@@ -78,4 +73,34 @@ export default function Activities({ limit }: Props) {
       initialVisibleCount={2}
     />
   );
+}
+
+function compareActivityImageNames(a: string, b: string) {
+  const ak = getActivityImageSortKey(a);
+  const bk = getActivityImageSortKey(b);
+
+  if (ak.priority !== bk.priority) return ak.priority - bk.priority;
+  if (ak.number !== bk.number) return ak.number - bk.number;
+  return a.localeCompare(b, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
+}
+
+function getActivityImageSortKey(fileName: string) {
+  const stem = path.parse(fileName).name.toLowerCase();
+  const match = stem.match(/^0*(\d+)(?:\D|$)/);
+  const number = match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+
+  return {
+    number,
+    priority:
+      number === 1
+        ? 0
+        : Number.isFinite(number) && number > 1
+          ? 1
+          : number === 0
+            ? 2
+            : 3,
+  };
 }
