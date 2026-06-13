@@ -9,65 +9,107 @@ const ROOT_DIR = path.join(__dirname, "..");
 const ACTIVITIES_JSON_PATH = path.join(ROOT_DIR, "src/data/activities.json");
 const PUBLIC_DIR = path.join(ROOT_DIR, "public");
 
-const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif", ".svg"]);
+const IMAGE_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".avif",
+  ".svg",
+]);
 
 function getImagesFromFolder(folderPath: string): string[] {
-    try {
-        const fullPath = path.join(PUBLIC_DIR, folderPath);
+  try {
+    const fullPath = path.join(PUBLIC_DIR, folderPath);
 
-        if (!fs.existsSync(fullPath)) {
-            console.warn(`Warning: Folder not found: ${fullPath}`);
-            return [];
-        }
-
-        const files = fs.readdirSync(fullPath);
-        return files
-            .filter((file) => IMAGE_EXTENSIONS.has(path.extname(file).toLowerCase()))
-            .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }))
-            .map((file) => `/${folderPath.replace(/^\//, "")}/${file}`);
-    } catch (error) {
-        console.error(`Error reading image folder ${folderPath}:`, error);
-        return [];
+    if (!fs.existsSync(fullPath)) {
+      console.warn(`Warning: Folder not found: ${fullPath}`);
+      return [];
     }
+
+    const files = fs.readdirSync(fullPath);
+    return files
+      .filter((file) => IMAGE_EXTENSIONS.has(path.extname(file).toLowerCase()))
+      .sort(compareActivityImageNames)
+      .map((file) => `/${folderPath.replace(/^\//, "")}/${file}`);
+  } catch (error) {
+    console.error(`Error reading image folder ${folderPath}:`, error);
+    return [];
+  }
+}
+
+function compareActivityImageNames(a: string, b: string): number {
+  const ak = getActivityImageSortKey(a);
+  const bk = getActivityImageSortKey(b);
+
+  if (ak.priority !== bk.priority) return ak.priority - bk.priority;
+  if (ak.number !== bk.number) return ak.number - bk.number;
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+}
+
+function getActivityImageSortKey(fileName: string): {
+  priority: number;
+  number: number;
+} {
+  const stem = path.parse(fileName).name.toLowerCase();
+  const match = stem.match(/^0*(\d+)(?:\D|$)/);
+  const number = match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+
+  return {
+    number,
+    priority:
+      number === 1
+        ? 0
+        : Number.isFinite(number) && number > 1
+          ? 1
+          : number === 0
+            ? 2
+            : 3,
+  };
 }
 
 async function resolveImages() {
-    console.log("Resolving activity images...");
+  console.log("Resolving activity images...");
 
-    if (!fs.existsSync(ACTIVITIES_JSON_PATH)) {
-        console.error(`Error: activities.json not found at ${ACTIVITIES_JSON_PATH}`);
-        process.exit(1);
-    }
-
-    const data = JSON.parse(fs.readFileSync(ACTIVITIES_JSON_PATH, "utf-8"));
-
-    if (!data.activities || !Array.isArray(data.activities)) {
-        console.error("Error: Invalid activities.json format");
-        process.exit(1);
-    }
-
-    const updatedActivities = data.activities.map((activity: any) => {
-        let resolvedImages: string[] = [];
-
-        if (activity.imageFolder) {
-            resolvedImages = getImagesFromFolder(activity.imageFolder);
-        } else if (activity.images && Array.isArray(activity.images)) {
-            resolvedImages = activity.images;
-        } else if (activity.image) {
-            resolvedImages = [activity.image];
-        }
-
-        // Preserve existing resolvedImages if needed, or always overwrite
-        return { ...activity, resolvedImages };
-    });
-
-    fs.writeFileSync(
-        ACTIVITIES_JSON_PATH,
-        JSON.stringify({ activities: updatedActivities }, null, 2),
-        "utf-8"
+  if (!fs.existsSync(ACTIVITIES_JSON_PATH)) {
+    console.error(
+      `Error: activities.json not found at ${ACTIVITIES_JSON_PATH}`,
     );
+    process.exit(1);
+  }
 
-    console.log(`Successfully updated ${ACTIVITIES_JSON_PATH} with resolved images.`);
+  const data = JSON.parse(fs.readFileSync(ACTIVITIES_JSON_PATH, "utf-8"));
+
+  if (!data.activities || !Array.isArray(data.activities)) {
+    console.error("Error: Invalid activities.json format");
+    process.exit(1);
+  }
+
+  const updatedActivities = data.activities.map((activity: any) => {
+    let resolvedImages: string[] = [];
+
+    if (activity.imageFolder) {
+      resolvedImages = getImagesFromFolder(activity.imageFolder);
+    } else if (activity.images && Array.isArray(activity.images)) {
+      resolvedImages = activity.images;
+    } else if (activity.image) {
+      resolvedImages = [activity.image];
+    }
+
+    // Preserve existing resolvedImages if needed, or always overwrite
+    return { ...activity, resolvedImages };
+  });
+
+  fs.writeFileSync(
+    ACTIVITIES_JSON_PATH,
+    JSON.stringify({ activities: updatedActivities }, null, 2),
+    "utf-8",
+  );
+
+  console.log(
+    `Successfully updated ${ACTIVITIES_JSON_PATH} with resolved images.`,
+  );
 }
 
 resolveImages().catch(console.error);

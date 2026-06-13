@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   motion,
@@ -36,6 +36,8 @@ export default function ImageLightbox({
   imageClassName = "",
 }: ImageLightboxProps) {
   const directionRef = useRef(0);
+  const preloadedImagesRef = useRef(new Set<string>());
+  const [, setPreloadVersion] = useState(0);
 
   // ── Drag state — on the outer wrapper, separate from transitions ──
   const dragX = useMotionValue(0);
@@ -62,6 +64,12 @@ export default function ImageLightbox({
     [currentIndex, onNavigate],
   );
 
+  const markPreloaded = useCallback((src: string) => {
+    if (preloadedImagesRef.current.has(src)) return;
+    preloadedImagesRef.current.add(src);
+    setPreloadVersion((version) => version + 1);
+  }, []);
+
   // Keyboard
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -77,18 +85,21 @@ export default function ImageLightbox({
     };
   }, [onClose, goNext, goPrev]);
 
-  // ── Preload only adjacent optimized images ──
+  // ── Preload the active image and nearby optimized images ──
   useEffect(() => {
-    for (const offset of [-1, 1]) {
-      if (offset === 0) continue;
-      let idx = currentIndex + offset;
-      if (idx < 0) idx += images.length;
-      if (idx >= images.length) idx -= images.length;
+    if (!images.length) return;
+
+    for (const offset of [0, -1, 1, -2, 2]) {
+      const idx = (currentIndex + offset + images.length) % images.length;
+      const src = images[idx];
+      if (!src || preloadedImagesRef.current.has(src)) continue;
       const img = new Image();
       img.decoding = "async";
-      img.src = getOptimizedImageSrc(images[idx]);
+      img.onload = () => markPreloaded(src);
+      img.onerror = () => markPreloaded(src);
+      img.src = getOptimizedImageSrc(src);
     }
-  }, [currentIndex, images]);
+  }, [currentIndex, images, markPreloaded]);
 
   // ── Drag handlers ──
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -262,7 +273,7 @@ export default function ImageLightbox({
                   animate="center"
                   exit="exit"
                   transition={springTransition}
-                  className="absolute inset-0 flex items-center justify-center"
+                  className="absolute inset-0 flex items-center justify-center will-change-transform"
                 >
                   <ImageWithSkeleton
                     src={images[currentIndex]}
@@ -273,6 +284,9 @@ export default function ImageLightbox({
                     quality={85}
                     containerClassName={`h-full w-full flex items-center justify-center pointer-events-none`}
                     className={`h-auto max-h-[95%] w-auto max-w-[95%] object-contain sm:max-h-[92%] sm:max-w-[92%] ${imageClassName}`}
+                    initialLoaded={preloadedImagesRef.current.has(
+                      images[currentIndex],
+                    )}
                     priority
                   />
                 </motion.div>

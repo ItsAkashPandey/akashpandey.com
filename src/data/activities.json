@@ -1,6 +1,83 @@
 {
   "activities": [
     {
+      "name": "IN-SPACe Industry Connect - 10",
+      "description": "I represented Bhoomicam at IN-SPACe Industry Connect - 10, the annual in-person industry meet for stakeholders of the Indian space sector, held on 10-11 June 2026 in Ahmedabad.\n\nBhoomicam showcased its AI-powered geospatial intelligence work on the IN-SPACe data wall and took part in downstream application discussions around pest and disease forewarning and early detection of biotic stress in major crops of India.\n\nThe event also marked Bhoomicam's selection among the top 3 grantees under the IN-SPACe Department of Space Seed Fund Scheme, with Rs. 40 lakh support for a national pilot.\n\nI attended sessions, connected with government, ISRO, industry, academia, investor, and startup stakeholders, and got to listen to Wing Commander Rakesh Sharma, AC (Retd.) and Group Captain Shubhanshu Shukla, AC.\n\nWith: Prof. Siddhartha Khare and Bhoomicam team",
+      "date": "2026-06-11",
+      "location": "The Forum, Hotel & Convention, Shela, Ahmedabad",
+      "imageFolder": "INSPACe_Industry_Connect_2026",
+      "links": [
+        {
+          "name": "Event Page",
+          "href": "https://www.inspace.events/",
+          "icon": "globe"
+        },
+        {
+          "name": "Bhoomicam Post",
+          "href": "https://www.linkedin.com/posts/bhoomicam-private-limited_bhoomicam-inspace-iitroorkee-activity-7447974024288178176-KfmI",
+          "icon": "linkedin"
+        }
+      ],
+      "resolvedImages": [
+        "/INSPACe_Industry_Connect_2026/01-datawall.webp",
+        "/INSPACe_Industry_Connect_2026/02-seed-fund-stage.webp",
+        "/INSPACe_Industry_Connect_2026/03-astronauts-session.webp",
+        "/INSPACe_Industry_Connect_2026/04-venue.webp",
+        "/INSPACe_Industry_Connect_2026/05-roundtable.webp",
+        "/INSPACe_Industry_Connect_2026/06-hall-session.webp",
+        "/INSPACe_Industry_Connect_2026/07-downstream-poc.webp",
+        "/INSPACe_Industry_Connect_2026/08-mou-session.webp",
+        "/INSPACe_Industry_Connect_2026/09-breakout-session.webp",
+        "/INSPACe_Industry_Connect_2026/10-space-tech-ecosystem.webp"
+      ]
+    },
+    {
+      "name": "IN-SPACe Short-Term Course - Google Earth Engine Lecture",
+      "description": "I was invited to deliver a hands-on lecture as Co-Director of Bhoomicam on \"Working with Google Earth Engine\" for the IN-SPACe Short-Term Skill Development Course on Essentials of Space Data Products and Services.\n\nThe session was held at GNEC, IIT Roorkee Greater Noida Campus, and focused on practical use of Google Earth Engine: data catalogues, time-series datasets, analysis-ready data, image classification, and data export.\n\nI kept the lecture demo-oriented so participants could connect remote sensing concepts with real-world analysis workflows and space-data applications.\n\nWith: Prof. Siddhartha Khare, IN-SPACe organizers, and course participants",
+      "date": "2026-04-27",
+      "location": "GNEC, IIT Roorkee Greater Noida Campus, Noida",
+      "imageFolder": "INSPACe_GNEC_Workshop_2026",
+      "links": [
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/posts/iamakashpandey_googleearthengine-inspace-iitroorkee-activity-7460397383475011584-pR3t",
+          "icon": "linkedin"
+        }
+      ],
+      "resolvedImages": [
+        "/INSPACe_GNEC_Workshop_2026/01-lecture-wide.webp",
+        "/INSPACe_GNEC_Workshop_2026/02-lecture-title.webp",
+        "/INSPACe_GNEC_Workshop_2026/03-gee-demo.webp",
+        "/INSPACe_GNEC_Workshop_2026/04-classroom-demo.webp",
+        "/INSPACe_GNEC_Workshop_2026/05-hands-on-session.webp"
+      ]
+    },
+    {
+      "name": "EGU General Assembly 2026",
+      "description": "I presented my PhD research at the European Geosciences Union (EGU) General Assembly 2026, held from 3-8 May 2026 in Vienna, Austria.\n\nMy poster, \"Establishing PhenoCam-based monitoring of wheat and rice phenology in India with satellite and meteorological data,\" focused on integrating PhenoCam observations, satellite remote sensing, and meteorological datasets to monitor crop phenology across wheat and rice systems.\n\nThe conference was a valuable opportunity to share my work with the wider geoscience community and connect my phenology research with broader Earth observation and precision agriculture discussions.\n\nWith: Prof. Siddhartha Khare",
+      "date": "2026-05-08",
+      "location": "Austria Center Vienna, Vienna, Austria",
+      "imageFolder": "EGU_2026_Visit",
+      "links": [
+        {
+          "name": "EGU Abstract",
+          "href": "https://doi.org/10.5194/egusphere-egu26-14674",
+          "icon": "globe"
+        },
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/posts/siddhartha-khare-503a4429_congratulations-to-akash-kumar-for-presenting-activity-7460679560636837890-8aDT",
+          "icon": "linkedin"
+        }
+      ],
+      "resolvedImages": [
+        "/EGU_2026_Visit/01-poster-session-wide.webp",
+        "/EGU_2026_Visit/02-poster-session-portrait.webp",
+        "/EGU_2026_Visit/03-conference-poster.webp",
+        "/EGU_2026_Visit/04-poster-session.webp"
+      ]
+    },
+    {
       "name": "India International Science Festival (IISF 2022)",
       "description": "We participated in the India International Science Festival 2022 held from 21–24 January 2023 at Maulana Azad National Institute of Technology Bhopal. The festival included a large Startup Expo where selected startups from different institutes and organizations across India showcased their technologies.\n\nAt the expo, we exhibited Bhoomicam at our booth and demonstrated the platform to visitors, researchers, and industry representatives.\n\nThe event was part of India’s G20 presidency celebrations and the Azadi Ka Amrit Mahotsav.\n\nWith: Tushar Bharadwaj",
       "date": "2023-01-24",
@@ -232,10 +309,7 @@
       "location": "GB Pant University, Pantnagar, Uttarakhand",
       "imageFolder": "GB_Pant",
       "links": [],
-      "resolvedImages": [
-        "/GB_Pant/0.jpg",
-        "/GB_Pant/1.jpg"
-      ]
+      "resolvedImages": ["/GB_Pant/0.jpg", "/GB_Pant/1.jpg"]
     },
     {
       "name": "PhenoCam Installation at KVK",
