@@ -42,3 +42,4 @@ output/
 logs/
 
 # large public image/event directories (host these on a CDN)
+.vercel
