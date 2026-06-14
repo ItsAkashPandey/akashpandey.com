@@ -1,3 +1,5 @@
+import { ensureChatLogTable, getChatLogPool } from "./chat-log-postgres";
+
 export type ChatLogRow = {
   timestamp: string;
   visitorId: string;
@@ -12,25 +14,6 @@ export type ChatLogAppendResult =
   | { status: "disabled"; reason: string }
   | { status: "ok"; mode: "postgres" | "webhook" | "file" }
   | { status: "error"; error: string };
-
-function shouldUsePostgresSsl(connectionString: string): boolean {
-  try {
-    const url = new URL(connectionString);
-    const sslmode = url.searchParams.get("sslmode");
-    if (sslmode === "require") return true;
-    if (sslmode === "disable") return false;
-
-    const host = url.hostname;
-    // Default to no SSL for typical local dev.
-    if (host === "localhost" || host === "127.0.0.1") return false;
-
-    // Many managed Postgres providers (including Supabase) require SSL.
-    return true;
-  } catch {
-    // If it's not a URL we can parse, keep the pg default.
-    return false;
-  }
-}
 
 type WebhookPayload = {
   token?: string;
@@ -81,9 +64,7 @@ export async function appendChatLogRows(rows: ChatLogRow[]) {
         return {
           status: "error",
           error:
-            error instanceof Error
-              ? error.message
-              : "Chat log webhook failed",
+            error instanceof Error ? error.message : "Chat log webhook failed",
         } as const;
       }
     }
@@ -92,20 +73,8 @@ export async function appendChatLogRows(rows: ChatLogRow[]) {
   // Optional: Postgres
   if (databaseUrl) {
     try {
-      const { Pool } = (await import("pg")) as any;
-
-      // Reuse a global pool across hot reloads.
-      const globalAny = globalThis as any;
-      const pool: any =
-        globalAny.__halChatLogPool ||
-        new Pool({
-          connectionString: databaseUrl,
-          max: 5,
-          ...(shouldUsePostgresSsl(databaseUrl)
-            ? { ssl: { rejectUnauthorized: false } }
-            : null),
-        });
-      globalAny.__halChatLogPool = pool;
+      const pool = await getChatLogPool(databaseUrl);
+      await ensureChatLogTable(pool);
 
       const sql =
         "insert into chat_logs (timestamp, visitor_id, visitor_name, conversation_id, role, message) values ($1,$2,$3,$4,$5,$6)";
@@ -139,7 +108,10 @@ export async function appendChatLogRows(rows: ChatLogRow[]) {
   // Fallback: local append-only JSONL file (no external API). Requires a persistent filesystem.
   // NOTE: This is not reliable on serverless platforms that do not persist disk writes.
   if (process.env.VERCEL === "1" && !process.env.CHAT_LOG_FILE_PATH) {
-    return { status: "disabled", reason: "Local file logging is disabled on Vercel to prevent build bloat" } as const;
+    return {
+      status: "disabled",
+      reason: "Local file logging is disabled on Vercel to prevent build bloat",
+    } as const;
   }
 
   const { appendFile, mkdir } = await import("node:fs/promises");
