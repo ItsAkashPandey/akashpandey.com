@@ -10,21 +10,7 @@ import {
   getAdminSessionSecret,
   verifyAdminSessionCookieValue,
 } from "@/lib/admin-auth";
-
-function shouldUsePostgresSsl(connectionString: string): boolean {
-  try {
-    const url = new URL(connectionString);
-    const sslmode = url.searchParams.get("sslmode");
-    if (sslmode === "require") return true;
-    if (sslmode === "disable") return false;
-
-    const host = url.hostname;
-    if (host === "localhost" || host === "127.0.0.1") return false;
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { ensureChatLogTable, getChatLogPool } from "@/lib/chat-log-postgres";
 
 async function requireAdminSession(): Promise<NextResponse | null> {
   const secret = getAdminSessionSecret();
@@ -138,18 +124,8 @@ export async function GET(req: Request) {
     process.env.DATABASE_URL;
   if (databaseUrl) {
     try {
-      const { Pool } = (await import("pg")) as any;
-      const globalAny = globalThis as any;
-      const pool: any =
-        globalAny.__halChatLogPool ||
-        new Pool({
-          connectionString: databaseUrl,
-          max: 5,
-          ...(shouldUsePostgresSsl(databaseUrl)
-            ? { ssl: { rejectUnauthorized: false } }
-            : null),
-        });
-      globalAny.__halChatLogPool = pool;
+      const pool = await getChatLogPool(databaseUrl);
+      await ensureChatLogTable(pool);
 
       const where: string[] = [];
       const params: any[] = [];
@@ -206,7 +182,7 @@ export async function GET(req: Request) {
         rows: [],
         storage: "none",
         message:
-          "Local file logging is disabled on Vercel by default to prevent build bloat. Use Google Sheets or Postgres.",
+          "Chat storage is not connected. Add CHAT_LOG_DATABASE_URL for Postgres, or CHAT_LOG_WEBHOOK_URL for Google Sheets, in your Vercel environment variables.",
       },
       {
         headers: {

@@ -31,6 +31,7 @@ import {
   Database,
   Download,
   ExternalLink,
+  Info,
   LogOut,
   MessageCircle,
   RefreshCw,
@@ -53,7 +54,7 @@ type ChatLogRow = {
 
 type ApiResponse = {
   rows: ChatLogRow[];
-  storage?: "postgres" | "webhook" | "file";
+  storage?: "postgres" | "webhook" | "file" | "none";
   filePath?: string;
   count?: number;
   message?: string;
@@ -597,6 +598,33 @@ export default function ChatLogsClient({
           </div>
         )}
       </section>
+
+      {data?.storage === "none" && (
+        <section className="mt-6 rounded-2xl border border-amber-500/25 bg-amber-500/8 p-4 shadow-sm">
+          <div className="flex gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-300">
+              <Info className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold">
+                Connect persistent chat storage
+              </h2>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Vercel cannot save chat logs in local files. Add one production
+                environment variable:{" "}
+                <code className="bg-background/70 rounded px-1 py-0.5">
+                  CHAT_LOG_DATABASE_URL
+                </code>{" "}
+                for Postgres. The app will create the{" "}
+                <code className="bg-background/70 rounded px-1 py-0.5">
+                  chat_logs
+                </code>{" "}
+                table automatically.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="bg-background/55 mt-6 overflow-hidden rounded-2xl border shadow-sm">
         <div className="border-b px-4 py-3">
