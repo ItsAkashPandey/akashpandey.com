@@ -40,9 +40,12 @@ export async function ensureChatLogTable(pool: any) {
       conversation_id text not null,
       role text not null check (role in ('user', 'assistant')),
       message text not null,
+      notes text,
       created_at timestamptz not null default now()
     )
   `);
+
+  await pool.query(`alter table chat_logs add column if not exists notes text`);
 
   await pool.query(
     `create index if not exists chat_logs_timestamp_id_idx on chat_logs (timestamp desc, id desc)`,

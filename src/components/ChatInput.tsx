@@ -1,17 +1,11 @@
-import { ChatRequestOptions } from "ai";
-import { SendHorizontal, Trash } from "lucide-react";
+import type { ChatMessageShape } from "@/lib/chat-types";
+import { CornerDownLeft, SendHorizontal, Trash } from "lucide-react";
 import { HTMLAttributes } from "react";
 import { Button } from "./ui/Button";
-import { Input } from "./ui/Input";
 
 interface ChatInputProps extends HTMLAttributes<HTMLFormElement> {
   input: string;
-  handleSubmit: (
-    event?: {
-      preventDefault?: () => void;
-    },
-    chatRequestOptions?: ChatRequestOptions,
-  ) => void;
+  handleSubmit: (event?: { preventDefault?: () => void }) => void;
   handleInputChange: (
     e:
       | React.ChangeEvent<HTMLInputElement>
@@ -19,18 +13,12 @@ interface ChatInputProps extends HTMLAttributes<HTMLFormElement> {
   ) => void;
   setMessages: (
     messages:
-      | Array<{ id: string; role: "user" | "assistant"; content: string }>
-      | ((
-        messages: Array<{
-          id: string;
-          role: "user" | "assistant";
-          content: string;
-        }>,
-      ) => Array<{ id: string; role: "user" | "assistant"; content: string }>),
+      | ChatMessageShape[]
+      | ((messages: ChatMessageShape[]) => ChatMessageShape[]),
   ) => void;
   onClearChat?: () => void;
   isLoading: boolean;
-  messages: Array<{ id: string; role: "user" | "assistant"; content: string }>;
+  messages: ChatMessageShape[];
 }
 
 export default function ChatInput({
@@ -45,43 +33,50 @@ export default function ChatInput({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex gap-1.5 border-t border-white/20 dark:border-white/10 bg-white/10 dark:bg-black/20 px-2 py-2 backdrop-blur-md sm:gap-2 sm:px-3 sm:py-2.5"
+      className="border-t border-white/20 bg-white/20 px-3 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-black/20"
     >
-      <Button
-        title="Clear chat"
-        variant="outline"
-        onClick={() => {
-          setMessages([]);
-          onClearChat?.();
-        }}
-        className="h-9 px-3 py-2 touch-target sm:h-10 sm:px-4 sm:py-2.5 bg-white/10 dark:bg-white/5 hover:bg-white/20 dark:hover:bg-white/10 border-white/20 dark:border-white/10"
-        disabled={messages.length === 0}
-        type="button"
-      >
-        <Trash className="size-4 text-rose-500 sm:size-5" />
-      </Button>
-      <Input
-        autoFocus
-        placeholder="Ask something..."
-        value={input}
-        onChange={handleInputChange}
-        className="h-8 text-base bg-transparent border-white/20 dark:border-white/10 focus-visible:ring-primary/30 sm:h-9 sm:text-sm"
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            handleSubmit(e);
-          }
-        }}
-      />
-      <Button
-        title="Send message"
-        variant="default"
-        className="h-9 px-3 py-2 touch-target sm:h-10 sm:px-4 sm:py-2.5"
-        disabled={input.length === 0}
-        type="submit"
-      >
-        <SendHorizontal className="size-4 sm:size-5" />
-      </Button>
+      <div className="bg-background/70 focus-within:ring-primary/20 flex items-end gap-2 rounded-2xl border border-white/30 p-2 shadow-sm ring-0 transition focus-within:ring-4 dark:border-white/10 dark:bg-white/5">
+        <Button
+          title="Clear chat"
+          variant="ghost"
+          onClick={() => {
+            setMessages([]);
+            onClearChat?.();
+          }}
+          className="size-10 shrink-0 rounded-xl text-rose-500 hover:bg-rose-500/10"
+          disabled={messages.length === 0}
+          type="button"
+        >
+          <Trash className="size-4" />
+        </Button>
+        <textarea
+          autoFocus
+          placeholder="Ask about Akash..."
+          value={input}
+          onChange={handleInputChange}
+          rows={1}
+          className="placeholder:text-muted-foreground max-h-28 min-h-10 flex-1 resize-none bg-transparent px-1 py-2 text-sm outline-none"
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              handleSubmit(event);
+            }
+          }}
+        />
+        <Button
+          title="Send message"
+          variant="default"
+          className="size-10 shrink-0 rounded-xl"
+          disabled={input.trim().length === 0 || isLoading}
+          type="submit"
+        >
+          {isLoading ? (
+            <CornerDownLeft className="size-4 opacity-70" />
+          ) : (
+            <SendHorizontal className="size-4" />
+          )}
+        </Button>
+      </div>
     </form>
   );
 }

@@ -50,6 +50,7 @@ type ChatLogRow = {
   conversationId: string;
   role: "user" | "assistant";
   message: string;
+  notes?: string | null;
 };
 
 type ApiResponse = {
@@ -111,6 +112,7 @@ function toCsv(rows: ChatLogRow[]): string {
     "conversationId",
     "role",
     "message",
+    "notes",
   ];
 
   const escape = (value: unknown) => {
@@ -144,6 +146,52 @@ function StatusCard({
       <p className="mt-1 truncate text-sm font-semibold tabular-nums">
         {value}
       </p>
+    </div>
+  );
+}
+
+function parseNotes(
+  notes: string | null | undefined,
+): Record<string, any> | null {
+  if (!notes) return null;
+  try {
+    const parsed = JSON.parse(notes);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function RowNotes({ notes }: { notes: string | null | undefined }) {
+  const parsed = parseNotes(notes);
+  if (!parsed) return null;
+
+  const contextCount = Array.isArray(parsed.contextRefs)
+    ? parsed.contextRefs.length
+    : 0;
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] opacity-75">
+      {parsed.intent && (
+        <span className="rounded-full border px-2 py-0.5">
+          intent: {String(parsed.intent)}
+        </span>
+      )}
+      {parsed.latencyMs && (
+        <span className="rounded-full border px-2 py-0.5">
+          {String(parsed.latencyMs)} ms
+        </span>
+      )}
+      {parsed.model && (
+        <span className="rounded-full border px-2 py-0.5">
+          {String(parsed.model)}
+        </span>
+      )}
+      {contextCount > 0 && (
+        <span className="rounded-full border px-2 py-0.5">
+          {contextCount} refs
+        </span>
+      )}
     </div>
   );
 }
@@ -767,6 +815,7 @@ export default function ChatLogsClient({
                                           <p className="whitespace-pre-wrap">
                                             {row.message}
                                           </p>
+                                          <RowNotes notes={row.notes} />
                                         </div>
                                       </div>
                                     </div>
@@ -862,6 +911,7 @@ export default function ChatLogsClient({
                                     <p className="whitespace-pre-wrap">
                                       {row.message}
                                     </p>
+                                    <RowNotes notes={row.notes} />
                                   </div>
                                 </div>
                               </div>

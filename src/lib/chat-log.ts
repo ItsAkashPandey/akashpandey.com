@@ -77,7 +77,7 @@ export async function appendChatLogRows(rows: ChatLogRow[]) {
       await ensureChatLogTable(pool);
 
       const sql =
-        "insert into chat_logs (timestamp, visitor_id, visitor_name, conversation_id, role, message) values ($1,$2,$3,$4,$5,$6)";
+        "insert into chat_logs (timestamp, visitor_id, visitor_name, conversation_id, role, message, notes) values ($1,$2,$3,$4,$5,$6,$7)";
 
       for (const row of rows) {
         await pool.query(sql, [
@@ -87,6 +87,7 @@ export async function appendChatLogRows(rows: ChatLogRow[]) {
           row.conversationId,
           row.role,
           row.message,
+          row.notes ?? null,
         ]);
       }
 

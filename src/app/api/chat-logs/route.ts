@@ -90,6 +90,7 @@ export async function GET(req: Request) {
           conversationId: String(r.conversationId || ""),
           role: r.role === "assistant" ? "assistant" : "user",
           message: String(r.message || ""),
+          notes: r.notes ? String(r.notes) : null,
         }))
         .filter(
           (r) => r.timestamp && r.visitorId && r.conversationId && r.message,
@@ -141,7 +142,7 @@ export async function GET(req: Request) {
       params.push(limit);
       const limitParam = `$${params.length}`;
 
-      const sql = `select id, timestamp, visitor_id as "visitorId", visitor_name as "visitorName", conversation_id as "conversationId", role, message from chat_logs${
+      const sql = `select id, timestamp, visitor_id as "visitorId", visitor_name as "visitorName", conversation_id as "conversationId", role, message, notes from chat_logs${
         where.length ? ` where ${where.join(" and ")}` : ""
       } order by timestamp desc, id desc limit ${limitParam}`;
 

@@ -1,9 +1,5 @@
-type ChatMessageShape = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-};
-import { Bot, Loader2 } from "lucide-react";
+import type { ChatMessageShape } from "@/lib/chat-types";
+import { Loader2, MessageCircle } from "lucide-react";
 import { useEffect, useRef } from "react";
 import ChatMessage from "./ChatMessage";
 import ChatPrompts from "./ChatPrompts";
@@ -37,13 +33,13 @@ export default function ChatMessages({
 
   return (
     <div
-      className="h-full min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain scroll-smooth p-2 sm:p-3"
+      className="h-full min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain scroll-smooth p-3 sm:p-4"
       ref={scrollRef}
     >
-      <ul>
+      <ul className="space-y-3">
         {messages.map((msg) => (
           <li key={msg.id}>
-            <ChatMessage message={msg} />
+            <ChatMessage message={msg} onPromptClick={onPromptClick} />
           </li>
         ))}
       </ul>
@@ -51,11 +47,11 @@ export default function ChatMessages({
       {/* empty */}
       {!error && messages.length === 0 && (
         <div className="flex h-full flex-col items-center justify-center gap-2 p-3 sm:gap-3 sm:p-4">
-          <Bot className="size-6 sm:size-8" />
+          <MessageCircle className="size-6 sm:size-8" />
           <p className="text-sm font-medium">
             Send a message to start the chat!
           </p>
-          <p className="max-w-[200px] text-center text-xs text-muted-foreground sm:max-w-[250px]">
+          <p className="text-muted-foreground max-w-[200px] text-center text-xs sm:max-w-[250px]">
             You can ask the bot anything about me and it will help to find the
             relevant information!
           </p>
@@ -65,20 +61,21 @@ export default function ChatMessages({
 
       {/* loading */}
       {isLoading && isLastMessageUser && (
-        <div className="flex items-center justify-center">
-          <Loader2 className="mr-1.5 size-3 animate-spin text-muted-foreground" />
-          <p className="text-center text-xs text-muted-foreground">
-            Thinking...
-          </p>
+        <div className="flex items-center justify-start pl-2">
+          <div className="bg-background/70 flex items-center gap-2 rounded-full border px-3 py-1.5 shadow-sm">
+            <Loader2 className="text-muted-foreground size-3.5 animate-spin" />
+            <p className="text-muted-foreground text-xs">Thinking</p>
+          </div>
         </div>
       )}
 
       {/* error */}
       {error && (
         <div className="flex flex-col items-center gap-2 py-3">
-          <div className="rounded-xl bg-rose-500/10 dark:bg-rose-500/5 border border-rose-200/30 dark:border-rose-500/10 px-4 py-3 text-center max-w-[260px]">
-            <p className="text-xs text-rose-600 dark:text-rose-400 font-medium">
-              {error.message || "Oops, something went sideways 🙃 — please try again!"}
+          <div className="max-w-[280px] rounded-xl border border-rose-200/30 bg-rose-500/10 px-4 py-3 text-center dark:border-rose-500/10 dark:bg-rose-500/5">
+            <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+              {error.message ||
+                "Oops, something went sideways 🙃 — please try again!"}
             </p>
           </div>
         </div>
