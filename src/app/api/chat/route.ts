@@ -2,29 +2,41 @@ export const runtime = "nodejs";
 
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { appendChatLogRows, type ChatLogAppendResult, type ChatLogRow } from "@/lib/chat-log";
-import { buildAIContext } from "@/lib/build-ai-context";
+import {
+  appendChatLogRows,
+  type ChatLogAppendResult,
+  type ChatLogRow,
+} from "@/lib/chat-log";
+import type {
+  ChatAction,
+  ChatHistoryMessage,
+  ChatUiCard,
+} from "@/lib/chat-types";
+import {
+  buildKnowledgePrompt,
+  retrieveSiteKnowledge,
+} from "@/lib/site-knowledge";
 
-type IncomingMessage = {
-  role: "user" | "assistant";
-  content: string;
+type ChatRequestBody = {
+  message?: unknown;
+  history?: unknown;
+  messages?: unknown;
+  conversationId?: string;
+  visitorName?: string;
+  client?: {
+    page?: string;
+  };
 };
-
-type NameInferenceResult = {
-  visitorName: string | null;
-};
-
-/* ── friendly error messages (never expose internals) ── */
 
 const FRIENDLY_ERRORS = {
-  unavailable: "Kasi is taking a quick nap 😴 — try again in a moment!",
-  busy: "Looks like Kasi is a bit busy right now 🤔 — give it another shot!",
-  rateLimit: "Kasi got too popular! 🔥 Rate limited — try again in a few seconds.",
-  config: "Kasi isn't feeling well today 🤧 — Akash is working on it!",
-  generic: "Oops, something went sideways 🙃 — please try again!",
+  busy: "Kasi is busy for a moment. Try again in a few seconds.",
+  rateLimit:
+    "Too many chat requests at once. Give it a few seconds and try again.",
+  config:
+    "Kasi is not configured right now. Akash needs to check the model key.",
+  generic: "Something went sideways. Please try again.",
 };
 
-/* ── fallback free models to try if primary is rate-limited ── */
 const FREE_FALLBACK_MODELS = [
   "openrouter/free",
   "minimax/minimax-m2.5:free",
@@ -32,9 +44,8 @@ const FREE_FALLBACK_MODELS = [
   "liquid/lfm-2.5-1.2b-thinking:free",
 ];
 
-const MAX_MESSAGES = 20;
-const MAX_MESSAGE_LENGTH = 4000;
-
+const MAX_HISTORY = 10;
+const MAX_MESSAGE_LENGTH = 2400;
 const requestCounts = new Map<string, { count: number; resetAt: number }>();
 
 function getClientIp(req: Request): string {
@@ -43,7 +54,7 @@ function getClientIp(req: Request): string {
   return req.headers.get("x-real-ip") || "unknown";
 }
 
-function isRateLimited(key: string, limit = 20, windowMs = 60_000): boolean {
+function isRateLimited(key: string, limit = 24, windowMs = 60_000): boolean {
   const now = Date.now();
   const current = requestCounts.get(key);
   if (!current || current.resetAt <= now) {
@@ -55,127 +66,200 @@ function isRateLimited(key: string, limit = 20, windowMs = 60_000): boolean {
   return current.count > limit;
 }
 
-function normalizeMessages(input: unknown): IncomingMessage[] | null {
-  if (!Array.isArray(input)) return null;
+function normalizeOneMessage(message: unknown): ChatHistoryMessage | null {
+  if (!message || typeof message !== "object") return null;
+  const candidate = message as { role?: unknown; content?: unknown };
+  if (candidate.role !== "user" && candidate.role !== "assistant") return null;
+  if (typeof candidate.content !== "string") return null;
 
-  const messages = input.slice(-MAX_MESSAGES);
-  const normalized: IncomingMessage[] = [];
-
-  for (const message of messages) {
-    if (
-      !message ||
-      (message.role !== "user" && message.role !== "assistant") ||
-      typeof message.content !== "string"
-    ) {
-      return null;
-    }
-
-    const content = message.content.trim();
-    if (!content || content.length > MAX_MESSAGE_LENGTH) {
-      return null;
-    }
-
-    normalized.push({ role: message.role, content });
-  }
-
-  return normalized;
+  const content = candidate.content.trim();
+  if (!content || content.length > MAX_MESSAGE_LENGTH) return null;
+  return { role: candidate.role, content };
 }
 
-function safeParseNameInference(text: string): NameInferenceResult | null {
-  const trimmed = (text || "").trim();
-  if (!trimmed) return null;
-  try {
-    const parsed = JSON.parse(trimmed) as Partial<NameInferenceResult>;
-    if (parsed && typeof parsed === "object") {
-      const name =
-        typeof parsed.visitorName === "string"
-          ? parsed.visitorName.trim().slice(0, 80)
-          : null;
-      return { visitorName: name || null };
-    }
-    return null;
-  } catch {
-    return null;
-  }
+function normalizeHistory(input: unknown): ChatHistoryMessage[] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .map(normalizeOneMessage)
+    .filter(Boolean)
+    .slice(-MAX_HISTORY) as ChatHistoryMessage[];
 }
 
-async function inferVisitorNameFromUserText(opts: {
+function resolveMessageAndHistory(body: ChatRequestBody): {
+  message: string | null;
+  history: ChatHistoryMessage[];
+} {
+  if (typeof body.message === "string") {
+    const message = body.message.trim();
+    return {
+      message: message && message.length <= MAX_MESSAGE_LENGTH ? message : null,
+      history: normalizeHistory(body.history),
+    };
+  }
+
+  const legacyMessages = normalizeHistory(body.messages);
+  const lastUserIndex = [...legacyMessages]
+    .reverse()
+    .findIndex((message) => message.role === "user");
+  if (lastUserIndex < 0) {
+    return { message: null, history: legacyMessages };
+  }
+
+  const actualIndex = legacyMessages.length - 1 - lastUserIndex;
+  const current = legacyMessages[actualIndex];
+  return {
+    message: current.content,
+    history: legacyMessages.slice(0, actualIndex).slice(-MAX_HISTORY),
+  };
+}
+
+function inferVisitorNameFast(text: string): string | null {
+  const trimmed = text.trim();
+  const direct = trimmed.match(
+    /(?:my name is|i am|i'm|call me|this is)\s+([a-z][a-z .'-]{1,50})/i,
+  );
+  const rawName =
+    direct?.[1] ||
+    (/^[a-z][a-z .'-]{1,40}$/i.test(trimmed) && trimmed.split(/\s+/).length <= 3
+      ? trimmed
+      : "");
+  const name = rawName
+    .replace(/[?!.]+$/g, "")
+    .split(/\s+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ")
+    .trim();
+
+  if (!name) return null;
+  if (
+    /^(skip|nothing|anonymous|no|none|forget|leave|whatever|hello|hi|hey)$/i.test(
+      name,
+    )
+  ) {
+    return null;
+  }
+
+  return name.slice(0, 80);
+}
+
+function inferIntent(text: string) {
+  const lower = text.toLowerCase();
+  if (/(contact|email|reach|connect|message)/.test(lower)) return "contact";
+  if (/(publication|paper|journal|doi|research|poster)/.test(lower)) {
+    return "publications";
+  }
+  if (/(activity|event|conference|workshop|visit|timeline)/.test(lower)) {
+    return "activities";
+  }
+  if (/(skill|tool|uav|gps|software|instrument|drone|gis)/.test(lower)) {
+    return "skills";
+  }
+  if (/(phd|education|degree|iit|mtech|btech)/.test(lower)) return "education";
+  if (/(role|job|career|experience|bhoomicam|work)/.test(lower)) {
+    return "career";
+  }
+  return "general";
+}
+
+function buildSystemPrompt(opts: {
+  knowledgePrompt: string;
+  actions: ChatAction[];
+}) {
+  const actionLines = opts.actions
+    .filter((action) => action.href)
+    .map((action) => `- ${action.label}: ${action.href}`)
+    .join("\n");
+
+  return [
+    "You are kasi, the website assistant for Akash Pandey / Akash Kumar.",
+    "Be concise, warm, and useful. Answer Akash-specific questions only from the supplied context.",
+    "If a fact about Akash is not in context, say you do not have that exact detail.",
+    "For non-Akash questions, answer briefly when appropriate, then connect back to the website if useful.",
+    "Use Markdown. Use a compact table only when it improves scanning.",
+    "When a useful page exists, mention the exact link path naturally.",
+    "Never claim you can see private files or admin logs.",
+    "",
+    "Relevant website context:",
+    opts.knowledgePrompt,
+    "",
+    "Useful links you may mention:",
+    actionLines || "- /contact",
+  ].join("\n");
+}
+
+async function askOpenRouter(opts: {
   apiKey: string;
   model: string;
-  userText: string;
-}): Promise<string | null> {
-  const text = opts.userText.trim();
-  if (!text) return null;
+  systemPrompt: string;
+  history: ChatHistoryMessage[];
+  message: string;
+}): Promise<{ reply: string; modelUsed: string }> {
+  const modelsToTry = [
+    opts.model,
+    ...FREE_FALLBACK_MODELS.filter((model) => model !== opts.model),
+  ];
 
-  const prompt =
-    "You extract a user's preferred name from text. " +
-    "Return STRICT JSON only (no markdown, no prose) like: {\"visitorName\":\"Akash\"} or {\"visitorName\":null}. " +
-    "Input may contain a single user message, or a short exchange like 'User: ...\\nAssistant: ...'. " +
-    "CRITICAL: Only return a name if the USER is telling you their name or explicitly instructing what they want to be called. " +
-    "If the user is asking the assistant's name (e.g. 'what is your name?'), return null. " +
-    "If a name appears only in the Assistant text (like 'I'm kasi'), ignore it and return null. " +
-    "IMPORTANT: If the user's response is a deflection, dismissal, or indicates they want to skip naming " +
-    "(e.g., 'Leave it', 'Forget it', 'Skip', 'Never mind', 'Nothing', 'Don't worry', 'It's fine', 'Just chat', " +
-    "'No thanks', 'Pass', 'Whatever', 'Doesn't matter', 'no one','Not important', 'Let's skip that', 'Move on', etc.), return null. " +
-    "Only return a name if it genuinely sounds like a person's name (proper nouns, common first/last names like Rahul, Alex, Priya). " +
-    "Rules: If the message is a question/complaint/statement and contains no clear preferred name, return null. " +
-    "If the message is just a likely person's name (e.g. 'Rahul', 'Siri', 'Akash Sharma'), return it. " +
-    "If the message contains a name plus a question (e.g. 'I'm Siri, what's Akash's age?'), return the name (Siri). " +
-    "If the user refuses naming (e.g. 'don't call me anything', 'anonymous'), return null. " +
-    "Prefer null over guessing.";
+  let lastError: string | null = null;
+  const messages = [
+    { role: "system" as const, content: opts.systemPrompt },
+    ...opts.history.map((message) => ({
+      role: message.role,
+      content: message.content,
+    })),
+    { role: "user" as const, content: opts.message },
+  ];
 
-  try {
-    const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${opts.apiKey}`,
-          "HTTP-Referer": "https://akashpandey.com",
-          "X-Title": "kasi - Akash Website Assistant",
+  for (const model of modelsToTry) {
+    try {
+      const response = await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${opts.apiKey}`,
+            "HTTP-Referer": "https://akashpandey.com",
+            "X-Title": "kasi - Akash Website Assistant",
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            temperature: 0.25,
+            max_tokens: 1000,
+          }),
         },
-        body: JSON.stringify({
-          model: opts.model,
-          messages: [
-            { role: "system", content: prompt },
-            { role: "user", content: text },
-          ],
-          temperature: 0,
-          max_tokens: 64,
-        }),
-      },
-    );
+      );
 
-    if (!response.ok) {
-      return null;
+      if (response.status === 429) {
+        lastError = "rate-limited";
+        continue;
+      }
+
+      if (!response.ok) {
+        lastError = String(response.status);
+        continue;
+      }
+
+      const result = (await response.json()) as {
+        choices?: Array<{ message?: { content?: string } }>;
+      };
+      const reply = result.choices?.[0]?.message?.content?.trim();
+      if (reply) return { reply, modelUsed: model };
+    } catch {
+      lastError = "exception";
     }
-
-    const result = (await response.json()) as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-
-    const raw = (result.choices?.[0]?.message?.content || "").trim();
-    const parsed = safeParseNameInference(raw);
-    return parsed?.visitorName ?? null;
-  } catch (error) {
-    console.error("[Name Inference Error]", error);
-    return null;
   }
+
+  throw new Error(lastError || "model-failed");
 }
 
-function safeLastUserMessage(messages: IncomingMessage[]): string | null {
-  for (let index = messages.length - 1; index >= 0; index -= 1) {
-    const message = messages[index];
-    if (message?.role === "user") {
-      const text = (message.content || "").trim();
-      return text || null;
-    }
-  }
-  return null;
+function buildNotes(input: Record<string, unknown>) {
+  return JSON.stringify(input);
 }
 
 export async function POST(req: Request) {
+  const startedAt = Date.now();
+
   try {
     const rateLimitKey = getClientIp(req);
     if (isRateLimited(rateLimitKey)) {
@@ -185,224 +269,149 @@ export async function POST(req: Request) {
       );
     }
 
-    const {
-      messages: rawMessages,
-      conversationId,
-      visitorName,
-    }: {
-      messages: unknown;
-      conversationId?: string;
-      visitorName?: string;
-    } = await req.json();
+    const body = (await req.json()) as ChatRequestBody;
+    const { message, history } = resolveMessageAndHistory(body);
 
-    const messages = normalizeMessages(rawMessages);
-    if (!messages) {
+    if (!message) {
       return NextResponse.json(
         { error: "Please send a shorter, valid chat message." },
         { status: 400 },
       );
     }
 
-    const visitorCookieName = "hal_vid";
     const cookieStore = await cookies();
+    const visitorCookieName = "hal_vid";
     const existingVisitorId = cookieStore.get(visitorCookieName)?.value;
     const visitorId = existingVisitorId || crypto.randomUUID();
-
-    const resolvedConversationId =
-      typeof conversationId === "string" && conversationId.trim()
-        ? conversationId.trim()
+    const conversationId =
+      typeof body.conversationId === "string" && body.conversationId.trim()
+        ? body.conversationId.trim()
         : crypto.randomUUID();
-
-    const resolvedVisitorName =
-      typeof visitorName === "string" && visitorName.trim()
-        ? visitorName.trim().slice(0, 80)
-        : null;
+    const visitorName =
+      typeof body.visitorName === "string" && body.visitorName.trim()
+        ? body.visitorName.trim().slice(0, 80)
+        : inferVisitorNameFast(message);
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     const model = process.env.OPENROUTER_MODEL || "openrouter/free";
 
     if (!apiKey) {
-      console.error("[Chat API] OPENROUTER_API_KEY is not configured");
       return NextResponse.json(
         { error: FRIENDLY_ERRORS.config },
         { status: 503 },
       );
     }
 
-    // Build dynamic context from website data + fed knowledge
-    const dynamicContext = buildAIContext();
+    const retrieval = retrieveSiteKnowledge(
+      [message, ...history.slice(-3).map((item) => item.content)].join("\n"),
+    );
+    const intent = inferIntent(message);
+    const systemPrompt = buildSystemPrompt({
+      knowledgePrompt: buildKnowledgePrompt(retrieval.docs),
+      actions: retrieval.actions,
+    });
 
-    const systemPrompt =
-      `You are kasi, the website assistant for Akash.\n` +
-      `Use PROFILE CONTEXT as the source of truth for Akash's personal facts (age, height, roles, contact, etc).\n` +
-      `Do not guess, approximate, or invent Akash-specific details. If a personal fact is not present in PROFILE CONTEXT, say you don't have that info.\n` +
-      `If the user asks about your (kasi's) physical attributes, you have none.\n\n` +
-      `PROFILE CONTEXT (authoritative):\n${dynamicContext}`;
+    const { reply, modelUsed } = await askOpenRouter({
+      apiKey,
+      model,
+      systemPrompt,
+      history,
+      message,
+    });
 
-    const chatMessages = [
-      { role: "system" as const, content: systemPrompt },
-      ...(messages || []).map((message) => ({
-        role: message.role as "user" | "assistant",
-        content: message.content,
-      })),
-    ];
-
-    let reply = "Sorry, I don't have an answer for that.";
-
-    // Build list of models to try: primary first, then fallbacks
-    const modelsToTry = [model, ...FREE_FALLBACK_MODELS.filter(m => m !== model)];
-
-    let lastError: string | null = null;
-    for (const tryModel of modelsToTry) {
-      try {
-        console.log(`[Chat API] Trying model: ${tryModel}`);
-        const apiResponse = await fetch(
-          "https://openrouter.ai/api/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
-              "HTTP-Referer": "https://akashpandey.com",
-              "X-Title": "kasi - Akash Website Assistant",
-            },
-            body: JSON.stringify({
-              model: tryModel,
-              messages: chatMessages,
-              temperature: 0.3,
-              max_tokens: 4096,
-            }),
-          },
-        );
-
-        if (apiResponse.status === 429) {
-          console.warn(`[Chat API] Model ${tryModel} rate-limited (429), trying next...`);
-          lastError = "rate-limited";
-          continue; // Try next model
-        }
-
-        if (!apiResponse.ok) {
-          const errBody = await apiResponse.text().catch(() => "");
-          console.warn(`[Chat API] Model ${tryModel} failed (${apiResponse.status}): ${errBody.slice(0, 200)}`);
-          lastError = `${apiResponse.status}`;
-          continue; // Try next model
-        }
-
-        const result = (await apiResponse.json()) as {
-          choices?: Array<{ message?: { content?: string } }>;
-        };
-
-        reply = (result.choices?.[0]?.message?.content || "").trim() || reply;
-        lastError = null; // Success!
-        break;
-      } catch (error) {
-        console.error(`[Chat API] Model ${tryModel} threw:`, error);
-        lastError = "exception";
-        continue;
-      }
-    }
-
-    if (lastError) {
-      console.error(`[Chat API] All models failed. Last error: ${lastError}`);
-      const friendlyMsg = lastError === "rate-limited" ? FRIENDLY_ERRORS.rateLimit : FRIENDLY_ERRORS.busy;
-      return NextResponse.json(
-        { error: friendlyMsg },
-        { status: 502 },
-      );
-    }
-
-    // Best-effort: infer a preferred name from the latest user message if none was provided.
-    let inferredVisitorName: string | null = null;
-    const userMessageCount = (messages || []).filter((m) => m.role === "user").length;
-    if (!resolvedVisitorName && userMessageCount <= 3) {
-      try {
-        const lastUserText = safeLastUserMessage(messages || []);
-        if (lastUserText) {
-          inferredVisitorName = await inferVisitorNameFromUserText({
-            apiKey,
-            model,
-            userText: `User: ${lastUserText}\nAssistant: ${reply}`,
-          });
-        }
-      } catch (e) {
-        console.warn("[Visitor Name Inference Warning]", e);
-      }
-    }
-
-    // Log user+assistant turns (best-effort, never fail the chat on logging issues).
+    const latencyMs = Date.now() - startedAt;
+    const turnId = crypto.randomUUID();
     let logResult: ChatLogAppendResult | null = null;
-    try {
-      const lastUserText = safeLastUserMessage(messages || []);
-      const timestamp = new Date().toISOString();
-      const rows: ChatLogRow[] = [];
 
-      if (lastUserText) {
-        rows.push({
+    try {
+      const timestamp = new Date().toISOString();
+      const commonNotes = {
+        turnId,
+        intent,
+        latencyMs,
+        model: modelUsed,
+        page: body.client?.page || null,
+        contextRefs: retrieval.docs.map((doc) => doc.id),
+        actions: retrieval.actions.map((action) => ({
+          label: action.label,
+          href: action.href ?? null,
+          prompt: action.prompt ?? null,
+        })),
+      };
+
+      const rows: ChatLogRow[] = [
+        {
           timestamp,
           visitorId,
-          visitorName: resolvedVisitorName ?? inferredVisitorName,
-          conversationId: resolvedConversationId,
+          visitorName,
+          conversationId,
           role: "user",
-          message: lastUserText,
-        });
-      }
+          message,
+          notes: buildNotes({ ...commonNotes, sequence: 1 }),
+        },
+        {
+          timestamp,
+          visitorId,
+          visitorName,
+          conversationId,
+          role: "assistant",
+          message: reply,
+          notes: buildNotes({ ...commonNotes, sequence: 2 }),
+        },
+      ];
 
-      rows.push({
-        timestamp,
-        visitorId,
-        visitorName: resolvedVisitorName ?? inferredVisitorName,
-        conversationId: resolvedConversationId,
-        role: "assistant",
-        message: reply,
-      });
-
-      if (rows.length > 0) {
-        logResult = await appendChatLogRows(rows);
-      }
+      logResult = await appendChatLogRows(rows);
     } catch (logError) {
       console.warn("[Chat Log Warning]", logError);
       logResult = {
         status: "error",
-        error: logError instanceof Error ? logError.message : "Unknown log error",
+        error:
+          logError instanceof Error ? logError.message : "Unknown log error",
       };
     }
 
     if (logResult?.status === "disabled") {
       console.warn(`[Chat Log Disabled] ${logResult.reason}`);
     }
-
     if (logResult?.status === "error") {
       console.warn(`[Chat Log Failed] ${logResult.error}`);
     }
 
-    const includeDebug = process.env.NODE_ENV !== "production";
-    const res = NextResponse.json({
+    const response = NextResponse.json({
       reply,
-      visitorName: resolvedVisitorName ?? inferredVisitorName,
-      ...(includeDebug
+      visitorName,
+      actions: retrieval.actions,
+      cards: retrieval.cards,
+      ...(process.env.NODE_ENV !== "production"
         ? {
-          meta: {
-            chatLog: logResult ?? { status: "disabled", reason: "No rows" },
-          },
-        }
+            meta: {
+              intent,
+              latencyMs,
+              model: modelUsed,
+              contextRefs: retrieval.docs.map((doc) => doc.id),
+              chatLog: logResult,
+            },
+          }
         : {}),
     });
+
     if (!existingVisitorId) {
-      res.cookies.set(visitorCookieName, visitorId, {
+      response.cookies.set(visitorCookieName, visitorId, {
         httpOnly: true,
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
         path: "/",
-        maxAge: 60 * 60 * 24 * 365, // 1 year
+        maxAge: 60 * 60 * 24 * 365,
       });
     }
-    return res;
+
+    return response;
   } catch (error) {
     console.error("[API Chat Route Error]", error);
-    // Never expose internal error details to the user
-    return NextResponse.json(
-      { error: FRIENDLY_ERRORS.generic },
-      { status: 500 },
-    );
+    const message =
+      error instanceof Error && error.message === "rate-limited"
+        ? FRIENDLY_ERRORS.rateLimit
+        : FRIENDLY_ERRORS.busy || FRIENDLY_ERRORS.generic;
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 }

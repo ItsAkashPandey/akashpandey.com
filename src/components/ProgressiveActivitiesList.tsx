@@ -73,6 +73,24 @@ const activityTypeStyles = {
   }
 >;
 
+function scrollToRenderedActivity(
+  id: string,
+  behavior: ScrollBehavior = "smooth",
+  attempt = 0,
+) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.scrollIntoView({ behavior, block: "center" });
+    return;
+  }
+
+  if (attempt < 12) {
+    requestAnimationFrame(() =>
+      scrollToRenderedActivity(id, behavior, attempt + 1),
+    );
+  }
+}
+
 function getActivityType(
   activity: ActivityWithMeta,
 ): Exclude<ActivityTypeFilter, "all"> {
@@ -178,6 +196,26 @@ export default function ProgressiveActivitiesList({
     setSortBy("newest");
   };
 
+  useEffect(() => {
+    const revealHashTarget = () => {
+      const match = window.location.hash.match(/^#activity-(\d+)$/);
+      if (!match) return;
+
+      const index = Number(match[1]);
+      if (!Number.isFinite(index)) return;
+
+      setVisibleCount((current) =>
+        Math.max(current, Math.min(index + 1, filteredActivities.length)),
+      );
+
+      scrollToRenderedActivity(`activity-${index}`, "smooth");
+    };
+
+    revealHashTarget();
+    window.addEventListener("hashchange", revealHashTarget);
+    return () => window.removeEventListener("hashchange", revealHashTarget);
+  }, [filteredActivities.length]);
+
   const loadMore = useCallback(() => {
     if (!hasMore) return;
     setVisibleCount((prev) =>
@@ -232,11 +270,26 @@ export default function ProgressiveActivitiesList({
 
   const timelineEntries = useMemo(
     () =>
-      visibleActivities.map((activity) => ({
+      filteredActivities.map((activity) => ({
         id: activity.elementId,
         date: activity.date,
       })),
-    [visibleActivities],
+    [filteredActivities],
+  );
+
+  const selectTimelineEntry = useCallback(
+    (id: string) => {
+      const index = filteredActivities.findIndex(
+        (activity) => activity.elementId === id,
+      );
+      if (index < 0) return;
+
+      setVisibleCount((current) =>
+        Math.max(current, Math.min(index + 1, filteredActivities.length)),
+      );
+      scrollToRenderedActivity(id);
+    },
+    [filteredActivities],
   );
 
   return (
@@ -421,7 +474,10 @@ export default function ProgressiveActivitiesList({
       </section>
 
       {filteredActivities.length > 0 && (
-        <TimelineBar entries={timelineEntries} />
+        <TimelineBar
+          entries={timelineEntries}
+          onSelectEntry={selectTimelineEntry}
+        />
       )}
     </div>
   );

@@ -1,6 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import type {
+  ChatAction,
+  ChatMessageShape,
+  ChatUiCard,
+} from "@/lib/chat-types";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import ChatInput from "./ChatInput";
 import ChatMessages from "./ChatMessages";
 
@@ -9,9 +20,7 @@ type ChatPanelProps = {
 };
 
 export default function ChatPanel({ isExpanded }: ChatPanelProps) {
-  const [messages, setMessages] = useState<
-    Array<{ id: string; role: "user" | "assistant"; content: string }>
-  >([]);
+  const [messages, setMessages] = useState<ChatMessageShape[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
@@ -26,19 +35,31 @@ export default function ChatPanel({ isExpanded }: ChatPanelProps) {
     if (!isExpanded) return;
     if (messagesRef.current.length > 0) return;
 
-    const greeting = "Hey — I’m kasi. What should I call you?";
+    const greeting =
+      "Hi, I’m kasi. Ask me about Akash’s research, activities, publications, skills, or contact details.";
 
     setMessages([
       {
         id: crypto.randomUUID?.() ?? `${Date.now()}-assistant-greeting`,
         role: "assistant",
         content: greeting,
+        actions: [
+          {
+            label: "Recent activities",
+            prompt: "What are Akash's recent activities?",
+            kind: "prompt",
+          },
+          { label: "Publications", href: "/publications", kind: "page" },
+          { label: "Contact", href: "/contact", kind: "page" },
+        ],
       },
     ]);
   }, [isExpanded]);
 
   const handleInputChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>) => {
+    (
+      event: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>,
+    ) => {
       setInput(event.target.value);
     },
     [],
@@ -48,10 +69,9 @@ export default function ChatPanel({ isExpanded }: ChatPanelProps) {
     messagesRef.current = messages;
   }, [messages]);
 
-  const handleSubmit = useCallback(
-    async (event?: { preventDefault?: () => void }) => {
-      event?.preventDefault?.();
-      const trimmedInput = input.trim();
+  const sendMessageText = useCallback(
+    async (text: string) => {
+      const trimmedInput = text.trim();
       if (!trimmedInput || isLoading) {
         return;
       }
@@ -73,15 +93,25 @@ export default function ChatPanel({ isExpanded }: ChatPanelProps) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: nextMessages,
+            message: trimmedInput,
+            history: messagesRef.current
+              .slice(-8)
+              .map(({ role, content }) => ({ role, content })),
             conversationId: conversationIdRef.current,
             visitorName: visitorName || undefined,
+            client: {
+              page:
+                typeof window !== "undefined"
+                  ? window.location.pathname
+                  : undefined,
+            },
           }),
         });
 
         if (!response.ok) {
           // Parse the friendly error from the server
-          let friendlyMessage = "Oops, something went sideways 🙃 — please try again!";
+          let friendlyMessage =
+            "Oops, something went sideways 🙃 — please try again!";
           try {
             const errorData = await response.json();
             if (errorData?.error && typeof errorData.error === "string") {
@@ -96,8 +126,11 @@ export default function ChatPanel({ isExpanded }: ChatPanelProps) {
         const data = (await response.json()) as {
           reply?: string;
           visitorName?: string | null;
+          actions?: ChatAction[];
+          cards?: ChatUiCard[];
         };
-        const assistantText = data.reply?.trim() || "Sorry, I don't have an answer for that.";
+        const assistantText =
+          data.reply?.trim() || "Sorry, I don't have an answer for that.";
 
         const nextVisitorName = (data.visitorName || "").trim();
         if (nextVisitorName && !visitorName) {
@@ -110,15 +143,29 @@ export default function ChatPanel({ isExpanded }: ChatPanelProps) {
             id: crypto.randomUUID?.() ?? `${Date.now()}-assistant`,
             role: "assistant",
             content: assistantText,
+            actions: data.actions,
+            cards: data.cards,
           },
         ]);
       } catch (caughtError) {
-        setError(caughtError instanceof Error ? caughtError : new Error("Unknown error"));
+        setError(
+          caughtError instanceof Error
+            ? caughtError
+            : new Error("Unknown error"),
+        );
       } finally {
         setIsLoading(false);
       }
     },
-    [input, isLoading, visitorName],
+    [isLoading, visitorName],
+  );
+
+  const handleSubmit = useCallback(
+    async (event?: { preventDefault?: () => void }) => {
+      event?.preventDefault?.();
+      await sendMessageText(input);
+    },
+    [input, sendMessageText],
   );
 
   const handleClearChat = () => {
@@ -139,11 +186,7 @@ export default function ChatPanel({ isExpanded }: ChatPanelProps) {
         messages={messages}
         error={error}
         isLoading={isLoading}
-        onPromptClick={(prompt) =>
-          handleInputChange({
-            target: { value: prompt },
-          } as ChangeEvent<HTMLInputElement>)
-        }
+        onPromptClick={(prompt) => sendMessageText(prompt)}
       />
       <ChatInput
         input={input}

@@ -1,5 +1,5 @@
 import { useChatbot } from "@/contexts/ChatContext";
-import { Suspense, lazy, useCallback, useState, useEffect } from "react";
+import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import ChatHeader from "./ChatHeader";
 import {
   Accordion,
@@ -20,7 +20,7 @@ function ChatPanelFallback() {
         </div>
 
         <div className="flex items-start justify-start">
-          <Skeleton className="mr-2 mt-0.5 h-4 w-4 shrink-0 rounded-full sm:mr-2.5 sm:h-5 sm:w-5" />
+          <Skeleton className="mt-0.5 mr-2 h-4 w-4 shrink-0 rounded-full sm:mr-2.5 sm:h-5 sm:w-5" />
           <Skeleton className="h-20 w-[220px] rounded-lg sm:w-64" />
         </div>
 
@@ -29,7 +29,7 @@ function ChatPanelFallback() {
         </div>
 
         <div className="flex items-start justify-start">
-          <Skeleton className="mr-2 mt-0.5 h-4 w-4 shrink-0 rounded-full sm:mr-2.5 sm:h-5 sm:w-5" />
+          <Skeleton className="mt-0.5 mr-2 h-4 w-4 shrink-0 rounded-full sm:mr-2.5 sm:h-5 sm:w-5" />
           <Skeleton className="h-20 w-[220px] rounded-lg sm:w-64" />
         </div>
       </div>
@@ -63,14 +63,17 @@ export default function Chat() {
     }
   }, [isOpen, expandedValue]);
 
-  const handleValueChange = useCallback((nextValue: string) => {
-    setExpandedValue(nextValue);
-    if (nextValue) {
-      setHasOpened(true);
-    }
-    // Sync back to context
-    setIsOpen(nextValue === "item-1");
-  }, [setIsOpen]);
+  const handleValueChange = useCallback(
+    (nextValue: string) => {
+      setExpandedValue(nextValue);
+      if (nextValue) {
+        setHasOpened(true);
+      }
+      // Sync back to context
+      setIsOpen(nextValue === "item-1");
+    },
+    [setIsOpen],
+  );
 
   const isExpanded = expandedValue === "item-1";
 
@@ -85,17 +88,16 @@ export default function Chat() {
       >
         <AccordionItem
           value="item-1"
-          style={{
-            background: "rgba(255, 255, 255, 0.25)",
-            backdropFilter: "blur(40px) saturate(200%)",
-            WebkitBackdropFilter: "blur(40px) saturate(200%)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15)",
-          }}
-          className={`fixed bottom-3 overflow-hidden shadow-2xl transition-all duration-300 ease-out dark:!bg-[rgba(20,20,20,0.55)] dark:!border-[rgba(255,255,255,0.15)] sm:bottom-8 sm:left-auto sm:right-8 ${isExpanded ? "left-3 right-3 w-auto rounded-[1.5rem] sm:left-auto sm:w-[360px]" : "right-3 w-14 rounded-full"}`}
+          className={`fixed bottom-3 overflow-hidden border border-white/55 bg-white/55 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-3xl transition-all duration-300 ease-out sm:right-8 sm:bottom-8 sm:left-auto dark:border-white/10 dark:bg-zinc-950/68 dark:shadow-[0_24px_80px_rgba(0,0,0,0.36)] ${
+            isExpanded
+              ? "right-3 left-3 w-auto rounded-[1.65rem] sm:left-auto sm:w-[410px]"
+              : "right-3 w-16 rounded-[1.35rem]"
+          }`}
         >
           <AccordionTrigger
-            className={`border-b border-white/20 transition-colors hover:bg-white/10 dark:border-white/10 dark:hover:bg-white/5 ${isExpanded ? "px-5 py-3.5" : "size-14 justify-center p-0"}`}
+            className={`border-white/20 transition-colors hover:bg-white/20 dark:border-white/10 dark:hover:bg-white/5 ${
+              isExpanded ? "border-b px-5 py-3.5" : "size-16 justify-center p-0"
+            }`}
           >
             <ChatHeader compact={!isExpanded} />
           </AccordionTrigger>
@@ -107,7 +109,7 @@ export default function Chat() {
               <div
                 className={
                   isExpanded
-                    ? "flex max-h-[min(420px,calc(100vh-8rem))] min-h-[340px] flex-col justify-between rounded-b-lg sm:max-h-[480px] sm:min-h-[380px]"
+                    ? "flex max-h-[min(640px,calc(100vh-8rem))] min-h-[480px] flex-col justify-between rounded-b-[1.4rem] sm:max-h-[660px] sm:min-h-[560px]"
                     : "hidden"
                 }
               >

@@ -1,50 +1,36 @@
-import { useEffect, useState } from "react";
+import { Sparkles } from "lucide-react";
 import { Button } from "./ui/Button";
 
 interface ChatPromptsProps {
   onPromptClick: (prompt: string) => void;
 }
 
-const allPrompts = [
+const prompts = [
   "Give me a quick intro to Akash",
-  "What is Akash's current role?",
-  "Summarize Akash's experience",
   "What is Akash researching at IIT Roorkee?",
-  "What is Akash's PhD topic?",
-  "What tools does Akash use for remote sensing and GIS?",
-  "What instruments does Akash work with (UAV/GPS/sensors)?",
-  "List Akash's key skills",
-  "What publications does Akash have?",
-  "Which of Akash's publications are in Ecological Informatics?",
-  "What activities has Akash worked on?",
-  "How can I contact Akash?"
+  "Show Akash's recent activities",
+  "Which publications are in Ecological Informatics?",
+  "What UAV and GIS tools does Akash use?",
+  "How can I contact Akash?",
 ];
 
-function getRandomPrompts(prompts: string[], count: number): string[] {
-  const shuffled = [...prompts].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
-}
-
 export default function ChatPrompts({ onPromptClick }: ChatPromptsProps) {
-  const [randomPrompts, setRandomPrompts] = useState<string[]>([]);
-
-  useEffect(() => {
-    setRandomPrompts(getRandomPrompts(allPrompts, 3));
-  }, []);
-
   return (
-    <div className="mt-2 flex w-full max-w-[200px] flex-col gap-1.5 sm:mt-3 sm:max-w-[250px] sm:gap-2">
-      <p className="text-center text-xs text-muted-foreground">Try asking:</p>
-      <div className="flex flex-col gap-1 sm:gap-1.5">
-        {randomPrompts.map((prompt) => (
+    <div className="mt-3 flex w-full max-w-[280px] flex-col gap-2">
+      <p className="text-muted-foreground flex items-center justify-center gap-1.5 text-xs">
+        <Sparkles className="size-3" />
+        Try asking
+      </p>
+      <div className="flex flex-wrap justify-center gap-1.5">
+        {prompts.map((prompt) => (
           <Button
             key={prompt}
             variant="outline"
             size="sm"
             onClick={() => onPromptClick(prompt)}
-            className="h-auto min-h-[32px] w-full justify-start whitespace-normal break-words px-2 py-1.5 text-left text-xs leading-normal sm:min-h-[36px] sm:px-3 sm:py-2"
+            className="h-auto min-h-8 rounded-full px-3 py-1.5 text-xs"
           >
-            <span className="line-clamp-2">{prompt}</span>
+            {prompt}
           </Button>
         ))}
       </div>
