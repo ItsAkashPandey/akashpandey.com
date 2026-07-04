@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { HighlightText } from "@/components/HighlightedText";
+import ImageLightbox from "@/components/ImageLightbox";
 import StackedImageDeck from "@/components/StackedImageDeck";
 import { cn } from "@/lib/utils";
 
@@ -561,29 +562,35 @@ function PublicationCard({
 }
 
 function PublicationMediaPreview({ media }: { media: PublicationMedia[] }) {
-  const openVisual = (index: number) => {
-    const item = media[index];
-    if (!item) return;
-    window.open(item.fullImage || item.image, "_blank", "noopener,noreferrer");
-  };
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const fullImages = media.map((item) => item.fullImage || item.image);
 
   return (
-    <aside className="border-border/50 bg-muted/15 flex min-h-[290px] items-center justify-center overflow-visible border-t p-5 md:border-t-0 md:border-l">
-      <StackedImageDeck
-        images={media.map((item) => item.image)}
-        labels={media.map((item) => item.label)}
-        alt={media[0]?.alt ?? "Publication visual"}
-        imageWidth={900}
-        imageHeight={680}
-        sizes="(max-width: 1024px) calc(100vw - 3rem), 300px"
-        quality={88}
-        idleQuality={88}
-        stackSize={Math.min(3, media.length)}
-        className="h-[250px] w-full max-w-[280px] rounded-xl"
-        cardClassName="p-1.5"
-        imageClassName="object-contain"
-        onImageClick={openVisual}
-      />
-    </aside>
+    <>
+      <aside className="border-border/50 bg-muted/15 flex min-h-[290px] items-center justify-center overflow-visible border-t p-5 md:border-t-0 md:border-l">
+        <StackedImageDeck
+          images={media.map((item) => item.image)}
+          labels={media.map((item) => item.label)}
+          alt={media[0]?.alt ?? "Publication visual"}
+          imageWidth={900}
+          imageHeight={680}
+          sizes="(max-width: 1024px) calc(100vw - 3rem), 300px"
+          quality={88}
+          idleQuality={88}
+          stackSize={Math.min(3, media.length)}
+          className="h-[250px] w-full max-w-[280px] rounded-xl"
+          imageClassName="object-contain"
+          onImageClick={setLightboxIndex}
+        />
+      </aside>
+      {lightboxIndex !== null && (
+        <ImageLightbox
+          images={fullImages}
+          currentIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNavigate={setLightboxIndex}
+        />
+      )}
+    </>
   );
 }

@@ -42,7 +42,7 @@ export default function ActivitySwipeCards({
           "h-[200px] w-full max-w-[280px] rounded-xl sm:h-[220px] sm:max-w-[300px]",
           className,
         )}
-        imageClassName="object-cover"
+        imageClassName="object-contain"
         onImageClick={openLightbox}
       />
 

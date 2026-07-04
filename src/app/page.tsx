@@ -13,11 +13,10 @@ import skillsData from "@/data/skills.json";
 
 import ImageWithSkeleton from "@/components/ImageWithSkeleton";
 import LazySection from "@/components/LazySection";
-import { cn } from "@/lib/utils";
 
 const LocationMap = dynamic(() => import("@/components/LocationMap"), {
   loading: () => (
-    <div className="border-border/50 bg-muted/40 h-[270px] w-full animate-pulse rounded-2xl border" />
+    <div className="border-border/50 bg-muted/40 h-48 w-full animate-pulse rounded-t-3xl border" />
   ),
 });
 
@@ -91,9 +90,6 @@ export default function Home() {
           <SwipeCards className="mx-auto shrink-0 sm:mx-0" />
 
           <div className="flex min-w-0 flex-1 flex-col text-center sm:max-w-3xl sm:text-left">
-            <p className="text-muted-foreground mb-3 text-[11px] font-semibold tracking-[0.18em] uppercase">
-              Geospatial researcher · builder
-            </p>
             <h1 className="title text-3xl leading-tight text-balance sm:text-5xl">
               {homeContent.introduction.greeting.replace(" 👋", "")}
               <span className="ml-1 inline-block origin-bottom-right hover:animate-[wave_1.3s_ease-in-out]">
@@ -188,23 +184,17 @@ export default function Home() {
                     key={skill.name}
                     className="group flex flex-col items-center gap-1.5 transition-all duration-300 hover:scale-110 sm:gap-2"
                   >
-                    <div className="bg-background/80 ring-border/50 group-hover:ring-primary/50 group-hover:shadow-primary/10 relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl p-2 shadow-lg ring-1 backdrop-blur-sm transition-all duration-300 group-hover:shadow-xl sm:h-16 sm:w-16 sm:p-3">
+                    <div className="ring-border/50 group-hover:ring-foreground/20 relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white p-2 shadow-sm ring-1 transition-all duration-300 group-hover:shadow-lg sm:h-16 sm:w-16 sm:p-3">
                       <ImageWithSkeleton
                         src={skill.logo}
                         alt={skill.name}
                         width={64}
                         height={64}
                         containerClassName="w-full h-full"
-                        className={cn(
-                          "h-full w-full object-contain",
-                          skill.invertDark && "dark:invert",
-                          (skill as any).invertLight && "invert dark:invert-0",
-                        )}
+                        className="h-full w-full object-contain"
                       />
                     </div>
-                    <span
-                      className={`max-w-[56px] bg-gradient-to-r text-center text-[10px] leading-tight font-bold sm:max-w-none sm:text-sm ${(skill as any).gradient} bg-clip-text text-transparent`}
-                    >
+                    <span className="text-foreground/85 max-w-[64px] text-center text-[10px] leading-tight font-semibold sm:max-w-none sm:text-sm">
                       {skill.name}
                     </span>
                   </div>
@@ -218,23 +208,17 @@ export default function Home() {
                     key={skill.name}
                     className="group flex flex-col items-center gap-1.5 transition-all duration-300 hover:scale-110 sm:gap-2"
                   >
-                    <div className="bg-background/80 ring-border/50 group-hover:ring-primary/50 group-hover:shadow-primary/10 relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl p-2 shadow-lg ring-1 backdrop-blur-sm transition-all duration-300 group-hover:shadow-xl sm:h-16 sm:w-16 sm:p-3">
+                    <div className="ring-border/50 group-hover:ring-foreground/20 relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white p-2 shadow-sm ring-1 transition-all duration-300 group-hover:shadow-lg sm:h-16 sm:w-16 sm:p-3">
                       <ImageWithSkeleton
                         src={skill.logo}
                         alt={skill.name}
                         width={64}
                         height={64}
                         containerClassName="w-full h-full"
-                        className={cn(
-                          "h-full w-full object-contain",
-                          skill.invertDark && "dark:invert",
-                          (skill as any).invertLight && "invert dark:invert-0",
-                        )}
+                        className="h-full w-full object-contain"
                       />
                     </div>
-                    <span
-                      className={`max-w-[56px] bg-gradient-to-r text-center text-[10px] leading-tight font-bold sm:max-w-none sm:text-sm ${(skill as any).gradient} bg-clip-text text-transparent`}
-                    >
+                    <span className="text-foreground/85 max-w-[64px] text-center text-[10px] leading-tight font-semibold sm:max-w-none sm:text-sm">
                       {skill.name}
                     </span>
                   </div>

@@ -15,6 +15,7 @@ import type {
 import {
   buildKnowledgePrompt,
   retrieveSiteKnowledge,
+  type KnowledgeDoc,
 } from "@/lib/site-knowledge";
 
 type ChatRequestBody = {
@@ -151,7 +152,11 @@ function inferIntent(text: string) {
   if (/(activity|event|conference|workshop|visit|timeline)/.test(lower)) {
     return "activities";
   }
-  if (/(skill|tool|uav|gps|software|instrument|drone|gis)/.test(lower)) {
+  if (
+    /(skill|tool|uav|gps|software|instrument|drone|gis|sensor|spectro|phenocam|weather station|theodolite|total station|faro|trimble|emlid|sokkia|python|qgis|arcgis|earth engine|pix4d|cloudcompare|latex|erdas|envi|revit|staad|autocad)/.test(
+      lower,
+    )
+  ) {
     return "skills";
   }
   if (/(phd|education|degree|iit|mtech|btech)/.test(lower)) return "education";
@@ -197,7 +202,11 @@ function buildSystemPrompt(opts: {
     "If a fact about Akash is not in context, say you do not have that exact detail.",
     "For non-Akash questions, answer briefly when appropriate, then connect back to the website if useful.",
     "Use Markdown. Use a compact table only when it improves scanning.",
-    "When a useful page exists, mention the exact link path naturally.",
+    "Use only the context relevant to the current question. Never append unrelated activities, publications, skills, or navigation suggestions.",
+    "When a useful page exists, write a descriptive clickable Markdown link such as [skills page](/skills), never a bare path such as /skills.",
+    "When inviting the visitor to ask Akash directly, link both [the contact form](/contact) and [akash_k@ce.iitr.ac.in](mailto:akash_k@ce.iitr.ac.in).",
+    "For a named instrument or software tool, include the exact model and concrete tasks from context when they are available.",
+    "For a named tool question, close with a brief invitation to use [the contact form](/contact) or email [akash_k@ce.iitr.ac.in](mailto:akash_k@ce.iitr.ac.in) for deployment-specific details.",
     "Never claim you can see private files or admin logs.",
     "Adapt to the visitor's register and energy: concise to concise, playful to playful, romantic to warmly romantic, and blunt to direct.",
     "Do not escalate harassment, demeaning language, hate, threats, or sexually explicit content. Keep tone-matching clever and bounded.",
@@ -210,6 +219,79 @@ function buildSystemPrompt(opts: {
     "Useful links you may mention:",
     actionLines || "- /contact",
   ].join("\n");
+}
+
+function removeRepeatedReply(input: string) {
+  const text = input.trim();
+  const paragraphs = text
+    .split(/\n{2,}/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (paragraphs.length >= 2 && paragraphs.length % 2 === 0) {
+    const midpoint = paragraphs.length / 2;
+    const firstHalf = paragraphs.slice(0, midpoint).join("\n\n");
+    const secondHalf = paragraphs.slice(midpoint).join("\n\n");
+    if (firstHalf === secondHalf) return firstHalf;
+  }
+
+  const normalizedLength = text.length;
+  for (
+    let split = Math.floor(normalizedLength * 0.45);
+    split <= Math.ceil(normalizedLength * 0.55);
+    split += 1
+  ) {
+    const first = text.slice(0, split).trim();
+    const second = text.slice(split).trim();
+    if (first.length > 80 && first === second) return first;
+  }
+
+  return text;
+}
+
+function directToolReply(message: string, docs: KnowledgeDoc[]) {
+  const normalizedMessage = message.toLowerCase();
+  const tool = docs.find((doc) => {
+    if (!doc.id.startsWith("skill-tool-")) return false;
+    const identifyingTerms = [
+      doc.title,
+      doc.details?.model ?? "",
+      ...(doc.keywords ?? []),
+    ]
+      .flatMap((value) => value.toLowerCase().split(/[^a-z0-9+.-]+/))
+      .filter(
+        (term) =>
+          term.length >= 4 &&
+          !["skill", "tool", "instrument", "software"].includes(term),
+      );
+    return identifyingTerms.some((term) => normalizedMessage.includes(term));
+  });
+
+  if (!tool) return null;
+
+  const model =
+    tool.details?.model && tool.details.model !== tool.title
+      ? ` (${tool.details.model})`
+      : "";
+  const tasks = (tool.details?.tasks ?? [])
+    .map((task) => `- ${task.charAt(0).toUpperCase()}${task.slice(1)}`)
+    .join("\n");
+  const experience = (tool.details?.experience ?? tool.text)
+    .replace(/^I have\b/i, "He has")
+    .replace(/^I use\b/i, "He uses")
+    .replace(/^I work\b/i, "He works")
+    .replace(/^My\b/i, "His")
+    .replace(/\bmy\b/gi, "his");
+
+  return [
+    `Akash has hands-on experience with **${tool.title}${model}**.`,
+    experience,
+    tasks ? `\nHe has used it for:\n${tasks}` : "",
+    tool.href ? `\n[See it on the skills page](${tool.href}).` : "",
+    "\nFor campaign- or setup-specific details, use [the contact form](/contact) or email [akash_k@ce.iitr.ac.in](mailto:akash_k@ce.iitr.ac.in).",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 async function askOpenRouter(opts: {
@@ -327,9 +409,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const retrieval = retrieveSiteKnowledge(
-      [message, ...history.slice(-3).map((item) => item.content)].join("\n"),
-    );
+    const retrieval = retrieveSiteKnowledge(message);
     const intent = inferIntent(message);
     const systemPrompt = buildSystemPrompt({
       knowledgePrompt: buildKnowledgePrompt(retrieval.docs),
@@ -338,6 +418,8 @@ export async function POST(req: Request) {
     });
 
     const codeRequestAttempt = getCodeRequestAttempt(message, history);
+    const toolReply =
+      intent === "skills" ? directToolReply(message, retrieval.docs) : null;
     let reply: string;
     let modelUsed: string;
 
@@ -345,6 +427,9 @@ export async function POST(req: Request) {
       reply =
         "I’m going to stop the coding detour here. Kasi is Akash’s portfolio guide, not a general coding workspace. I can still help you explore Akash’s research, activities, publications, skills, or contact details.";
       modelUsed = "local/code-request-boundary";
+    } else if (toolReply) {
+      reply = toolReply;
+      modelUsed = "local/tool-detail";
     } else {
       const modelResponse = await askOpenRouter({
         apiKey,
@@ -364,6 +449,7 @@ export async function POST(req: Request) {
       reply = warning
         ? `${warning}\n\n${modelResponse.reply}`
         : modelResponse.reply;
+      reply = removeRepeatedReply(reply);
     }
 
     const latencyMs = Date.now() - startedAt;

@@ -1,5 +1,12 @@
 import { useChatbot } from "@/contexts/ChatContext";
-import { Suspense, lazy, useCallback, useEffect, useState } from "react";
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import ChatHeader from "./ChatHeader";
 import {
   Accordion,
@@ -52,6 +59,7 @@ export default function Chat() {
 
   const [expandedValue, setExpandedValue] = useState<string>("");
   const [hasOpened, setHasOpened] = useState(false);
+  const chatRootRef = useRef<HTMLDivElement>(null);
 
   // Sync with global isOpen state (both opening and closing)
   useEffect(() => {
@@ -77,6 +85,24 @@ export default function Chat() {
 
   const isExpanded = expandedValue === "item-1";
 
+  useEffect(() => {
+    if (!isExpanded) return;
+
+    const closeOnOutsidePress = (event: PointerEvent) => {
+      if (
+        event.target instanceof Node &&
+        !chatRootRef.current?.contains(event.target)
+      ) {
+        setExpandedValue("");
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsidePress, true);
+    return () =>
+      document.removeEventListener("pointerdown", closeOnOutsidePress, true);
+  }, [isExpanded, setIsOpen]);
+
   return (
     isVisible && (
       <Accordion
@@ -87,6 +113,7 @@ export default function Chat() {
         className="relative z-[60] flex"
       >
         <AccordionItem
+          ref={chatRootRef}
           value="item-1"
           className={`fixed bottom-4 overflow-hidden border border-white/60 bg-white/72 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-3xl transition-all duration-300 ease-out sm:right-8 sm:bottom-8 sm:left-auto dark:border-white/10 dark:bg-zinc-950/76 dark:shadow-[0_24px_80px_rgba(0,0,0,0.36)] ${
             isExpanded

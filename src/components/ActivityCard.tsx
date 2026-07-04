@@ -6,7 +6,7 @@ import Link from "next/link";
 import Markdown from "react-markdown";
 import Icon from "./Icon";
 import ActivitySwipeCards from "./ActivitySwipeCards";
-import { Calendar, MapPin, Users } from "lucide-react";
+import { Calendar, Linkedin, MapPin, Users } from "lucide-react";
 import { HighlightText } from "./HighlightedText";
 
 interface Props {
@@ -14,6 +14,110 @@ interface Props {
   images?: string[];
   priorityImage?: boolean;
   searchQuery?: string;
+}
+
+const verifiedLinkedInProfiles: Record<string, string> = {
+  "prof. idhayachandhiran ilampooranan":
+    "https://www.linkedin.com/in/idhaya/",
+  "idhayachandhiran ilampooranan": "https://www.linkedin.com/in/idhaya/",
+  "mukund narayanan":
+    "https://www.linkedin.com/in/mukund-narayanan-0b63a310b/",
+  "prof. siddhartha khare":
+    "https://www.linkedin.com/in/siddhartha-khare-503a4429/",
+  "siddhartha khare":
+    "https://www.linkedin.com/in/siddhartha-khare-503a4429/",
+  "prof. saurabh vijay":
+    "https://www.linkedin.com/in/saurabh-vijay-phd-b93a1429/",
+  "saurabh vijay":
+    "https://www.linkedin.com/in/saurabh-vijay-phd-b93a1429/",
+  "tushar bharadwaj": "https://www.linkedin.com/in/tusharbharadwaj/",
+  "shreyas goswami": "https://www.linkedin.com/in/goswami-shreyas/",
+  "apurwa chaurasia":
+    "https://www.linkedin.com/in/apurwa-chaurasia-6a9969b1/",
+  "peeyush jasaiwal": "https://www.linkedin.com/in/peeyush-jasaiwal/",
+  "amarjeet kumar mahato":
+    "https://www.linkedin.com/in/amarjeet-kumar-mahato-630619160/",
+  "gaurav singh bareth": "https://www.linkedin.com/in/g2306/",
+  "ishfaqul haque":
+    "https://www.linkedin.com/in/ishfaqul-haque-a24a61251/",
+  "isfaqul haque":
+    "https://www.linkedin.com/in/ishfaqul-haque-a24a61251/",
+  "nitin lodhi": "https://www.linkedin.com/in/nitin-lodhi-215b72260/",
+  "prashant singh":
+    "https://www.linkedin.com/in/prashant-singh-356409b1/",
+  "sahil kundal": "https://www.linkedin.com/in/skundal1/",
+  "sushmit srivastava":
+    "https://www.linkedin.com/in/sushmit-srivastava-598403206/",
+};
+
+function collaboratorHref(name: string) {
+  const normalized = name
+    .replace(/[.]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+  return (
+    verifiedLinkedInProfiles[normalized] ??
+    `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(
+      `${name.replace(/[.]+$/g, "").trim()} IIT Roorkee`,
+    )}`
+  );
+}
+
+function CollaboratorLinks({
+  text,
+  query,
+}: {
+  text: string;
+  query: string;
+}) {
+  return (
+    <span className="not-prose flex flex-wrap items-center gap-x-1 gap-y-1">
+      {text
+        .split(/(\s*,\s*|\s+and\s+|\s*&\s*)/i)
+        .filter(Boolean)
+        .map((part, index) => {
+          if (/^\s*(,|and|&)\s*$/i.test(part)) {
+            return <span key={`${part}-${index}`}>{part.trim()}</span>;
+          }
+
+          const prefixMatch = part.match(/^(\s*my supervisor\s*-\s*)/i);
+          const prefix = prefixMatch?.[0] ?? "";
+          const rawName = part.slice(prefix.length).trim();
+          const suffix = rawName.match(/[.]+$/)?.[0] ?? "";
+          const name = rawName.replace(/[.]+$/g, "").trim();
+          const isGroup =
+            !name ||
+            /(organizers|participants|colleagues|volunteering tas|team|students|officers)/i.test(
+              name,
+            );
+
+          if (isGroup) {
+            return (
+              <span key={`${part}-${index}`}>
+                <HighlightText text={part.trim()} query={query} />
+              </span>
+            );
+          }
+
+          return (
+            <span key={`${name}-${index}`} className="inline-flex items-center">
+              {prefix && <span>{prefix.replace("-", "—")}</span>}
+              <a
+                href={collaboratorHref(name)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground decoration-border hover:decoration-foreground inline-flex items-center gap-1 font-semibold underline decoration-1 underline-offset-4 transition-colors"
+              >
+                <HighlightText text={name} query={query} />
+                <Linkedin className="size-3 text-[#0A66C2]" aria-hidden />
+              </a>
+              {suffix}
+            </span>
+          );
+        })}
+    </span>
+  );
 }
 
 export function ActivityCard({
@@ -122,8 +226,8 @@ export function ActivityCard({
                         <Users className="size-3" />
                         <span>With</span>
                       </div>
-                      <span className="text-muted-foreground/90 text-xs font-medium italic">
-                        <HighlightText
+                      <span className="text-muted-foreground/90 min-w-0 text-xs font-medium">
+                        <CollaboratorLinks
                           text={collaborators}
                           query={searchQuery}
                         />

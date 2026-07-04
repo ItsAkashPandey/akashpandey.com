@@ -23,6 +23,11 @@ export type KnowledgeDoc = {
   href?: string;
   meta?: string;
   keywords?: string[];
+  details?: {
+    model?: string;
+    experience?: string;
+    tasks?: string[];
+  };
 };
 
 type RetrievalResult = {
@@ -195,6 +200,50 @@ function getSkillDocs(): KnowledgeDoc[] {
         ...tools,
       ],
     });
+
+    for (const subcategory of category.subcategories ?? []) {
+      for (const tool of subcategory.tools ?? []) {
+        docs.push({
+          id: `skill-tool-${String(tool.name)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "")}`,
+          kind: "skill",
+          title: tool.name,
+          href: `/skills#${String(tool.name)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "")}`,
+          meta: [subcategory.name, tool.model].filter(Boolean).join(" · "),
+          text: cleanText(
+            [
+              `${tool.name} is part of Akash's ${subcategory.name} field and software toolkit.`,
+              tool.model ? `Model: ${tool.model}.` : "",
+              tool.experience ?? "",
+              tool.tasks ? `Used for: ${tool.tasks.join("; ")}.` : "",
+            ]
+              .filter(Boolean)
+              .join(" "),
+          ),
+          keywords: [
+            "skill",
+            "tool",
+            "instrument",
+            category.mainCategory,
+            subcategory.name,
+            tool.name,
+            tool.model,
+            ...(tool.aliases ?? []),
+            ...(tool.tasks ?? []),
+          ].filter(Boolean),
+          details: {
+            model: tool.model,
+            experience: tool.experience,
+            tasks: tool.tasks,
+          },
+        });
+      }
+    }
   }
 
   return docs;
@@ -279,6 +328,23 @@ export function getSiteKnowledgeDocs(): KnowledgeDoc[] {
 }
 
 function tokenize(input: string) {
+  const stopWords = new Set([
+    "about",
+    "akash",
+    "does",
+    "have",
+    "know",
+    "tell",
+    "that",
+    "the",
+    "their",
+    "what",
+    "when",
+    "where",
+    "which",
+    "with",
+  ]);
+
   return Array.from(
     new Set(
       input
@@ -294,7 +360,7 @@ function tokenize(input: string) {
           if (token === "tools") return "tool";
           return token;
         })
-        .filter((token) => token.length > 2),
+        .filter((token) => token.length > 2 && !stopWords.has(token)),
     ),
   );
 }
@@ -309,7 +375,11 @@ function detectIntentKind(query: string): KnowledgeDoc["kind"] | null {
   if (/(publication|paper|journal|doi|research|poster)/.test(lower)) {
     return "publication";
   }
-  if (/(skill|tool|uav|gps|software|instrument|drone|gis)/.test(lower)) {
+  if (
+    /(skill|tool|uav|gps|software|instrument|drone|gis|sensor|spectro|phenocam|weather station|theodolite|total station|faro|trimble|emlid|sokkia|python|qgis|arcgis|earth engine|pix4d|cloudcompare|latex|erdas|envi|revit|staad|autocad)/.test(
+      lower,
+    )
+  ) {
     return "skill";
   }
   if (/(contact|email|reach|message|connect)/.test(lower)) return "contact";
@@ -330,7 +400,6 @@ function scoreDoc(
   const keywords = (doc.keywords ?? []).join(" ").toLowerCase();
   let score = doc.id === "profile-core" ? 1.2 : 0;
 
-  if (intentKind && doc.kind === intentKind) score += 10;
   if (intentKind === "activity" && doc.id === "route-activities") score += 8;
   if (intentKind === "activity" && doc.id.startsWith("activity-")) {
     const index = Number(doc.id.replace("activity-", ""));
@@ -343,8 +412,9 @@ function scoreDoc(
   if (intentKind === "contact" && doc.id === "route-contact") score += 8;
 
   for (const token of tokens) {
-    if (title.includes(token)) score += 6;
-    if (keywords.includes(token)) score += 4;
+    if (title === token) score += 14;
+    else if (title.includes(token)) score += 8;
+    if (keywords.includes(token)) score += 5;
     if (text.includes(token)) score += 1;
   }
 
@@ -407,8 +477,22 @@ function intentActions(query: string): ChatAction[] {
       kind: "page",
     });
   }
-  if (/(skill|tool|uav|gps|software|instrument|drone|gis)/.test(lower)) {
+  if (
+    /(skill|tool|uav|gps|software|instrument|drone|gis|sensor|spectro|phenocam|weather station|theodolite|total station|faro|trimble|emlid|sokkia|python|qgis|arcgis|earth engine|pix4d|cloudcompare|latex|erdas|envi|revit|staad|autocad)/.test(
+      lower,
+    )
+  ) {
     actions.push({ label: "View skills", href: "/skills", kind: "page" });
+    actions.push({
+      label: "Ask Akash",
+      href: "/contact",
+      kind: "page",
+    });
+    actions.push({
+      label: "Email Akash",
+      href: "mailto:akash_k@ce.iitr.ac.in",
+      kind: "email",
+    });
   }
   if (/(contact|email|reach|message|connect)/.test(lower)) {
     actions.push({ label: "Contact Akash", href: "/contact", kind: "page" });
@@ -418,12 +502,6 @@ function intentActions(query: string): ChatAction[] {
       kind: "email",
     });
   }
-
-  actions.push({
-    label: "Ask about recent activities",
-    prompt: "What are Akash's recent activities?",
-    kind: "prompt",
-  });
 
   return actions;
 }
@@ -435,7 +513,7 @@ export function retrieveSiteKnowledge(
   const tokens = tokenize(query);
   const intentKind = detectIntentKind(query);
   const wantsRecent = /(recent|latest|newest|new|current)/i.test(query);
-  const docs = getSiteKnowledgeDocs()
+  const rankedDocs = getSiteKnowledgeDocs()
     .map((doc) => ({ doc, score: scoreDoc(doc, tokens, intentKind) }))
     .filter(({ doc, score }) => doc.id === "profile-core" || score > 0)
     .sort((a, b) => {
@@ -450,20 +528,34 @@ export function retrieveSiteKnowledge(
 
       return b.score - a.score;
     })
-    .slice(0, limit)
-    .map(({ doc }) => doc);
+    .slice(0, limit);
+  const docs = rankedDocs.map(({ doc }) => doc);
 
   const actions = uniqueActions([
     ...intentActions(query),
-    ...docs.map(actionForDoc).filter(Boolean),
+    ...rankedDocs
+      .filter(
+        ({ doc, score }) =>
+          score >= 8 &&
+          !doc.id.startsWith("route-") &&
+          (!intentKind || doc.kind === intentKind),
+      )
+      .map(({ doc }) => actionForDoc(doc))
+      .filter(Boolean),
   ] as ChatAction[]).slice(0, 5);
 
-  const cards = docs
-    .filter((doc) => ["activity", "publication", "skill"].includes(doc.kind))
-    .slice(0, 4)
-    .map((doc) => ({
+  const cards = rankedDocs
+    .filter(
+      ({ doc, score }) =>
+        score >= 8 &&
+        doc.kind === intentKind &&
+        ["activity", "publication", "skill"].includes(doc.kind) &&
+        !doc.id.startsWith("route-"),
+    )
+    .slice(0, intentKind === "activity" ? 3 : 2)
+    .map(({ doc }) => ({
       title: doc.title,
-      subtitle: doc.text.slice(0, 140),
+      subtitle: doc.text.slice(0, 160),
       href: doc.href,
       meta: doc.meta || doc.kind,
     }));
