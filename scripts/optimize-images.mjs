@@ -85,6 +85,51 @@ async function prepareKrishiTechImages() {
   }
 }
 
+async function optimizeSkillAssets() {
+  const folder = assertInsidePublic(path.join(publicRoot, "skills"));
+  if (!(await exists(folder))) return;
+
+  const entries = await fs.readdir(folder, { withFileTypes: true });
+  const sources = entries
+    .filter(
+      (entry) =>
+        entry.isFile() && /\.(png|jpe?g)$/i.test(entry.name),
+    )
+    .map((entry) => assertInsidePublic(path.join(folder, entry.name)));
+
+  for (const input of sources) {
+    const output = assertInsidePublic(
+      path.join(folder, `${path.parse(input).name}.webp`),
+    );
+
+    if (dryRun) {
+      console.log(
+        `[skill] ${path.relative(publicRoot, input)} -> ${path.relative(publicRoot, output)}`,
+      );
+      continue;
+    }
+
+    const temporary = `${output}.tmp`;
+    await sharp(input)
+      .rotate()
+      .resize({
+        width: 384,
+        height: 384,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .webp({
+        quality: 82,
+        alphaQuality: 90,
+        effort: 6,
+        smartSubsample: true,
+      })
+      .toFile(temporary);
+    await fs.rename(temporary, output);
+    await fs.rm(input);
+  }
+}
+
 async function walk(directory) {
   const entries = await fs.readdir(directory, { withFileTypes: true });
   const nested = await Promise.all(
@@ -181,6 +226,7 @@ async function runPool(items, worker) {
 }
 
 await prepareKrishiTechImages();
+await optimizeSkillAssets();
 
 const files = (await walk(publicRoot)).map(assertInsidePublic);
 const inspected = await runPool(files, inspectCandidate);

@@ -1,203 +1,399 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import SwipeCards from "@/components/SwipeCards";
 import ImageLightbox from "@/components/ImageLightbox";
-import Markdown from "react-markdown";
-import skillsData from "@/data/skills.json";
-import { useTheme } from "next-themes";
-import {
-  Plane,
-  Radio,
-  MapPin,
-  Ruler,
-  Code,
-  Globe,
-  Camera,
-  Building,
-  ListTree,
-} from "lucide-react";
 import ImageWithSkeleton from "@/components/ImageWithSkeleton";
+import SwipeCards from "@/components/SwipeCards";
+import skillsData from "@/data/skills.json";
 import { cn } from "@/lib/utils";
+import {
+  Blocks,
+  Building2,
+  Camera,
+  Code2,
+  GalleryHorizontalEnd,
+  Globe2,
+  MapPin,
+  Plane,
+  RadioTower,
+  Ruler,
+  Sparkles,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-// Map subcategory names to icons
-const subcategoryIcons: Record<string, React.ReactNode> = {
-  UAVs: <Plane className="text-primary h-5 w-5" />,
-  "Ground Sensors": <Radio className="text-primary h-5 w-5" />,
-  GPS: <MapPin className="text-primary h-5 w-5" />,
-  Surveying: <Ruler className="text-primary h-5 w-5" />,
-  Programming: <Code className="text-primary h-5 w-5" />,
-  "Geospatial Analysis": <Globe className="text-primary h-5 w-5" />,
-  Photogrammetry: <Camera className="text-primary h-5 w-5" />,
-  "Civil Engineering": <Building className="text-primary h-5 w-5" />,
+const subcategoryConfig: Record<
+  string,
+  { Icon: typeof Plane; accent: string; surface: string }
+> = {
+  UAVs: {
+    Icon: Plane,
+    accent: "text-orange-700 dark:text-orange-300",
+    surface: "bg-orange-500/10",
+  },
+  "Ground Sensors": {
+    Icon: RadioTower,
+    accent: "text-rose-700 dark:text-rose-300",
+    surface: "bg-rose-500/10",
+  },
+  GPS: {
+    Icon: MapPin,
+    accent: "text-sky-700 dark:text-sky-300",
+    surface: "bg-sky-500/10",
+  },
+  Surveying: {
+    Icon: Ruler,
+    accent: "text-slate-700 dark:text-slate-300",
+    surface: "bg-slate-500/10",
+  },
+  Programming: {
+    Icon: Code2,
+    accent: "text-violet-700 dark:text-violet-300",
+    surface: "bg-violet-500/10",
+  },
+  "Geospatial Analysis": {
+    Icon: Globe2,
+    accent: "text-emerald-700 dark:text-emerald-300",
+    surface: "bg-emerald-500/10",
+  },
+  Photogrammetry: {
+    Icon: Camera,
+    accent: "text-cyan-700 dark:text-cyan-300",
+    surface: "bg-cyan-500/10",
+  },
+  "Civil Engineering": {
+    Icon: Building2,
+    accent: "text-amber-800 dark:text-amber-300",
+    surface: "bg-amber-500/10",
+  },
 };
 
+function categoryLabel(value: string) {
+  return value === "instrument handling" ? "Field instruments" : "Software";
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function categoryDescription(value: string) {
+  return value === "instrument handling"
+    ? "Hardware I have operated in fields, farms, and survey sites"
+    : "Tools I use to analyse, map, automate, and write";
+}
+
+function gradientBackground(gradient?: string) {
+  const colours = gradient?.match(/#[A-Fa-f0-9]{6}/g);
+  const first = colours?.[0] ?? "#64748b";
+  const second = colours?.[1] ?? first;
+  return {
+    background: `radial-gradient(circle at 76% 16%, color-mix(in srgb, ${second} 28%, transparent), transparent 34%), linear-gradient(145deg, color-mix(in srgb, ${first} 15%, hsl(var(--background))), color-mix(in srgb, ${second} 10%, hsl(var(--muted))))`,
+  };
+}
+
 export default function SkillsPage() {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const [activeCategoryId, setActiveCategoryId] = useState(
+    skillsData.skills[0]?.id ?? 1,
+  );
   const [activeImages, setActiveImages] = useState<string[] | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const activeCategory = useMemo(
+    () =>
+      skillsData.skills.find((category) => category.id === activeCategoryId) ??
+      skillsData.skills[0],
+    [activeCategoryId],
+  );
 
   const openLightbox = useCallback((images: string[]) => {
     setActiveImages(images);
     setLightboxIndex(0);
   }, []);
 
-  const closeLightbox = useCallback(() => setActiveImages(null), []);
+  useEffect(() => {
+    const revealHashTool = () => {
+      const slug = window.location.hash.replace(/^#/, "");
+      if (!slug) return;
+      const category = skillsData.skills.find((candidate) =>
+        candidate.subcategories.some((subcategory) =>
+          subcategory.tools.some((tool) => slugify(tool.name) === slug),
+        ),
+      );
+      if (!category) return;
+
+      setActiveCategoryId(category.id);
+      window.setTimeout(() => {
+        document.getElementById(slug)?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 80);
+    };
+
+    revealHashTool();
+    window.addEventListener("hashchange", revealHashTool);
+    return () => window.removeEventListener("hashchange", revealHashTool);
+  }, []);
+
+  if (!activeCategory) return null;
+
+  const toolCount = activeCategory.subcategories.reduce(
+    (total, subcategory) => total + subcategory.tools.length,
+    0,
+  );
+  const categoryImages =
+    "images" in activeCategory ? activeCategory.images : [];
 
   return (
     <article className="relative mt-10 flex flex-col gap-8 pb-16">
-      {/* Header */}
-      <div className="flex max-w-3xl flex-col gap-3">
+      <header className="flex max-w-3xl flex-col gap-3">
         <p className="text-muted-foreground text-xs font-semibold tracking-[0.18em] uppercase">
           Instruments · software · methods
         </p>
         <h1 className="title">my skills.</h1>
         <p className="text-muted-foreground text-base leading-relaxed sm:text-lg">
-          The field instruments, geospatial systems, and programming tools I use
-          to turn observations into usable evidence.
+          The equipment and tools I have actually used—not a keyword list.
         </p>
-      </div>
+      </header>
 
-      <div className="grid min-w-0 gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-start xl:gap-8">
-        <aside className="border-border/60 bg-background/88 supports-[backdrop-filter]:bg-background/72 rounded-[24px] border p-3 shadow-[0_16px_45px_rgba(15,23,42,0.06)] backdrop-blur-2xl lg:sticky lg:top-24">
-          <div className="border-border/50 flex items-center gap-2 border-b px-2 pb-3">
-            <ListTree className="size-4" />
-            <p className="text-sm font-semibold">Skill index</p>
-          </div>
-          <nav className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] lg:flex-col lg:overflow-visible [&::-webkit-scrollbar]:hidden">
-            {skillsData.skills.map((category, index) => (
-              <a
+      <section className="border-border/55 bg-card/42 overflow-hidden rounded-[28px] border shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+        <div
+          className="border-border/55 grid gap-2 border-b p-2 sm:grid-cols-2 sm:p-3"
+          role="tablist"
+          aria-label="Skills sections"
+        >
+          {skillsData.skills.map((category, index) => {
+            const active = category.id === activeCategory.id;
+            const Icon = category.id === 1 ? RadioTower : Blocks;
+            const count = category.subcategories.reduce(
+              (total, subcategory) => total + subcategory.tools.length,
+              0,
+            );
+
+            return (
+              <button
                 key={category.id}
-                href={`#skill-${category.id}`}
-                className="hover:bg-muted group flex shrink-0 items-center gap-2.5 rounded-xl px-2.5 py-2 text-xs font-medium transition-colors"
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setActiveCategoryId(category.id)}
+                className={cn(
+                  "group relative flex min-w-0 items-center gap-3 rounded-[18px] border px-3 py-3.5 text-left transition-all sm:px-4",
+                  active
+                    ? "border-foreground/12 bg-foreground text-background shadow-[0_10px_28px_rgba(15,23,42,.14)]"
+                    : "hover:border-border bg-background/35 hover:bg-background/72 border-transparent",
+                )}
               >
-                <span className="bg-muted text-muted-foreground group-hover:bg-foreground group-hover:text-background grid size-6 place-items-center rounded-lg text-[10px] font-semibold transition-colors">
-                  {String(index + 1).padStart(2, "0")}
+                <span
+                  className={cn(
+                    "grid size-10 shrink-0 place-items-center rounded-[13px] border",
+                    active
+                      ? "border-background/15 bg-background/12"
+                      : "border-border/60 bg-muted/55",
+                  )}
+                >
+                  <Icon className="size-4.5" />
                 </span>
-                <span>{category.mainCategory}</span>
-              </a>
-            ))}
-          </nav>
-        </aside>
+                <span className="min-w-0">
+                  <span className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold tracking-[0.14em] opacity-55">
+                      0{index + 1}
+                    </span>
+                    <span className="truncate text-sm font-bold">
+                      {categoryLabel(category.mainCategory)}
+                    </span>
+                    <span className="text-[10px] opacity-55">{count}</span>
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-0.5 block truncate text-[11px]",
+                      active ? "text-background/62" : "text-muted-foreground",
+                    )}
+                  >
+                    {categoryDescription(category.mainCategory)}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-        <div className="flex min-w-0 flex-col gap-8">
-          {skillsData.skills.map((mainCat, idx) => (
+        <div className="grid gap-7 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_250px] lg:items-center">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="bg-foreground text-background grid size-8 place-items-center rounded-xl">
+                {activeCategory.id === 1 ? (
+                  <RadioTower className="size-4" />
+                ) : (
+                  <Blocks className="size-4" />
+                )}
+              </span>
+              <span className="text-muted-foreground text-xs font-semibold">
+                {toolCount} tools · {activeCategory.subcategories.length} groups
+              </span>
+            </div>
+            <h2 className="title mt-5 text-3xl leading-tight sm:text-4xl">
+              {categoryLabel(activeCategory.mainCategory).toLowerCase()}
+            </h2>
+            <p className="text-muted-foreground mt-4 max-w-3xl text-sm leading-7 sm:text-base">
+              {activeCategory.description}
+            </p>
+          </div>
+
+          {categoryImages?.length ? (
+            <div className="mx-auto h-[245px] w-[205px] lg:mx-0 lg:justify-self-end">
+              <SwipeCards images={categoryImages} className="h-full w-full" />
+            </div>
+          ) : (
+            <div className="border-border/50 bg-muted/25 relative hidden aspect-square w-[210px] overflow-hidden rounded-[26px] border lg:grid lg:place-items-center">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(59,130,246,.14),transparent_32%),radial-gradient(circle_at_20%_80%,rgba(16,185,129,.12),transparent_35%)]" />
+              <div className="border-border/60 bg-background/80 relative grid size-24 place-items-center rounded-[28px] border shadow-[0_20px_55px_rgba(15,23,42,.12)] backdrop-blur-xl">
+                <Code2 className="size-9" strokeWidth={1.5} />
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="grid gap-5 lg:grid-cols-2">
+        {activeCategory.subcategories.map((subcategory) => {
+          const config = subcategoryConfig[subcategory.name] ?? {
+            Icon: Sparkles,
+            accent: "text-foreground",
+            surface: "bg-muted",
+          };
+          const SubcategoryIcon = config.Icon;
+
+          return (
             <section
-              id={`skill-${mainCat.id}`}
-              key={mainCat.id}
-              className="border-border/55 bg-card/35 scroll-mt-24 space-y-6 rounded-[26px] border p-5 shadow-[0_16px_42px_rgba(15,23,42,0.05)] sm:p-7"
+              key={subcategory.name}
+              className="border-border/55 bg-card/35 min-w-0 rounded-[24px] border p-4 shadow-[0_14px_40px_rgba(15,23,42,0.045)] sm:p-5"
             >
-              {/* Category Header with Photo beside it */}
-              {/* Category Header with Photo beside it - Side-by-side on all screens */}
-              <div className="flex flex-col gap-4 sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-12">
-                {/* Photo next to header - Right on all screens */}
-                <div className="mx-auto h-[233px] w-[175px] shrink-0 sm:mx-0 sm:h-[250px] sm:w-[280px]">
-                  <SwipeCards
-                    images={(mainCat as any).images}
-                    className="h-full w-full"
-                  />
-                </div>
-
-                <div className="flex min-w-0 flex-1 flex-col gap-2 text-center sm:gap-3 sm:text-left">
-                  <h2 className="title text-2xl leading-tight sm:text-4xl">
-                    {mainCat.mainCategory}
-                  </h2>
-                  {/* Description */}
-                  <div className="prose text-muted-foreground dark:prose-invert max-w-full text-sm text-balance sm:text-base">
-                    <Markdown>{mainCat.description}</Markdown>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span
+                    className={cn(
+                      "grid size-9 place-items-center rounded-xl",
+                      config.surface,
+                      config.accent,
+                    )}
+                  >
+                    <SubcategoryIcon className="size-4" />
+                  </span>
+                  <div>
+                    <h2 className="text-sm font-bold">{subcategory.name}</h2>
+                    <p className="text-muted-foreground text-[10px]">
+                      {subcategory.tools.length} tools
+                    </p>
                   </div>
                 </div>
+                <span className="bg-muted text-muted-foreground rounded-full px-2 py-1 text-[9px] font-semibold tracking-wider uppercase">
+                  hands-on
+                </span>
               </div>
 
-              {/* All Subcategories in a flowing grid */}
-              <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2">
-                {mainCat.subcategories.map((subcat, subidx) => (
-                  <div
-                    key={subidx}
-                    className="from-muted/30 to-muted/5 border-border/30 flex flex-col rounded-2xl border bg-gradient-to-br p-5"
-                  >
-                    {/* Subcategory Title with Icon */}
-                    <h3 className="text-foreground mb-4 flex items-center gap-2 text-lg font-semibold">
-                      {subcategoryIcons[subcat.name] || (
-                        <Ruler className="text-primary h-5 w-5" />
-                      )}
-                      {subcat.name}
-                    </h3>
+              <div className="grid gap-3">
+                {subcategory.tools.map((tool) => {
+                  const popupImages =
+                    "popupImages" in tool ? tool.popupImages : undefined;
+                  const interactive = Boolean(popupImages?.length);
 
-                    {/* Tools - 2 column grid with full width items */}
-                    <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2">
-                      {subcat.tools.map((tool, toolIdx) => (
-                        <div
-                          key={toolIdx}
-                          onClick={() => {
-                            const popupImages = (tool as any).popupImages;
-                            if (popupImages && popupImages.length > 0) {
-                              openLightbox(popupImages);
-                            }
-                          }}
-                          className={`group bg-background/60 border-border/20 hover:border-primary/40 flex min-h-[54px] items-center gap-3 rounded-lg border px-3 py-2.5 transition-all duration-300 ${(tool as any).popupImages ? "cursor-pointer" : ""}`}
-                        >
-                          {/* Logo */}
-                          <div className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center">
+                  return (
+                    <article
+                      key={tool.name}
+                      id={slugify(tool.name)}
+                      className="border-border/55 bg-background/72 group/tool overflow-hidden rounded-[19px] border shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,.09)]"
+                    >
+                      <button
+                        type="button"
+                        disabled={!interactive}
+                        onClick={() =>
+                          popupImages?.length && openLightbox(popupImages)
+                        }
+                        className="w-full p-3 text-left disabled:cursor-default"
+                      >
+                        <div className="flex min-w-0 gap-3.5">
+                          <span
+                            className="border-border/45 relative grid h-[82px] w-[96px] shrink-0 place-items-center overflow-hidden rounded-[15px] border shadow-[inset_0_1px_0_rgba(255,255,255,.45)]"
+                            style={gradientBackground(tool.gradient)}
+                          >
+                            <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_28%,rgba(255,255,255,.28)_48%,transparent_68%)] opacity-0 transition-opacity duration-500 group-hover/tool:opacity-100" />
                             <ImageWithSkeleton
-                              src={
-                                isDark && (tool as any).logoDark
-                                  ? (tool as any).logoDark
-                                  : tool.logo
-                              }
-                              alt={tool.name}
-                              width={36}
-                              height={36}
-                              containerClassName="w-full h-full"
+                              src={tool.logo}
+                              alt={`${tool.name} equipment or software mark`}
+                              width={118}
+                              height={76}
+                              sizes="96px"
+                              containerClassName="h-[70px] w-[86px]"
                               className={cn(
-                                "h-full w-full object-contain transition-transform duration-300 group-hover:scale-110",
-                                (tool as any).invertDark && "dark:invert",
-                                (tool as any).invertLight &&
+                                "h-full w-full object-contain p-1.5 drop-shadow-[0_8px_9px_rgba(15,23,42,.18)] transition-transform duration-400 group-hover/tool:scale-[1.045]",
+                                "invertDark" in tool &&
+                                  tool.invertDark &&
+                                  "dark:invert",
+                                "invertLight" in tool &&
+                                  tool.invertLight &&
                                   "invert dark:invert-0",
                               )}
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src =
-                                  "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/devicon/devicon-original.svg";
-                              }}
                             />
-                          </div>
+                          </span>
 
-                          {/* Tool Name - Bold Brand Gradient */}
-                          <span
-                            className={cn(
-                              "text-sm leading-tight font-bold break-words transition-colors",
-                              (tool as any).gradient
-                                ? `bg-gradient-to-r ${(tool as any).gradient} bg-clip-text text-transparent`
-                                : "text-muted-foreground group-hover:text-foreground",
+                          <span className="min-w-0 flex-1">
+                            <span className="flex items-start justify-between gap-2">
+                              <span>
+                                <span className="block text-sm leading-5 font-bold">
+                                  {tool.name}
+                                </span>
+                                {"model" in tool &&
+                                  tool.model !== tool.name && (
+                                    <span className="text-muted-foreground mt-0.5 block text-[10px] font-medium">
+                                      {tool.model}
+                                    </span>
+                                  )}
+                              </span>
+                              {interactive && (
+                                <span className="bg-muted text-muted-foreground group-hover/tool:text-foreground inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[9px] font-semibold transition-colors">
+                                  <GalleryHorizontalEnd className="size-3" />
+                                  photos
+                                </span>
+                              )}
+                            </span>
+                            {"experience" in tool && (
+                              <span className="text-muted-foreground mt-2 block text-xs leading-5">
+                                {tool.experience}
+                              </span>
                             )}
-                          >
-                            {tool.name}
                           </span>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+
+                        {"tasks" in tool && tool.tasks?.length > 0 && (
+                          <span className="mt-3 flex flex-wrap gap-1.5">
+                            {tool.tasks.slice(0, 4).map((task) => (
+                              <span
+                                key={task}
+                                className="border-border/50 bg-muted/42 text-muted-foreground rounded-full border px-2 py-1 text-[9px] font-medium"
+                              >
+                                {task}
+                              </span>
+                            ))}
+                          </span>
+                        )}
+                      </button>
+                    </article>
+                  );
+                })}
               </div>
-
-              {/* Divider */}
-              {idx < skillsData.skills.length - 1 && (
-                <div className="border-border/30 border-t" />
-              )}
             </section>
-          ))}
-        </div>
-      </div>
+          );
+        })}
+      </section>
 
-      {/* Shared Image Lightbox Modal */}
       {activeImages && (
         <ImageLightbox
           images={activeImages}
           currentIndex={lightboxIndex}
-          onClose={closeLightbox}
+          onClose={() => setActiveImages(null)}
           onNavigate={setLightboxIndex}
-          imageClassName="p-3 sm:p-5 bg-white rounded-xl shadow-2xl"
         />
       )}
     </article>

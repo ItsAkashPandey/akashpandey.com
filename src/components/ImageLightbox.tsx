@@ -159,7 +159,7 @@ export default function ImageLightbox({
 
   return createPortal(
     <motion.div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -167,32 +167,41 @@ export default function ImageLightbox({
       onPointerDown={handleBackdropPointerDown}
       onPointerUp={handleBackdropPointerUp}
     >
-      <div className="absolute inset-0 bg-zinc-950/85 backdrop-blur-2xl" />
+      <div className="bg-background/45 pointer-events-none absolute inset-0 backdrop-blur-xl dark:bg-zinc-950/62" />
 
       <motion.div
-        className="relative z-10 flex h-[min(92vh,860px)] w-[min(96vw,1120px)] flex-col overflow-hidden rounded-[28px] border border-white/10 bg-zinc-950/82 shadow-[0_30px_90px_rgba(0,0,0,0.55)]"
+        className="border-border/60 bg-background/96 relative z-10 flex h-[min(76vh,720px)] w-[min(92vw,920px)] flex-col overflow-hidden rounded-[30px] border shadow-[0_30px_90px_rgba(15,23,42,0.22)] dark:bg-zinc-950/94 dark:shadow-[0_34px_100px_rgba(0,0,0,0.55)]"
         initial={{ scale: 0.985, y: 8 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.985, y: 8 }}
         transition={{ type: "spring", stiffness: 520, damping: 42, mass: 0.7 }}
         onPointerDown={(event) => event.stopPropagation()}
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 h-24 bg-gradient-to-b from-black/50 to-transparent" />
+        <div className="from-background/90 pointer-events-none absolute inset-x-0 top-0 z-30 h-20 bg-gradient-to-b to-transparent dark:from-black/55" />
         <div className="absolute top-3 right-3 left-3 z-40 flex items-center justify-between gap-3">
-          <div className="rounded-full border border-white/10 bg-black/35 px-3 py-1 text-xs font-semibold text-white/80 shadow-lg backdrop-blur-xl">
+          <div className="border-border/60 bg-background/75 text-muted-foreground rounded-full border px-3 py-1 text-xs font-semibold shadow-sm backdrop-blur-xl">
             {currentIndex + 1} / {images.length}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="grid size-9 place-items-center rounded-full border border-white/10 bg-black/35 text-white/90 shadow-lg backdrop-blur-xl transition hover:bg-white/15"
+            className="border-border/60 bg-background/75 text-foreground hover:bg-muted grid size-9 place-items-center rounded-full border shadow-sm backdrop-blur-xl transition"
             aria-label="Close"
           >
             <X className="size-4" strokeWidth={2.5} />
           </button>
         </div>
 
-        <div className="relative min-h-0 flex-1 overflow-hidden bg-[radial-gradient(circle_at_50%_15%,rgba(255,255,255,0.12),transparent_30%),#07070a]">
+        <div
+          className="bg-muted/20 relative min-h-0 flex-1 overflow-hidden"
+          style={{
+            backgroundImage:
+              "linear-gradient(hsl(var(--border)/.42) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)/.42) 1px, transparent 1px), radial-gradient(circle at 50% 45%, hsl(var(--background)) 0, transparent 64%)",
+            backgroundSize: "24px 24px, 24px 24px, 100% 100%",
+          }}
+        >
+          <span className="border-foreground/8 pointer-events-none absolute -top-16 -right-14 size-44 rotate-12 rounded-[42px] border" />
+          <span className="bg-foreground/[0.025] pointer-events-none absolute -bottom-16 -left-12 size-40 rotate-45 rounded-[36px]" />
           <motion.div
             className="absolute inset-0 cursor-grab touch-none select-none active:cursor-grabbing"
             style={{ x: dragX }}
@@ -222,7 +231,7 @@ export default function ImageLightbox({
                 return (
                   <motion.div
                     key={`${index}-${src}`}
-                    className="absolute inset-0 grid place-items-center px-3 py-10 sm:px-8 sm:py-12"
+                    className="absolute inset-0 grid place-items-center px-4 py-12 sm:px-10 sm:py-14"
                     initial={false}
                     animate={{
                       x: `${offset * 100}%`,
@@ -261,7 +270,7 @@ export default function ImageLightbox({
         </div>
 
         {images.length > 1 && (
-          <div className="border-t border-white/10 bg-black/32 px-3 py-3 backdrop-blur-xl">
+          <div className="border-border/60 bg-background/78 border-t px-3 py-3 backdrop-blur-xl">
             <div className="flex items-center gap-2 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
               {images.map((src, index) => {
                 const active = index === currentIndex;
@@ -271,10 +280,10 @@ export default function ImageLightbox({
                     type="button"
                     onClick={() => goTo(index)}
                     className={cn(
-                      "relative h-14 w-16 shrink-0 overflow-hidden rounded-xl border bg-zinc-900 transition",
+                      "bg-muted relative h-14 w-16 shrink-0 overflow-hidden rounded-xl border transition",
                       active
-                        ? "border-white/85 shadow-[0_0_0_2px_rgba(255,255,255,0.18)]"
-                        : "border-white/10 opacity-65 hover:opacity-100",
+                        ? "border-foreground/60 shadow-[0_0_0_2px_hsl(var(--foreground)/.10)]"
+                        : "border-border/60 opacity-65 hover:opacity-100",
                     )}
                     aria-label={`Go to image ${index + 1}`}
                   >
@@ -284,7 +293,7 @@ export default function ImageLightbox({
                       fill
                       sizes="64px"
                       quality={75}
-                      className="object-cover"
+                      className="object-contain p-1"
                       loading={
                         wrappedDistance(index, currentIndex, images.length) <= 4
                           ? "eager"
@@ -295,7 +304,7 @@ export default function ImageLightbox({
                       style={{ imageOrientation: "from-image" }}
                     />
                     {active && (
-                      <span className="absolute inset-x-2 bottom-1 h-0.5 rounded-full bg-white" />
+                      <span className="bg-foreground absolute inset-x-2 bottom-1 h-0.5 rounded-full" />
                     )}
                   </button>
                 );
@@ -322,26 +331,43 @@ function LightboxImage({
   className?: string;
   onReady: () => void;
 }) {
-  const loaded = isBrowserImageCached(src);
+  const [loaded, setLoaded] = useState(() => isBrowserImageCached(src));
 
   return (
-    <img
-      src={src}
-      alt={alt}
-      className={cn(
-        "max-h-full max-w-full rounded-[18px] object-contain shadow-[0_24px_80px_rgba(0,0,0,0.45)] select-none",
-        active ? "will-change-transform" : "opacity-90",
-        className,
+    <div className="relative grid h-full w-full place-items-center">
+      {!loaded && (
+        <div className="border-border/55 bg-muted/70 absolute h-[68%] w-[76%] max-w-2xl animate-pulse overflow-hidden rounded-[20px] border">
+          <div className="absolute inset-0 bg-[linear-gradient(160deg,transparent_0_52%,hsl(var(--border))_53_68%,hsl(var(--muted-foreground)/.12)_69%)]" />
+          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+        </div>
       )}
-      data-loaded={loaded ? "true" : "false"}
-      loading={active ? "eager" : "lazy"}
-      decoding="async"
-      draggable={false}
-      fetchPriority={active ? "high" : "low"}
-      onLoad={onReady}
-      onError={onReady}
-      style={{ imageOrientation: "from-image" }}
-    />
+      <img
+        src={src}
+        alt={alt}
+        className={cn(
+          "max-h-full max-w-full rounded-[18px] object-contain shadow-[0_22px_60px_rgba(15,23,42,0.18)] transition-[opacity,filter,transform] duration-300 select-none dark:shadow-[0_24px_70px_rgba(0,0,0,0.48)]",
+          active ? "will-change-transform" : "opacity-90",
+          loaded
+            ? "blur-0 scale-100 opacity-100"
+            : "scale-[.985] opacity-0 blur-md",
+          className,
+        )}
+        data-loaded={loaded ? "true" : "false"}
+        loading={active ? "eager" : "lazy"}
+        decoding="async"
+        draggable={false}
+        fetchPriority={active ? "high" : "low"}
+        onLoad={() => {
+          setLoaded(true);
+          onReady();
+        }}
+        onError={() => {
+          setLoaded(true);
+          onReady();
+        }}
+        style={{ imageOrientation: "from-image" }}
+      />
+    </div>
   );
 }
 
@@ -363,7 +389,7 @@ function NavButton({
       }}
       onPointerDown={(event) => event.stopPropagation()}
       className={cn(
-        "absolute top-1/2 z-30 grid size-11 -translate-y-1/2 place-items-center rounded-full border border-white/10 bg-black/35 text-white/90 shadow-xl backdrop-blur-xl transition hover:bg-white/15",
+        "border-border/60 bg-background/76 text-foreground hover:bg-muted absolute top-1/2 z-30 grid size-11 -translate-y-1/2 place-items-center rounded-full border shadow-lg backdrop-blur-xl transition",
         isPrev ? "left-3 sm:left-5" : "right-3 sm:right-5",
       )}
       aria-label={isPrev ? "Previous" : "Next"}

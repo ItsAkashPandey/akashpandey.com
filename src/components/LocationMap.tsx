@@ -1,359 +1,355 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useTheme } from "next-themes";
+import {
+  createResearchTrafficLayer,
+  researchTrafficLayerId,
+} from "@/lib/map-traffic-3d";
+import { LocateFixed, Navigation } from "lucide-react";
+import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl";
 import Image from "next/image";
-import { Navigation, LocateFixed } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useEffect, useRef, useState } from "react";
+
+const AKASH_LOCATION: [number, number] = [77.900244, 29.862397];
+const DARK_STYLE =
+  "https://api.maptiler.com/maps/streets-v2-dark/style.json?key=IrVvN2pzTqfoeBk0mJ6F";
+const LIGHT_STYLE =
+  "https://api.maptiler.com/maps/outdoor-v2/style.json?key=IrVvN2pzTqfoeBk0mJ6F";
+
+function createMarkerElement(kind: "akash" | "visitor") {
+  const element = document.createElement("div");
+  element.className =
+    kind === "akash"
+      ? "group/marker relative z-50 flex size-7 items-center justify-center"
+      : "group/visitor relative z-40 flex size-7 items-center justify-center";
+  element.innerHTML =
+    kind === "akash"
+      ? `<span class="size-3 rounded-full border-2 border-white bg-indigo-600 shadow-xl transition-transform group-hover/marker:scale-125 dark:border-zinc-800"></span>
+         <span class="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 translate-y-1 whitespace-nowrap rounded-md bg-zinc-900/95 px-2 py-1 text-[10px] font-bold text-white opacity-0 shadow-xl transition group-hover/marker:translate-y-0 group-hover/marker:opacity-100 dark:bg-white/95 dark:text-zinc-900">Akash</span>`
+      : `<span class="absolute inset-0 animate-ping rounded-full bg-sky-500/20"></span>
+         <span class="size-3 rounded-full border-2 border-white bg-sky-500 shadow-xl dark:border-zinc-800"></span>
+         <span class="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 translate-y-1 whitespace-nowrap rounded-md bg-zinc-900/95 px-2 py-1 text-[10px] font-bold text-white opacity-0 shadow-xl transition group-hover/visitor:translate-y-0 group-hover/visitor:opacity-100 dark:bg-white/95 dark:text-zinc-900">You</span>`;
+  return element;
+}
+
+function distanceBetween(first: [number, number], second: [number, number]) {
+  const radius = 6371;
+  const latitude = ((second[1] - first[1]) * Math.PI) / 180;
+  const longitude = ((second[0] - first[0]) * Math.PI) / 180;
+  const a =
+    Math.sin(latitude / 2) ** 2 +
+    Math.cos((first[1] * Math.PI) / 180) *
+      Math.cos((second[1] * Math.PI) / 180) *
+      Math.sin(longitude / 2) ** 2;
+  return radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function buildArc(first: [number, number], second: [number, number]) {
+  const points: [number, number][] = [];
+  const lift = Math.hypot(second[0] - first[0], second[1] - first[1]) * 0.22;
+
+  for (let index = 0; index <= 120; index++) {
+    const progress = index / 120;
+    points.push([
+      first[0] + (second[0] - first[0]) * progress,
+      first[1] +
+        (second[1] - first[1]) * progress +
+        Math.sin(Math.PI * progress) * lift,
+    ]);
+  }
+  return points;
+}
 
 export default function LocationMap() {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<any>(null);
-  const [time, setTime] = useState<string>("");
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const meMarkerRef = useRef<Marker | null>(null);
+  const visitorMarkerRef = useRef<Marker | null>(null);
+  const routeAnimationRef = useRef<number | null>(null);
+  const [time, setTime] = useState("");
   const [isClient, setIsClient] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [visitorLocation, setVisitorLocation] = useState<
+    [number, number] | null
+  >(null);
+  const [distance, setDistance] = useState("");
   const { resolvedTheme } = useTheme();
 
-  // IIT Roorkee coordinates
-  const latitude = 29.862397;
-  const longitude = 77.900244;
-
-  const [visitorLocation, setVisitorLocation] = useState<[number, number] | null>(null);
-
-  // MapTiler geospatial-themed styles
-  // Dark mode: Streets Dark - clean dark map style
-  // Light mode: Outdoor - shows terrain, contours, vegetation, trails
-  const darkStyle = "https://api.maptiler.com/maps/streets-v2-dark/style.json?key=IrVvN2pzTqfoeBk0mJ6F";
-  const lightStyle = "https://api.maptiler.com/maps/outdoor-v2/style.json?key=IrVvN2pzTqfoeBk0mJ6F";
-
-  // Get visitor location
-  useEffect(() => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setVisitorLocation([position.coords.longitude, position.coords.latitude]);
-        },
-        (error) => {
-          console.warn("Geolocation access denied or failed:", error.message);
-        }
-      );
-    }
-  }, []);
-
-  // Update time
   useEffect(() => {
     setIsClient(true);
     const updateTime = () => {
-      const now = new Date();
-      const formattedTime = now.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-        timeZone: "Asia/Kolkata",
-      });
-      setTime(`${formattedTime} IST`);
+      setTime(
+        `${new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+          timeZone: "Asia/Kolkata",
+        })} IST`,
+      );
     };
     updateTime();
-    const interval = setInterval(updateTime, 60000);
-    return () => clearInterval(interval);
+    const interval = window.setInterval(updateTime, 60_000);
+    return () => window.clearInterval(interval);
   }, []);
 
-  // Update map style when theme changes
   useEffect(() => {
-    if (!map.current || !mapLoaded) return;
-    const newStyle = resolvedTheme === 'dark' ? darkStyle : lightStyle;
-    map.current.setStyle(newStyle);
+    if (!("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      (position) =>
+        setVisitorLocation([
+          position.coords.longitude,
+          position.coords.latitude,
+        ]),
+      () => {
+        // The map remains useful without location permission.
+      },
+      { timeout: 5_000, maximumAge: 300_000 },
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!isClient || !mapContainer.current || mapRef.current) return;
+    let cancelled = false;
+
+    const initialise = async () => {
+      const maplibregl = (await import("maplibre-gl")).default;
+      if (cancelled || !mapContainer.current) return;
+
+      const map = new maplibregl.Map({
+        container: mapContainer.current,
+        style: resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE,
+        center: AKASH_LOCATION,
+        zoom: 4.7,
+        pitch: 34,
+        bearing: -7,
+        attributionControl: false,
+      });
+      mapRef.current = map;
+
+      const addTraffic = () => {
+        if (map.isStyleLoaded() && !map.getLayer(researchTrafficLayerId)) {
+          map.addLayer(createResearchTrafficLayer());
+        }
+      };
+
+      map.on("load", () => {
+        addTraffic();
+        setMapLoaded(true);
+      });
+      map.on("style.load", addTraffic);
+    };
+
+    void initialise();
+    return () => {
+      cancelled = true;
+      if (routeAnimationRef.current) {
+        cancelAnimationFrame(routeAnimationRef.current);
+      }
+      visitorMarkerRef.current?.remove();
+      meMarkerRef.current?.remove();
+      mapRef.current?.remove();
+      visitorMarkerRef.current = null;
+      meMarkerRef.current = null;
+      mapRef.current = null;
+    };
+    // The theme is applied by the style effect after initialisation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isClient]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+    map.setStyle(resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE);
   }, [resolvedTheme, mapLoaded]);
 
-  const animFrameRef = useRef<number | null>(null);
-  const meMarkerRef = useRef<any>(null);
-  const userMarkerRef = useRef<any>(null);
-  const [distance, setDistance] = useState<string>("");
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+    let cancelled = false;
 
-  // Navigation handlers
+    const installMarkersAndRoute = async () => {
+      if (cancelled || !map.isStyleLoaded()) return;
+      const maplibregl = (await import("maplibre-gl")).default;
+      if (cancelled) return;
+
+      if (!meMarkerRef.current) {
+        meMarkerRef.current = new maplibregl.Marker({
+          element: createMarkerElement("akash"),
+          anchor: "center",
+        })
+          .setLngLat(AKASH_LOCATION)
+          .addTo(map);
+      }
+
+      if (!visitorLocation) return;
+
+      if (!visitorMarkerRef.current) {
+        visitorMarkerRef.current = new maplibregl.Marker({
+          element: createMarkerElement("visitor"),
+          anchor: "center",
+        })
+          .setLngLat(visitorLocation)
+          .addTo(map);
+      } else {
+        visitorMarkerRef.current.setLngLat(visitorLocation).addTo(map);
+      }
+
+      const routeData: GeoJSON.Feature<GeoJSON.LineString> = {
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "LineString",
+          coordinates: buildArc(AKASH_LOCATION, visitorLocation),
+        },
+      };
+
+      if (map.getSource("visitor-route")) {
+        (map.getSource("visitor-route") as GeoJSONSource).setData(routeData);
+      } else {
+        map.addSource("visitor-route", {
+          type: "geojson",
+          data: routeData,
+        });
+        map.addLayer({
+          id: "visitor-route",
+          type: "line",
+          source: "visitor-route",
+          layout: { "line-join": "round", "line-cap": "round" },
+          paint: {
+            "line-color": "#64748b",
+            "line-width": 2.2,
+            "line-dasharray": [1, 2],
+            "line-opacity": 0.74,
+          },
+        });
+      }
+    };
+
+    void installMarkersAndRoute();
+    map.on("style.load", installMarkersAndRoute);
+
+    if (visitorLocation && map.getZoom() < 5.4) {
+      void import("maplibre-gl").then(({ default: maplibregl }) => {
+        if (cancelled) return;
+        const bounds = new maplibregl.LngLatBounds()
+          .extend(AKASH_LOCATION)
+          .extend(visitorLocation);
+        map.fitBounds(bounds, {
+          padding: 58,
+          maxZoom: 8.5,
+          duration: 2_200,
+        });
+      });
+    }
+
+    return () => {
+      cancelled = true;
+      map.off("style.load", installMarkersAndRoute);
+    };
+  }, [mapLoaded, visitorLocation]);
+
   const zoomToMe = () => {
-    if (!map.current) return;
-    map.current.flyTo({
-      center: [longitude, latitude],
+    mapRef.current?.flyTo({
+      center: AKASH_LOCATION,
       zoom: 12,
-      duration: 2000,
-      essential: true
+      pitch: 44,
+      bearing: -12,
+      duration: 1_600,
+      essential: true,
     });
   };
 
   const zoomToYou = () => {
-    if (!map.current || !visitorLocation) return;
-    map.current.flyTo({
+    if (!visitorLocation) return;
+    mapRef.current?.flyTo({
       center: visitorLocation,
       zoom: 12,
-      duration: 2000,
-      essential: true
+      pitch: 44,
+      duration: 1_600,
+      essential: true,
     });
   };
 
-  // 1. Initialize map once
   useEffect(() => {
-    if (!isClient || !mapContainer.current || map.current) return;
-
-    const initMap = async () => {
-      try {
-        const maplibregl = (await import("maplibre-gl")).default;
-        const initialStyle = resolvedTheme === 'dark' ? darkStyle : lightStyle;
-
-        map.current = new maplibregl.Map({
-          container: mapContainer.current as HTMLElement,
-          style: initialStyle,
-          center: [longitude, latitude],
-          zoom: 4,
-          pitch: 0,
-          bearing: 0,
-          attributionControl: false,
-        });
-
-        map.current.on("load", () => {
-          setMapLoaded(true);
-        });
-      } catch (error) {
-        console.error("Failed to load map:", error);
-      }
-    };
-
-    initMap();
-
-    return () => {
-      if (animFrameRef.current) {
-        cancelAnimationFrame(animFrameRef.current);
-      }
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, [isClient, resolvedTheme]); // resolvedTheme is needed here for the initial style
-
-  // 2. Handle Markers and Layers dynamically
-  useEffect(() => {
-    if (!map.current || !mapLoaded) return;
-
-    const addMarkersAndRoute = () => {
-      if (!map.current || !map.current.isStyleLoaded()) return;
-
-      // Me Marker (Always on top)
-      if (!meMarkerRef.current) {
-        const el = document.createElement("div");
-        el.className = "group/marker relative flex size-6 items-center justify-center z-50";
-        el.innerHTML = `
-          <div class="size-3 rounded-full bg-indigo-600 border-2 border-white dark:border-zinc-800 shadow-xl transition-transform group-hover/marker:scale-125 duration-75"></div>
-          <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900/95 dark:bg-white/95 text-white dark:text-zinc-900 text-[10px] font-bold rounded-md opacity-0 group-hover/marker:opacity-100 transition-all duration-75 shadow-xl pointer-events-none translate-y-1 group-hover/marker:translate-y-0 whitespace-nowrap">
-            Akash (Me)
-          </div>
-        `;
-
-        import("maplibre-gl").then((m) => {
-          if (!map.current) return;
-          meMarkerRef.current = new m.default.Marker({ element: el, anchor: 'center' })
-            .setLngLat([longitude, latitude])
-            .addTo(map.current);
-          el.parentElement!.style.zIndex = "100";
-        });
-      } else {
-        meMarkerRef.current.addTo(map.current);
-      }
-
-      // Visitor Marker
-      if (visitorLocation) {
-        if (!userMarkerRef.current) {
-          const el = document.createElement("div");
-          el.className = "group/user relative flex size-6 items-center justify-center z-40";
-          el.innerHTML = `
-            <div class="absolute inset-0 rounded-full bg-sky-500/20 animate-ping"></div>
-            <div class="size-3 rounded-full bg-sky-500 border-2 border-white dark:border-zinc-800 shadow-xl"></div>
-            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-zinc-900/95 dark:bg-white/95 text-white dark:text-zinc-900 text-[10px] font-bold rounded-md opacity-0 group-hover/user:opacity-100 transition-all duration-75 shadow-xl pointer-events-none translate-y-1 group-hover/user:translate-y-0 whitespace-nowrap">
-              You
-            </div>
-          `;
-
-          import("maplibre-gl").then((m) => {
-            if (!map.current) return;
-            userMarkerRef.current = new m.default.Marker({ element: el, anchor: 'center' })
-              .setLngLat(visitorLocation)
-              .addTo(map.current);
-            el.parentElement!.style.zIndex = "50";
-          });
-        } else {
-          userMarkerRef.current.addTo(map.current);
-        }
-
-        // Distance Calculation
-        const R = 6371;
-        const dLat = (visitorLocation[1] - latitude) * Math.PI / 180;
-        const dLon = (visitorLocation[0] - longitude) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos(latitude * Math.PI / 180) * Math.cos(visitorLocation[1] * Math.PI / 180) *
-          Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const d = R * c;
-        const distanceStr = d < 1 ? `${Math.round(d * 1000)}m` : `${d.toFixed(1)}km`;
-        setDistance(distanceStr);
-
-        // Red Flight Line
-        const steps = 150;
-        const arc: [number, number][] = [];
-        const [lon1, lat1] = [longitude, latitude];
-        const [lon2, lat2] = visitorLocation;
-        const lift = Math.sqrt(Math.pow(lon2 - lon1, 2) + Math.pow(lat2 - lat1, 2)) * 0.25;
-
-        for (let i = 0; i <= steps; i++) {
-          const t = i / steps;
-          const lon = lon1 + (lon2 - lon1) * t;
-          const lat = lat1 + (lat2 - lat1) * t + Math.sin(Math.PI * t) * lift;
-          arc.push([lon, lat]);
-        }
-
-        const routeData: any = {
-          'type': 'Feature',
-          'geometry': { 'type': 'LineString', 'coordinates': arc }
-        };
-
-        if (map.current.getSource('route')) {
-          (map.current.getSource('route') as any).setData(routeData);
-        } else {
-          map.current.addSource('route', { 'type': 'geojson', 'data': routeData });
-          map.current.addLayer({
-            'id': 'route',
-            'type': 'line',
-            'source': 'route',
-            'layout': { 'line-join': 'round', 'line-cap': 'round' },
-            'paint': {
-              'line-color': '#ef4444',
-              'line-width': 4,
-              'line-dasharray': [1, 2],
-              'line-opacity': 0.9
-            }
-          });
-
-          let dashOffset = 0;
-          const animate = () => {
-            if (!map.current || !map.current.getLayer('route')) return;
-            dashOffset = (dashOffset - 0.08) % 3;
-            try { map.current.setPaintProperty('route', 'line-dash-offset', dashOffset); } catch (e) { }
-            animFrameRef.current = requestAnimationFrame(animate);
-          };
-          animFrameRef.current = requestAnimationFrame(animate);
-        }
-      }
-    };
-
-    addMarkersAndRoute();
-    map.current.on('style.load', addMarkersAndRoute);
-
-    if (visitorLocation && map.current.getZoom() < 5) {
-      import("maplibre-gl").then((m) => {
-        const bounds = new m.default.LngLatBounds()
-          .extend([longitude, latitude])
-          .extend(visitorLocation);
-        map.current.fitBounds(bounds, { padding: 60, maxZoom: 9, duration: 2500 });
-      });
+    if (!visitorLocation) {
+      setDistance("");
+      return;
     }
-
-    return () => {
-      if (map.current) map.current.off('style.load', addMarkersAndRoute);
-    };
-
-  }, [mapLoaded, visitorLocation, resolvedTheme]);
+    const kilometres = distanceBetween(AKASH_LOCATION, visitorLocation);
+    setDistance(
+      kilometres < 1
+        ? `${Math.round(kilometres * 1_000)} m`
+        : `${kilometres.toFixed(1)} km`,
+    );
+  }, [visitorLocation]);
 
   if (!isClient) {
     return (
-      <div className="group relative h-48 overflow-hidden rounded-t-3xl bg-muted/50 animate-pulse"></div>
+      <div className="bg-muted/50 h-48 animate-pulse overflow-hidden rounded-t-3xl" />
     );
   }
 
   return (
     <div className="group relative h-48 overflow-hidden rounded-t-3xl">
-      {/* Map container */}
-      <div className="absolute size-full" ref={mapContainer}></div>
+      <div className="absolute inset-0">
+        <div ref={mapContainer} className="h-full w-full" />
+      </div>
 
-      {/* Gradient overlay */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(transparent,#9d9da200_60%,#fafafa)] dark:bg-[linear-gradient(transparent,#18181b73_60%,#0a0a0a)]"></div>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(transparent,#9d9da200_60%,#fafafa)] dark:bg-[linear-gradient(transparent,#18181b73_60%,#0a0a0a)]" />
 
-      {/* Cloud and plane animations - hidden on hover */}
       <div
         data-hidden={!mapLoaded}
-        className="transition-opacity duration-150 group-hover:pointer-events-none group-hover:opacity-0 data-[hidden=true]:opacity-0"
+        className="pointer-events-none absolute inset-0 overflow-hidden opacity-100 transition-opacity duration-700 data-[hidden=true]:opacity-0"
       >
-        {/* Cloud */}
         <Image
           src="/cloud.webp"
           width={390}
           height={347}
-          alt="cloud"
+          alt=""
+          priority
           draggable={false}
-          className="absolute top-0 size-80 animate-cloud blur-xs opacity-30 dark:opacity-40 invert dark:invert-0"
-        />
-
-        {/* Plane - simple CSS animation like duyle.dev */}
-        <img
-          src="/plane.webp"
-          width={24}
-          height={24}
-          alt="plane"
-          draggable={false}
-          className="-right-20 -bottom-20 absolute animate-plane [animation-delay:2.5s] invert dark:invert-0"
-        />
-
-        {/* Plane Shadow - separate element with offset animation */}
-        <img
-          src="/plane-shadow.webp"
-          width={24}
-          height={24}
-          alt="plane-shadow"
-          draggable={false}
-          className="-right-20 -bottom-20 absolute animate-plane-shadow [animation-delay:2.5s] opacity-40 dark:opacity-60 dark:invert"
+          className="animate-cloud absolute -top-14 -left-12 size-72 opacity-10 blur-[1px] invert dark:opacity-16 dark:invert-0"
         />
       </div>
 
-      {/* Navigation Controls */}
-      <div className="absolute left-3 top-3 flex flex-col gap-1 items-center">
+      <div className="absolute top-3 left-3 flex flex-col items-center gap-1">
         <button
+          type="button"
           onClick={zoomToMe}
           title="Zoom to Akash"
-          className="flex size-8 items-center justify-center rounded-lg border border-white/20 bg-background/60 text-foreground shadow-lg backdrop-blur-md transition-all hover:bg-background/80 hover:scale-105 active:scale-95"
+          className="bg-background/68 text-foreground hover:bg-background/88 flex size-8 items-center justify-center rounded-lg border border-white/20 shadow-lg backdrop-blur-md transition hover:scale-105 active:scale-95"
         >
           <LocateFixed className="size-4 text-indigo-500" />
         </button>
 
         {distance && visitorLocation && (
           <div className="flex flex-col items-center py-1">
-            <div className="h-4 w-px bg-indigo-500/20"></div>
-            <div className="bg-background/80 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 shadow-sm">
-              <span className="text-[9px] font-bold text-muted-foreground whitespace-nowrap">{distance}</span>
-            </div>
-            <div className="h-4 w-px bg-sky-500/20"></div>
+            <div className="h-3 w-px bg-slate-500/25" />
+            <span className="bg-background/78 text-muted-foreground rounded-full border border-white/10 px-2 py-0.5 text-[9px] font-bold whitespace-nowrap shadow-sm backdrop-blur-md">
+              {distance}
+            </span>
+            <div className="h-3 w-px bg-sky-500/20" />
           </div>
         )}
 
         {visitorLocation && (
           <button
+            type="button"
             onClick={zoomToYou}
-            title="Zoom to You"
-            className="flex size-8 items-center justify-center rounded-lg border border-white/20 bg-background/60 text-foreground shadow-lg backdrop-blur-md transition-all hover:bg-background/80 hover:scale-105 active:scale-95"
+            title="Zoom to you"
+            className="bg-background/68 text-foreground hover:bg-background/88 flex size-8 items-center justify-center rounded-lg border border-white/20 shadow-lg backdrop-blur-md transition hover:scale-105 active:scale-95"
           >
             <Navigation className="size-4 text-sky-500" />
           </button>
         )}
       </div>
 
-      {/* Time display */}
-      <div className="absolute top-0 right-0 p-3 flex flex-col items-end gap-1">
-        <div className="rounded bg-background/80 backdrop-blur-sm px-2 py-1.5 font-mono text-muted-foreground text-sm tabular-nums shadow-sm border border-white/10">
-          {time || "00:00 AM IST"}
-        </div>
+      <div className="bg-background/78 text-muted-foreground absolute top-3 right-3 rounded-lg border border-white/10 px-2.5 py-1.5 font-mono text-xs tabular-nums shadow-sm backdrop-blur-md">
+        {time || "00:00 AM IST"}
       </div>
 
-      {/* Coordinates */}
-      <div className="absolute bottom-0 right-0 p-2">
-        <div className="rounded bg-background/80 backdrop-blur-sm px-2 py-1 font-mono text-muted-foreground text-[10px] tabular-nums shadow-sm border border-white/5 opacity-70">
-          {latitude.toFixed(6)}°N, {longitude.toFixed(6)}°E
-        </div>
+      <div className="bg-background/78 text-muted-foreground/80 absolute right-2 bottom-2 rounded-md border border-white/5 px-2 py-1 font-mono text-[10px] tabular-nums shadow-sm backdrop-blur-md">
+        {AKASH_LOCATION[1].toFixed(6)}°N, {AKASH_LOCATION[0].toFixed(6)}°E
       </div>
     </div>
   );

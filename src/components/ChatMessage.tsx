@@ -1,9 +1,10 @@
 import { cn } from "@/lib/utils";
 import type { ChatAction, ChatMessageShape } from "@/lib/chat-types";
-import { ArrowUpRight, Bot, Sparkles } from "lucide-react";
+import { ArrowUpRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import KasiMark from "./KasiMark";
 
 interface ChatMessageProps {
   message: ChatMessageShape;
@@ -76,9 +77,11 @@ export default function ChatMessage({
       )}
     >
       {isBot && (
-        <div className="bg-background/70 mt-0.5 mr-2 flex size-7 shrink-0 items-center justify-center rounded-xl border shadow-sm">
-          <Bot className="text-primary size-3.5" />
-        </div>
+        <KasiMark
+          active
+          size="sm"
+          className="mt-0.5 mr-2 size-7 shrink-0 rounded-[10px]"
+        />
       )}
       <div
         className={cn(
@@ -123,15 +126,24 @@ export default function ChatMessage({
               />
             ),
             table: ({ node, ...props }) => (
-              <div className="mt-3 overflow-hidden rounded-xl border first:mt-0">
-                <table className="w-full text-left text-xs" {...props} />
+              <div className="mt-3 max-w-full overflow-x-auto overscroll-x-contain rounded-xl border [scrollbar-width:thin] first:mt-0">
+                <table
+                  className="w-max min-w-full border-collapse text-left text-xs"
+                  {...props}
+                />
               </div>
             ),
             th: ({ node, ...props }) => (
-              <th className="bg-muted px-2 py-1.5 font-semibold" {...props} />
+              <th
+                className="bg-muted px-2 py-1.5 font-semibold whitespace-nowrap"
+                {...props}
+              />
             ),
             td: ({ node, ...props }) => (
-              <td className="border-t px-2 py-1.5 align-top" {...props} />
+              <td
+                className="max-w-52 min-w-28 border-t px-2 py-1.5 align-top break-words whitespace-normal"
+                {...props}
+              />
             ),
           }}
         >

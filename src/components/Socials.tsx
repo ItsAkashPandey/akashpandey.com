@@ -1,134 +1,66 @@
 import data from "@/data/socials.json";
 import { socialSchema } from "@/lib/schemas";
+import type { IconType } from "react-icons";
+import { FaLinkedinIn } from "react-icons/fa6";
+import { HiOutlineEnvelope } from "react-icons/hi2";
+import {
+  SiGithub,
+  SiGooglescholar,
+  SiOrcid,
+  SiResearchgate,
+} from "react-icons/si";
 
-function LinkedInIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-    </svg>
-  );
-}
+const iconMap: Record<string, IconType> = {
+  LinkedIn: FaLinkedinIn,
+  GitHub: SiGithub,
+  ORCID: SiOrcid,
+  ResearchGate: SiResearchgate,
+  "Google Scholar": SiGooglescholar,
+  Email: HiOutlineEnvelope,
+};
 
-function GitHubIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
-    </svg>
-  );
-}
-
-function GoogleScholarIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M5.242 13.769 0 9.5 12 0l12 9.5-5.242 4.269C17.548 11.249 14.978 9.5 12 9.5c-2.977 0-5.548 1.748-6.758 4.269zM12 10a7 7 0 1 0 0 14 7 7 0 0 0 0-14z" />
-    </svg>
-  );
-}
-
-function ResearchGateIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M19.586 0c-.818 0-1.508.19-2.073.565-.563.377-.97.936-1.213 1.68a3.193 3.193 0 0 0-.112.437 8.365 8.365 0 0 0-.078.53 9 9 0 0 0-.05.727c-.01.282-.013.621-.013 1.016a31.121 31.123 0 0 0 .014 1.017 9 9 0 0 0 .05.727 7.946 7.946 0 0 0 .077.53h-.005a3.334 3.334 0 0 0 .113.438c.245.743.65 1.303 1.214 1.68.565.376 1.256.564 2.075.564.8 0 1.536-.213 2.105-.603.57-.39.94-.916 1.175-1.65.076-.235.135-.558.177-.93a10.9 10.9 0 0 0 .043-1.207v-.82c0-.095-.047-.142-.14-.142h-3.064c-.094 0-.14.047-.14.141v.956c0 .094.046.14.14.14h1.666c.056 0 .084.03.084.086 0 .36 0 .62-.036.865-.038.244-.1.447-.147.606-.108.385-.348.664-.638.876-.29.212-.738.35-1.227.35-.545 0-.901-.15-1.21-.353-.306-.203-.517-.454-.67-.915a3.136 3.136 0 0 1-.147-.762 17.366 17.367 0 0 1-.034-.656c-.01-.26-.014-.572-.014-.939a26.401 26.403 0 0 1 .014-.938 15.821 15.822 0 0 1 .035-.656 3.19 3.19 0 0 1 .148-.76 1.89 1.89 0 0 1 .742-1.01c.344-.244.593-.352 1.137-.352.508 0 .815.096 1.144.303.33.207.528.492.764.925.047.094.111.118.198.07l1.044-.43c.075-.048.09-.115.042-.199a3.549 3.549 0 0 0-.466-.742 3 3 0 0 0-.679-.607 3.313 3.313 0 0 0-.903-.41A4.068 4.068 0 0 0 19.586 0zM8.217 5.836c-1.69 0-3.036.086-4.297.086-1.146 0-2.291 0-3.007-.029v.831l1.088.2c.744.144 1.174.488 1.174 2.264v11.288c0 1.777-.43 2.12-1.174 2.263l-1.088.2v.832c.773-.029 2.12-.086 3.465-.086 1.29 0 2.951.057 3.667.086v-.831l-1.49-.2c-.773-.115-1.174-.487-1.174-2.264v-4.784c.688.057 1.29.057 2.206.057 1.748 3.123 3.41 5.472 4.355 6.56.86 1.032 2.177 1.691 3.839 1.691.487 0 1.003-.086 1.318-.23v-.744c-1.031 0-2.063-.716-2.808-1.518-1.26-1.376-2.95-3.582-4.355-6.074 2.32-.545 4.04-2.722 4.04-4.9 0-3.208-2.492-4.698-5.758-4.698zm-.515 1.29c2.406 0 3.839 1.26 3.839 3.552 0 2.263-1.547 3.782-4.097 3.782-.974 0-1.404-.03-2.063-.086v-7.19c.66-.059 1.547-.059 2.32-.059z" />
-    </svg>
-  );
-}
-
-function OrcidIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zM7.369 4.378c.525 0 .947.431.947.947s-.422.947-.947.947a.95.95 0 0 1-.947-.947c0-.525.422-.947.947-.947zm-.722 3.038h1.444v10.041H6.647V7.416zm3.562 0h3.9c3.712 0 5.344 2.653 5.344 5.025 0 2.578-1.925 5.025-5.344 5.025h-3.9V7.416zm1.444 1.303v7.444h2.297c3.272 0 4.022-2.484 4.022-3.722 0-2.016-1.284-3.722-4.097-3.722h-2.222z" />
-    </svg>
-  );
-}
-
-function MailIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
-      <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
-    </svg>
-  );
-}
-
-const iconMap: Record<string, React.FC<{ className?: string }>> = {
-  LinkedIn: LinkedInIcon,
-  GitHub: GitHubIcon,
-  ORCID: OrcidIcon,
-  ResearchGate: ResearchGateIcon,
-  "Google Scholar": GoogleScholarIcon,
-  Email: MailIcon,
+const brandStyles: Record<string, string> = {
+  LinkedIn:
+    "text-[#376d98] dark:text-[#7aa8cb] [--brand:#376d98] dark:[--brand:#7aa8cb]",
+  GitHub:
+    "text-[#414955] dark:text-[#c2c8d0] [--brand:#414955] dark:[--brand:#c2c8d0]",
+  ORCID:
+    "text-[#718f39] dark:text-[#a6c86c] [--brand:#718f39] dark:[--brand:#a6c86c]",
+  ResearchGate:
+    "text-[#2b897c] dark:text-[#75b8ad] [--brand:#2b897c] dark:[--brand:#75b8ad]",
+  "Google Scholar":
+    "text-[#526f9d] dark:text-[#8da7cf] [--brand:#526f9d] dark:[--brand:#8da7cf]",
+  Email:
+    "text-[#98685f] dark:text-[#c79a91] [--brand:#98685f] dark:[--brand:#c79a91]",
 };
 
 export default function Socials() {
   const socials = socialSchema.parse(data).socials;
 
   return (
-    <section className="flex flex-wrap gap-1.5 sm:gap-4">
+    <section className="flex flex-wrap gap-2" aria-label="Social profiles">
       {socials.map((item) => {
-        const IconComponent = iconMap[item.name];
+        const Icon = iconMap[item.name];
         return (
           <a
             href={item.href}
             key={item.name}
             target="_blank"
-            className="group relative flex flex-col items-center gap-1 overflow-hidden rounded-md p-1 sm:p-1.5 text-muted-foreground transition-colors hover:text-foreground"
+            className={`group/social border-border/55 bg-background/66 hover:border-border relative flex min-w-[52px] flex-col items-center gap-1.5 overflow-hidden rounded-[14px] border px-2 py-2 shadow-[0_5px_16px_rgba(15,23,42,.05),inset_0_1px_0_rgba(255,255,255,.55)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_color-mix(in_srgb,var(--brand)_16%,transparent)] ${brandStyles[item.name] ?? "text-foreground [--brand:#64748b]"}`}
             rel="noopener noreferrer"
             title={item.name}
           >
-            <span className="sr-only">{item.name}</span>
-            {IconComponent && (
-              <IconComponent className="relative z-10 size-5" />
-            )}
-            <span className="text-[10px] leading-tight opacity-70 group-hover:opacity-100 transition-opacity">
+            <span className="border-border/45 bg-muted/38 relative z-10 grid size-8 place-items-center rounded-[11px] border shadow-[inset_0_1px_0_rgba(255,255,255,.4)] transition-transform duration-300 group-hover/social:scale-105">
+              {Icon && <Icon className="size-4" aria-hidden />}
+              <span className="pointer-events-none absolute inset-px rounded-[10px] bg-[radial-gradient(circle_at_70%_15%,rgba(255,255,255,.62),transparent_32%)] opacity-55 dark:opacity-18" />
+            </span>
+            <span className="text-muted-foreground group-hover/social:text-foreground relative z-10 max-w-[66px] truncate text-[9px] leading-tight font-medium transition-colors">
               {item.name}
             </span>
-            {/* Glass shine effect */}
-            <span
-              className="pointer-events-none absolute inset-0 z-20 opacity-0 group-hover:animate-[shine_0.6s_ease-in-out]"
-              style={{
-                background: 'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%)',
-              }}
-            />
+            <span className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 rotate-12 bg-gradient-to-r from-transparent via-white/55 to-transparent opacity-0 blur-[1px] transition-[left,opacity] duration-600 group-hover/social:left-[120%] group-hover/social:opacity-80 dark:via-white/20" />
           </a>
         );
       })}
     </section>
   );
 }
-

@@ -72,7 +72,8 @@ Behavior rules:
 ## Skills & tools
 ### Instruments / field systems
 - UAVs: IdeaForge Q6, Trinity F90+, DJI Matrice 100, Agri‑Spray drone.
-- Ground sensors: PhenoCam, AWS, Spectroradiometer (SVC), FARO TLS.
+- Ground sensors: PhenoCam, Automatic Weather Station (AWS), SVC XHR-1024i spectroradiometer, FARO TLS.
+  - SVC XHR-1024i: hands-on field spectral-reflectance measurements for crop and vegetation observations; ground reference data for comparison with UAV and satellite imagery.
 - GPS: Trimble DA2, Emlid Reach RS2/RS3, Sokkia GRX2.
 - Surveying: Total Station, Analytical Theodolite, Digital Level.
 

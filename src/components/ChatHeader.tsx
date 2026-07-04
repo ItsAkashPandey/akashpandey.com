@@ -14,7 +14,7 @@ export default function ChatHeader({ compact = false }: ChatHeaderProps) {
         </p>
         <p className="text-muted-foreground mt-1 flex items-center gap-1.5 truncate text-[10px] leading-none">
           <span className="size-1.5 rounded-full bg-emerald-500" />
-          {compact ? "AI site guide" : "Akash’s AI site guide"}
+          {compact ? "Portfolio guide" : "Akash’s portfolio guide"}
         </p>
       </div>
     </section>

@@ -25,40 +25,53 @@ export default function KasiMark({
         "relative isolate grid shrink-0 place-items-center overflow-hidden border transition-all duration-300",
         sizeClasses[size],
         active
-          ? "border-zinc-950/10 bg-zinc-950 text-white shadow-[0_8px_24px_rgba(15,23,42,0.22)] dark:border-white/20 dark:bg-white dark:text-zinc-950 dark:shadow-[0_8px_28px_rgba(0,0,0,0.35)]"
-          : "border-border bg-muted text-muted-foreground shadow-inner",
+          ? "border-sky-950/12 bg-[linear-gradient(145deg,#0b1220_0%,#173b6d_56%,#176b70_125%)] text-white shadow-[0_11px_30px_rgba(24,72,125,.24)] dark:border-white/15 dark:shadow-[0_12px_34px_rgba(0,0,0,.38)]"
+          : "border-border/75 bg-background text-muted-foreground shadow-[inset_0_0_0_1px_hsl(var(--border)/.32)]",
         className,
       )}
     >
       <span
         className={cn(
-          "absolute inset-0 opacity-0 transition-opacity duration-300",
-          active &&
-            "bg-[radial-gradient(circle_at_75%_18%,rgba(52,211,153,0.34),transparent_34%),radial-gradient(circle_at_10%_100%,rgba(56,189,248,0.25),transparent_45%)] opacity-100 dark:bg-[radial-gradient(circle_at_75%_18%,rgba(16,185,129,0.18),transparent_34%),radial-gradient(circle_at_10%_100%,rgba(14,165,233,0.14),transparent_45%)]",
+          "absolute inset-0 transition-opacity duration-300",
+          active
+            ? "bg-[radial-gradient(circle_at_72%_16%,rgba(255,255,255,.28),transparent_28%),radial-gradient(circle_at_20%_85%,rgba(45,212,191,.19),transparent_36%)] opacity-100"
+            : "opacity-0",
         )}
       />
-      <svg viewBox="0 0 40 40" fill="none" className="relative z-10 size-[62%]">
-        <path
-          d="M11.5 9.5v21M27.8 9.8 15 20l13.4 10.2"
+      <svg viewBox="0 0 40 40" fill="none" className="relative z-10 size-[72%]">
+        <ellipse
+          cx="20"
+          cy="20"
+          rx="13.8"
+          ry="7.5"
+          transform="rotate(-28 20 20)"
           stroke="currentColor"
-          strokeWidth="3.15"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeWidth="1.45"
+          opacity={active ? 0.58 : 0.4}
+        />
+        <ellipse
+          cx="20"
+          cy="20"
+          rx="13.8"
+          ry="7.5"
+          transform="rotate(32 20 20)"
+          stroke="currentColor"
+          strokeWidth="1.15"
+          opacity={active ? 0.35 : 0.25}
         />
         <path
-          d="M29.8 6.8c2.4 1.8 3.8 4 4.5 6.7M7 30.5c-1.2-2-1.8-4.3-1.7-6.8"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          opacity={active ? 0.62 : 0.3}
+          d="M20 9.5c1.2 5.7 4.8 9.3 10.5 10.5-5.7 1.2-9.3 4.8-10.5 10.5-1.2-5.7-4.8-9.3-10.5-10.5C15.2 18.8 18.8 15.2 20 9.5Z"
+          fill="currentColor"
         />
-        <circle cx="31.8" cy="8.2" r="2" fill="currentColor" />
-        <circle cx="7.2" cy="31.5" r="1.55" fill="currentColor" />
+        <circle cx="31.2" cy="15.2" r="2" fill="currentColor" />
+        <circle cx="9.4" cy="25.6" r="1.55" fill="currentColor" opacity=".72" />
       </svg>
       <span
         className={cn(
-          "absolute right-1.5 bottom-1.5 z-20 size-1.5 rounded-full ring-2 ring-current/15 transition-colors",
-          active ? "bg-emerald-400" : "bg-zinc-400",
+          "absolute right-1.5 bottom-1.5 z-20 size-1.5 rounded-full ring-2 transition-colors",
+          active
+            ? "bg-emerald-300 shadow-[0_0_0_3px_rgba(110,231,183,.1)] ring-emerald-300/15"
+            : "bg-zinc-400 ring-zinc-400/10",
         )}
       />
     </span>

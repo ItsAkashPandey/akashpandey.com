@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface TimelineEntry {
@@ -17,78 +17,32 @@ interface Props {
 type MonthStop = {
   id: string;
   entryIds: string[];
-  month: string;
-  monthLong: string;
-  monthIndex: number;
+  label: string;
+  shortLabel: string;
   year: number;
-  count: number;
+  position: number;
 };
 
-type YearGroup = {
+type YearRange = {
   year: number;
   firstId: string;
-  count: number;
-  months: MonthStop[];
+  start: number;
+  end: number;
 };
 
-function buildTimeline(entries: TimelineEntry[]) {
-  const groups: YearGroup[] = [];
-  const entryToMonth = new Map<string, MonthStop>();
-
-  for (const entry of entries) {
-    const date = new Date(`${entry.date}T12:00:00`);
-    const year = date.getFullYear();
-    const monthIndex = date.getMonth();
-    let yearGroup = groups.find((group) => group.year === year);
-
-    if (!yearGroup) {
-      yearGroup = {
-        year,
-        firstId: entry.id,
-        count: 0,
-        months: [],
-      };
-      groups.push(yearGroup);
-    }
-
-    let month = yearGroup.months.find(
-      (candidate) => candidate.monthIndex === monthIndex,
-    );
-    if (!month) {
-      month = {
-        id: entry.id,
-        entryIds: [],
-        month: date.toLocaleDateString("en-US", { month: "short" }),
-        monthLong: date.toLocaleDateString("en-US", { month: "long" }),
-        monthIndex,
-        year,
-        count: 0,
-      };
-      yearGroup.months.push(month);
-    }
-
-    month.entryIds.push(entry.id);
-    month.count += 1;
-    yearGroup.count += 1;
-    entryToMonth.set(entry.id, month);
-  }
-
-  return { groups, entryToMonth };
-}
-
-function getClosestEntryId(entries: TimelineEntry[]) {
-  const targetY = window.innerHeight * 0.34;
+function closestEntry(entries: TimelineEntry[]) {
+  const targetY = window.innerHeight * 0.38;
   let closestId = entries[0]?.id ?? "";
-  let closestDistance = Number.POSITIVE_INFINITY;
+  let distance = Number.POSITIVE_INFINITY;
 
   for (const entry of entries) {
     const element = document.getElementById(entry.id);
     if (!element) continue;
-
-    const rect = element.getBoundingClientRect();
-    const distance = Math.abs(rect.top - targetY);
-    if (distance < closestDistance) {
-      closestDistance = distance;
+    const nextDistance = Math.abs(
+      element.getBoundingClientRect().top - targetY,
+    );
+    if (nextDistance < distance) {
+      distance = nextDistance;
       closestId = entry.id;
     }
   }
@@ -96,51 +50,100 @@ function getClosestEntryId(entries: TimelineEntry[]) {
   return closestId;
 }
 
+function buildTimeline(entries: TimelineEntry[]) {
+  const monthMap = new Map<string, Omit<MonthStop, "position">>();
+  const entryToMonthKey = new Map<string, string>();
+  const orderedKeys: string[] = [];
+
+  for (const entry of entries) {
+    const date = new Date(`${entry.date}T12:00:00`);
+    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    entryToMonthKey.set(entry.id, key);
+
+    if (!monthMap.has(key)) {
+      orderedKeys.push(key);
+      monthMap.set(key, {
+        id: entry.id,
+        entryIds: [entry.id],
+        label: date.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        }),
+        shortLabel: date.toLocaleDateString("en-US", { month: "short" }),
+        year: date.getFullYear(),
+      });
+    } else {
+      monthMap.get(key)?.entryIds.push(entry.id);
+    }
+  }
+
+  const denominator = Math.max(1, orderedKeys.length - 1);
+  const stops = orderedKeys.map((key, index) => ({
+    ...monthMap.get(key)!,
+    position: (index / denominator) * 100,
+  }));
+
+  const years: YearRange[] = [];
+  for (const stop of stops) {
+    const existing = years.find((item) => item.year === stop.year);
+    if (existing) {
+      existing.end = stop.position;
+    } else {
+      years.push({
+        year: stop.year,
+        firstId: stop.id,
+        start: stop.position,
+        end: stop.position,
+      });
+    }
+  }
+
+  for (let index = 0; index < years.length; index++) {
+    const current = years[index];
+    const previous = years[index - 1];
+    const next = years[index + 1];
+    current.start =
+      previous === undefined ? 0 : (previous.end + current.start) / 2;
+    current.end = next === undefined ? 100 : (current.end + next.start) / 2;
+  }
+
+  return { stops, years, entryToMonthKey, monthMap };
+}
+
 export default function TimelineBar({ entries, onSelectEntry }: Props) {
-  const { groups, entryToMonth } = useMemo(
+  const { stops, years, entryToMonthKey, monthMap } = useMemo(
     () => buildTimeline(entries),
     [entries],
   );
   const [activeId, setActiveId] = useState(entries[0]?.id ?? "");
-  const [displayYear, setDisplayYear] = useState(groups[0]?.year ?? 0);
-  const monthRailRef = useRef<HTMLDivElement>(null);
-  const monthRefs = useRef(new Map<string, HTMLButtonElement>());
-  const yearRefs = useRef(new Map<number, HTMLButtonElement>());
-
-  useEffect(() => {
-    const nextId = entries.some((entry) => entry.id === activeId)
-      ? activeId
-      : (entries[0]?.id ?? "");
-    setActiveId(nextId);
-
-    const activeMonth = entryToMonth.get(nextId);
-    if (activeMonth) setDisplayYear(activeMonth.year);
-  }, [activeId, entries, entryToMonth]);
+  const [scrubbing, setScrubbing] = useState(false);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const lastScrubbedId = useRef("");
 
   const selectEntry = useCallback(
     (id: string) => {
+      setActiveId(id);
       if (onSelectEntry) {
         onSelectEntry(id);
-        return;
+      } else {
+        document.getElementById(id)?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }
-
-      document.getElementById(id)?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
     },
     [onSelectEntry],
   );
 
   useEffect(() => {
-    if (!entries.length) return;
+    if (!entries.length || scrubbing) return;
 
     let frame = 0;
     const measure = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const nextId = getClosestEntryId(entries);
-        if (nextId) setActiveId(nextId);
+        const next = closestEntry(entries);
+        if (next) setActiveId(next);
       });
     };
 
@@ -155,194 +158,137 @@ export default function TimelineBar({ entries, onSelectEntry }: Props) {
       window.removeEventListener("timeline-measure", measure);
       cancelAnimationFrame(frame);
     };
-  }, [entries]);
+  }, [entries, scrubbing]);
 
-  const activeMonth = entryToMonth.get(activeId);
-  const activeYear = activeMonth?.year ?? displayYear;
-  const displayedGroup =
-    groups.find((group) => group.year === displayYear) ?? groups[0];
+  const activeKey = entryToMonthKey.get(activeId);
+  const activeMonth = activeKey ? monthMap.get(activeKey) : stops[0];
+  const activeStop =
+    stops.find(
+      (stop) =>
+        stop.year === activeMonth?.year &&
+        stop.shortLabel === activeMonth?.shortLabel,
+    ) ?? stops[0];
+  const activeYear = activeStop?.year;
 
-  useEffect(() => {
-    if (!activeMonth) return;
-    setDisplayYear(activeMonth.year);
+  const scrubToPointer = useCallback(
+    (clientY: number) => {
+      const track = trackRef.current;
+      if (!track || !stops.length) return;
 
-    requestAnimationFrame(() => {
-      yearRefs.current.get(activeMonth.year)?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "center",
-      });
-      monthRefs.current.get(activeMonth.id)?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-        inline: "center",
-      });
-    });
-  }, [activeMonth]);
+      const rect = track.getBoundingClientRect();
+      const ratio = Math.min(
+        1,
+        Math.max(0, (clientY - rect.top) / rect.height),
+      );
+      const index = Math.round(ratio * Math.max(0, stops.length - 1));
+      const stop = stops[index];
+      if (!stop || lastScrubbedId.current === stop.id) return;
 
-  if (!groups.length || !displayedGroup) return null;
-
-  const displayedMonthIndex = Math.max(
-    0,
-    displayedGroup.months.findIndex((month) => month.id === activeMonth?.id),
+      lastScrubbedId.current = stop.id;
+      selectEntry(stop.id);
+    },
+    [selectEntry, stops],
   );
-  const monthProgress =
-    displayedGroup.months.length <= 1
-      ? 1
-      : (displayedMonthIndex + 1) / displayedGroup.months.length;
+
+  if (!stops.length) return null;
 
   return (
-    <section
-      aria-label="Activity timeline"
-      className="border-border/60 bg-background/90 supports-[backdrop-filter]:bg-background/76 sticky top-[73px] z-30 overflow-hidden rounded-[22px] border shadow-[0_16px_45px_rgba(15,23,42,0.08)] backdrop-blur-2xl"
+    <aside
+      aria-label="Activity date scrubber"
+      className="pointer-events-none fixed top-24 right-1 bottom-8 z-40 hidden w-[92px] lg:block"
     >
-      <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span className="bg-foreground text-background grid size-8 shrink-0 place-items-center rounded-xl">
-            <CalendarRange className="size-4" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold tracking-[0.16em] uppercase">
-              Time navigator
-            </p>
-            <p className="text-muted-foreground truncate text-xs">
-              {activeMonth
-                ? `${activeMonth.monthLong} ${activeMonth.year}`
-                : "Swipe or choose a period"}
-            </p>
-          </div>
-        </div>
-        <span className="bg-muted text-muted-foreground rounded-full px-2.5 py-1 text-[10px] font-semibold tabular-nums">
-          {entries.length} moments
-        </span>
-      </div>
+      <div className="pointer-events-auto relative h-full overflow-hidden rounded-[20px] border border-white/8 bg-zinc-950/88 shadow-[0_18px_50px_rgba(2,6,23,.28)] backdrop-blur-xl dark:bg-black/78">
+        <div
+          ref={trackRef}
+          className="absolute inset-y-4 right-3 left-2 cursor-ns-resize touch-none select-none"
+          onPointerDown={(event) => {
+            setScrubbing(true);
+            event.currentTarget.setPointerCapture(event.pointerId);
+            scrubToPointer(event.clientY);
+          }}
+          onPointerMove={(event) => {
+            if (scrubbing) scrubToPointer(event.clientY);
+          }}
+          onPointerUp={(event) => {
+            setScrubbing(false);
+            lastScrubbedId.current = "";
+            event.currentTarget.releasePointerCapture(event.pointerId);
+          }}
+          onPointerCancel={() => {
+            setScrubbing(false);
+            lastScrubbedId.current = "";
+          }}
+        >
+          <span className="absolute top-0 right-[6px] bottom-0 w-px bg-white/12" />
 
-      <div className="space-y-3 px-3 py-3">
-        <div className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-2">
-          <span className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.14em] uppercase">
-            Year
-          </span>
-          <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {groups.map((group) => {
-              const isActive = group.year === activeYear;
-              const isDisplayed = group.year === displayYear;
+          {years.map((year, index) => {
+            const isActive = year.year === activeYear;
+            const height = Math.max(5, year.end - year.start);
 
-              return (
+            return (
+              <div
+                key={year.year}
+                className={cn(
+                  "absolute right-0 left-0 rounded-md transition-colors duration-300",
+                  isActive
+                    ? "bg-white/[0.075]"
+                    : index % 2 === 0
+                      ? "bg-white/[0.018]"
+                      : "bg-transparent",
+                )}
+                style={{ top: `${year.start}%`, height: `${height}%` }}
+              >
                 <button
-                  key={group.year}
-                  ref={(node) => {
-                    if (node) yearRefs.current.set(group.year, node);
-                    else yearRefs.current.delete(group.year);
-                  }}
                   type="button"
-                  onClick={() => {
-                    setDisplayYear(group.year);
-                    selectEntry(group.firstId);
-                  }}
+                  onClick={() => selectEntry(year.firstId)}
                   className={cn(
-                    "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold tabular-nums transition-all",
-                    isDisplayed
-                      ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                    isActive && !isDisplayed && "ring-foreground/20 ring-1",
+                    "absolute top-1/2 right-3 -translate-y-1/2 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums transition",
+                    isActive
+                      ? "bg-white text-zinc-950 shadow-sm"
+                      : "bg-black/42 text-white/66 hover:bg-white/12 hover:text-white",
                   )}
                   aria-current={isActive ? "date" : undefined}
                 >
-                  {group.year}
-                  <span className="ml-1.5 opacity-55">{group.count}</span>
+                  {year.year}
                 </button>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+
+          {stops.map((stop) => (
+            <button
+              key={`${stop.year}-${stop.shortLabel}`}
+              type="button"
+              onClick={() => selectEntry(stop.id)}
+              aria-label={`Go to ${stop.label}`}
+              title={stop.label}
+              className={cn(
+                "absolute right-[4px] z-10 size-[5px] -translate-y-1/2 rounded-full transition-all",
+                stop === activeStop
+                  ? "scale-150 bg-sky-300 ring-2 ring-sky-300/20"
+                  : "bg-white/24 hover:scale-150 hover:bg-white/70",
+              )}
+              style={{ top: `${stop.position}%` }}
+            />
+          ))}
+
+          {activeStop && (
+            <motion.div
+              className="pointer-events-none absolute right-[2px] left-0 z-20 -translate-y-1/2"
+              animate={{ top: `${activeStop.position}%` }}
+              transition={{ type: "spring", stiffness: 420, damping: 38 }}
+            >
+              <span className="absolute top-1/2 right-0 h-px w-5 bg-sky-300" />
+              <span className="absolute top-1/2 right-[17px] -translate-y-1/2 rounded-[7px] bg-zinc-900 px-2 py-1 text-[10px] font-bold whitespace-nowrap text-white shadow-lg ring-1 ring-white/10">
+                {activeStop.label}
+              </span>
+            </motion.div>
+          )}
         </div>
 
-        <div className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-2">
-          <span className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.14em] uppercase">
-            Month
-          </span>
-          <div className="relative min-w-0">
-            <button
-              type="button"
-              onClick={() =>
-                monthRailRef.current?.scrollBy({
-                  left: -220,
-                  behavior: "smooth",
-                })
-              }
-              className="border-border/60 bg-background absolute top-1/2 left-0 z-10 grid size-7 -translate-y-1/2 place-items-center rounded-full border shadow-sm"
-              aria-label="Earlier months"
-            >
-              <ChevronLeft className="size-3.5" />
-            </button>
-            <div
-              ref={monthRailRef}
-              className="flex snap-x snap-mandatory gap-2 overflow-x-auto px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            >
-              {displayedGroup.months.map((month) => {
-                const isActive = month.id === activeMonth?.id;
-                return (
-                  <button
-                    key={month.id}
-                    ref={(node) => {
-                      if (node) monthRefs.current.set(month.id, node);
-                      else monthRefs.current.delete(month.id);
-                    }}
-                    type="button"
-                    onClick={() => selectEntry(month.id)}
-                    className={cn(
-                      "group/month relative min-w-[88px] snap-center rounded-xl border px-3 py-2 text-left transition-all",
-                      isActive
-                        ? "border-foreground/30 bg-foreground/[0.06] shadow-sm"
-                        : "border-border/55 bg-background/60 hover:border-border hover:bg-muted/55",
-                    )}
-                    aria-current={isActive ? "date" : undefined}
-                  >
-                    <span
-                      className={cn(
-                        "block text-xs font-semibold",
-                        isActive
-                          ? "text-foreground"
-                          : "text-muted-foreground group-hover/month:text-foreground",
-                      )}
-                    >
-                      {month.month}
-                    </span>
-                    <span className="text-muted-foreground/75 mt-0.5 block text-[10px]">
-                      {month.count} {month.count === 1 ? "event" : "events"}
-                    </span>
-                    <span
-                      className={cn(
-                        "absolute top-2 right-2 size-1.5 rounded-full transition",
-                        isActive ? "bg-emerald-500" : "bg-border",
-                      )}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                monthRailRef.current?.scrollBy({
-                  left: 220,
-                  behavior: "smooth",
-                })
-              }
-              className="border-border/60 bg-background absolute top-1/2 right-0 z-10 grid size-7 -translate-y-1/2 place-items-center rounded-full border shadow-sm"
-              aria-label="Later months"
-            >
-              <ChevronRight className="size-3.5" />
-            </button>
-          </div>
-        </div>
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-zinc-950 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-zinc-950 to-transparent" />
       </div>
-
-      <div className="bg-border/60 h-0.5 w-full">
-        <div
-          className="bg-foreground h-full origin-left transition-transform duration-300"
-          style={{ transform: `scaleX(${monthProgress})` }}
-        />
-      </div>
-    </section>
+    </aside>
   );
 }

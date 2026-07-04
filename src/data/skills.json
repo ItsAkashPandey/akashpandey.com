@@ -28,7 +28,15 @@
           "tools": [
             {
               "name": "IdeaForge Q6",
-              "logo": "/skills/ideaforge.png",
+              "logo": "/skills/ideaforge.webp",
+              "model": "IdeaForge Q6",
+              "experience": "I have used the Q6 extensively for agricultural mapping and plantation-health monitoring across farms and other field sites. I also hold the relevant pilot certificate. My survey payloads were the MicaSense RedEdge-MX multispectral camera and Sony ILCE-5100 RGB camera.",
+              "tasks": [
+                "agricultural mapping",
+                "plantation health monitoring",
+                "MicaSense RedEdge-MX surveys",
+                "Sony ILCE-5100 RGB surveys"
+              ],
               "invertDark": true,
               "gradient": "from-[#F7931E] to-[#E85D04]",
               "popupImages": [
@@ -42,13 +50,27 @@
             },
             {
               "name": "Trinity F90+",
-              "logo": "/skills/trinity.png",
+              "logo": "/skills/trinity.webp",
+              "model": "Quantum-Systems Trinity F90+",
+              "experience": "I use this fixed-wing VTOL platform when a site needs efficient coverage over a larger area.",
+              "tasks": [
+                "multispectral mapping",
+                "large-area surveys",
+                "plantation health assessment"
+              ],
               "invertLight": true,
               "gradient": "from-[#0010ED] to-[#4361EE]"
             },
             {
               "name": "DJI Matrice 100",
-              "logo": "/skills/dji.png",
+              "logo": "/skills/dji.webp",
+              "model": "DJI Matrice 100",
+              "experience": "A familiar multirotor platform for hands-on flight work, sensor integration, and close-range mapping.",
+              "tasks": [
+                "UAV operations",
+                "sensor integration",
+                "photogrammetric image capture"
+              ],
               "invertDark": true,
               "gradient": "from-[#00B4DB] to-[#0083B0]",
               "popupImages": [
@@ -62,7 +84,13 @@
             },
             {
               "name": "Agri-Spray Drone",
-              "logo": "/skills/agridrone.png",
+              "logo": "/skills/agridrone.webp",
+              "experience": "I have worked with agricultural spraying systems in field demonstrations and precision-agriculture workflows.",
+              "tasks": [
+                "spray planning",
+                "field demonstrations",
+                "precision agriculture"
+              ],
               "invertDark": true,
               "gradient": "from-[#93B023] to-[#589632]",
               "popupImages": [
@@ -81,25 +109,59 @@
           "tools": [
             {
               "name": "PhenoCam",
-              "logo": "/skills/phenocam.png",
+              "logo": "/skills/phenocam.webp",
+              "experience": "PhenoCam is central to my PhD work: installing cameras, defining fields of view, and building season-long vegetation time series.",
+              "tasks": [
+                "crop phenology monitoring",
+                "time-lapse image analysis",
+                "field installation"
+              ],
               "invertDark": true,
               "gradient": "from-[#2D6A4F] to-[#40916C]"
             },
             {
               "name": "AWS",
-              "logo": "/skills/aws.png",
+              "logo": "/skills/aws.webp",
+              "model": "Automatic Weather Station",
+              "aliases": ["automatic weather station", "weather station"],
+              "experience": "I work with automatic weather stations alongside PhenoCam sites to connect crop development with local weather.",
+              "tasks": [
+                "meteorological monitoring",
+                "sensor deployment",
+                "phenology validation"
+              ],
               "invertDark": true,
               "gradient": "from-[#FF9900] to-[#E65100]"
             },
             {
               "name": "Spectroradiometer SVC",
-              "logo": "/skills/spectroradiometer.png",
+              "logo": "/skills/spectroradiometer.webp",
+              "model": "SVC XHR-1024i",
+              "aliases": [
+                "spectroradiometer",
+                "SVC",
+                "XHR-1024i",
+                "field spectrometer"
+              ],
+              "experience": "I have handled the SVC XHR-1024i in field campaigns to record ground spectral signatures for crop and vegetation studies.",
+              "tasks": [
+                "field spectral reflectance measurement",
+                "crop and vegetation observations",
+                "ground reference data for UAV and satellite imagery"
+              ],
               "invertLight": true,
               "gradient": "from-[#FF5F6D] to-[#FFC371]"
             },
             {
               "name": "FARO TLS",
-              "logo": "/skills/tls.png",
+              "logo": "/skills/tls.webp",
+              "model": "FARO Terrestrial Laser Scanner",
+              "experience": "I use terrestrial laser scanning for dense three-dimensional capture and field demonstrations.",
+              "tasks": [
+                "3D point-cloud capture",
+                "site scanning",
+                "survey training"
+              ],
               "invertDark": true,
               "gradient": "from-[#3258DB] to-[#1E40AF]"
             }
@@ -110,19 +172,40 @@
           "tools": [
             {
               "name": "Trimble DA2",
-              "logo": "/skills/trimble.png",
+              "logo": "/skills/trimble.webp",
+              "model": "Trimble Catalyst DA2",
+              "experience": "A compact GNSS receiver I use for accurate field positioning and geo-tagging observations.",
+              "tasks": [
+                "GNSS positioning",
+                "ground-control collection",
+                "field geo-tagging"
+              ],
               "invertDark": true,
               "gradient": "from-[#FBC02D] to-[#F57F17]"
             },
             {
               "name": "Emlid Reach RS2/RS3",
-              "logo": "/skills/emlid.png",
+              "logo": "/skills/emlid.webp",
+              "model": "Emlid Reach RS2 / RS3",
+              "experience": "I work with Reach receivers for RTK/PPK survey workflows and precise control points.",
+              "tasks": [
+                "RTK surveying",
+                "PPK workflows",
+                "ground-control points"
+              ],
               "invertDark": true,
               "gradient": "from-[#2196F3] to-[#1976D2]"
             },
             {
               "name": "Sokkia GRX2",
-              "logo": "/skills/sokkia.png",
+              "logo": "/skills/sokkia.webp",
+              "model": "Sokkia GRX2",
+              "experience": "A survey-grade GNSS system I have handled during field surveys and instrument training.",
+              "tasks": [
+                "GNSS surveying",
+                "base-rover observations",
+                "field training"
+              ],
               "invertDark": true,
               "gradient": "from-[#D32F2F] to-[#B71C1C]"
             }
@@ -133,19 +216,37 @@
           "tools": [
             {
               "name": "Total Station",
-              "logo": "/skills/ts.png",
+              "logo": "/skills/ts.webp",
+              "experience": "I have used total stations for conventional field surveying and helped train students during survey camps.",
+              "tasks": [
+                "angle and distance measurement",
+                "topographic surveying",
+                "student demonstrations"
+              ],
               "invertDark": true,
               "gradient": "from-[#607D8B] to-[#455A64]"
             },
             {
               "name": "Analytical Theodolite",
-              "logo": "/skills/theodolite.png",
+              "logo": "/skills/theodolite.webp",
+              "experience": "I learned and taught the fundamentals of precise angular measurement with analytical theodolites.",
+              "tasks": [
+                "horizontal and vertical angles",
+                "survey fundamentals",
+                "instrument training"
+              ],
               "invertLight": true,
               "gradient": "from-[#795548] to-[#5D4037]"
             },
             {
               "name": "Digital Level",
-              "logo": "/skills/digitallevel.png",
+              "logo": "/skills/digitallevel.webp",
+              "experience": "I use digital levels for elevation transfer and practical surveying exercises.",
+              "tasks": [
+                "precise levelling",
+                "elevation transfer",
+                "survey training"
+              ],
               "invertDark": true,
               "gradient": "from-[#212121] to-[#000000]"
             }
@@ -156,7 +257,7 @@
     {
       "id": 2,
       "mainCategory": "software",
-      "description": "Comprehensive suite of tools for geospatial analysis, GIS, remote sensing, and spatial data processing",
+      "description": "These are the tools I return to in day-to-day research. I use them to clean field observations, process satellite and UAV data, test ideas, make maps, and turn the result into something another person can actually use.",
       "image": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=600&fit=crop",
       "subcategories": [
         {
@@ -164,19 +265,39 @@
           "tools": [
             {
               "name": "Python",
-              "logo": "/skills/python.png",
+              "logo": "/skills/python.webp",
+              "experience": "Python is my everyday research language. I use it for image and time-series processing, analysis, automation, and reproducible workflows.",
+              "tasks": [
+                "remote-sensing analysis",
+                "PhenoCam processing",
+                "machine learning",
+                "workflow automation"
+              ],
               "invertDark": true,
               "gradient": "from-[#4B8BBE] to-[#FFD43B]"
             },
             {
               "name": "R",
-              "logo": "/skills/R.png",
+              "logo": "/skills/R.webp",
+              "experience": "I use R when statistical exploration and clear, reproducible plots are the shortest route to an answer.",
+              "tasks": [
+                "statistical analysis",
+                "time-series exploration",
+                "research visualisation"
+              ],
               "invertDark": true,
               "gradient": "from-[#276BBE] to-[#1B5299]"
             },
             {
               "name": "LaTeX",
-              "logo": "/skills/latex.png",
+              "logo": "/skills/latex.webp",
+              "experience": "Leaving MS Word was difficult because I had used it for years and knew its essential tools almost by heart. The switch was worth it: LaTeX made manuscript typesetting, thesis writing, references, and stubborn formatting much easier to control.",
+              "tasks": [
+                "manuscript typesetting",
+                "thesis writing",
+                "references and equations",
+                "consistent formatting"
+              ],
               "invertDark": true,
               "gradient": "from-[#008080] to-[#00CED1]"
             }
@@ -187,31 +308,61 @@
           "tools": [
             {
               "name": "Google Earth Engine",
-              "logo": "/skills/gee.png",
+              "logo": "/skills/gee.webp",
+              "experience": "Earth Engine is where I prototype large-area satellite analyses without spending days moving data around.",
+              "tasks": [
+                "satellite time series",
+                "crop mapping",
+                "cloud-scale geospatial analysis"
+              ],
               "invertDark": true,
               "gradient": "from-[#4285F4] to-[#255FDB]"
             },
             {
               "name": "QGIS",
-              "logo": "/skills/qgis.png",
+              "logo": "/skills/qgis.webp",
+              "experience": "QGIS is my dependable open-source workbench for checking layers, building maps, and sharing repeatable spatial workflows.",
+              "tasks": [
+                "spatial analysis",
+                "cartography",
+                "field-data quality checks"
+              ],
               "invertDark": true,
               "gradient": "from-[#93B023] to-[#589632]"
             },
             {
               "name": "ArcGIS Pro",
-              "logo": "/skills/arcgis.png",
+              "logo": "/skills/arcgis.webp",
+              "experience": "I use ArcGIS Pro for structured GIS projects, geoprocessing, and polished spatial outputs.",
+              "tasks": [
+                "geoprocessing",
+                "spatial data management",
+                "map production"
+              ],
               "invertDark": true,
               "gradient": "from-[#007AC2] to-[#005E96]"
             },
             {
               "name": "ERDAS IMAGINE",
-              "logo": "/skills/erdas.png",
+              "logo": "/skills/erdas.webp",
+              "experience": "ERDAS is useful in my remote-sensing workflow for inspecting, correcting, and classifying imagery.",
+              "tasks": [
+                "image preprocessing",
+                "classification",
+                "raster analysis"
+              ],
               "invertDark": true,
               "gradient": "from-[#D1001C] to-[#990014]"
             },
             {
               "name": "ENVI",
-              "logo": "/skills/envi.png",
+              "logo": "/skills/envi.webp",
+              "experience": "I use ENVI when a task needs focused spectral and remote-sensing image analysis.",
+              "tasks": [
+                "spectral analysis",
+                "image classification",
+                "remote-sensing preprocessing"
+              ],
               "invertDark": true,
               "gradient": "from-[#006E90] to-[#005068]"
             }
@@ -222,19 +373,33 @@
           "tools": [
             {
               "name": "Pix4D Mapper",
-              "logo": "/skills/pix4d.png",
+              "logo": "/skills/pix4d.webp",
+              "experience": "Pix4D helps me turn overlapping UAV images into orthomosaics, surface models, and survey-ready outputs.",
+              "tasks": ["UAV photogrammetry", "orthomosaics", "surface models"],
               "invertDark": true,
               "gradient": "from-[#E01E25] to-[#B0171C]"
             },
             {
               "name": "FARO Scene",
-              "logo": "/skills/scene.png",
+              "logo": "/skills/scene.webp",
+              "experience": "I use FARO Scene to register, inspect, and prepare terrestrial laser-scanner data.",
+              "tasks": [
+                "scan registration",
+                "TLS processing",
+                "point-cloud inspection"
+              ],
               "invertDark": true,
               "gradient": "from-[#3258DB] to-[#1E40AF]"
             },
             {
               "name": "CloudCompare",
-              "logo": "/skills/cloudcompare.png",
+              "logo": "/skills/cloudcompare.webp",
+              "experience": "CloudCompare is my practical choice for cleaning, comparing, and measuring large point clouds.",
+              "tasks": [
+                "point-cloud cleaning",
+                "3D comparison",
+                "distance measurement"
+              ],
               "invertDark": true,
               "gradient": "from-[#F7931E] to-[#E85D04]"
             }
@@ -245,19 +410,33 @@
           "tools": [
             {
               "name": "AutoCAD 3D",
-              "logo": "/skills/autocad.png",
+              "logo": "/skills/autocad.webp",
+              "experience": "My civil-engineering training began with AutoCAD for technical drawings and three-dimensional design work.",
+              "tasks": ["technical drafting", "3D modelling", "civil drawings"],
               "invertDark": true,
               "gradient": "from-[#E61F25] to-[#B0171C]"
             },
             {
               "name": "Revit",
-              "logo": "/skills/revit.png",
+              "logo": "/skills/revit.webp",
+              "experience": "I have used Revit to understand BIM-based building models and coordinated design documentation.",
+              "tasks": [
+                "BIM modelling",
+                "building documentation",
+                "design coordination"
+              ],
               "invertDark": true,
               "gradient": "from-[#0275B8] to-[#015A8E]"
             },
             {
               "name": "STAAD.Pro",
-              "logo": "/skills/stadd.jpg",
+              "logo": "/skills/stadd.webp",
+              "experience": "STAAD.Pro formed part of my civil-engineering toolkit for learning structural analysis and design checks.",
+              "tasks": [
+                "structural analysis",
+                "load modelling",
+                "design checks"
+              ],
               "invertDark": true,
               "gradient": "from-[#17468C] to-[#12366D]"
             }

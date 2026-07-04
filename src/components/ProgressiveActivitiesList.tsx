@@ -285,8 +285,8 @@ export default function ProgressiveActivitiesList({
   );
 
   return (
-    <div className="relative grid min-w-0 gap-6 lg:grid-cols-[248px_minmax(0,1fr)] lg:items-start xl:gap-8">
-      <aside className="border-border/60 bg-background/88 supports-[backdrop-filter]:bg-background/72 rounded-[24px] border p-4 shadow-[0_16px_45px_rgba(15,23,42,0.06)] backdrop-blur-2xl lg:sticky lg:top-24">
+    <div className="relative grid min-w-0 gap-5 lg:grid-cols-[232px_minmax(0,1fr)] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-8">
+      <aside className="border-border/60 bg-background/88 supports-[backdrop-filter]:bg-background/72 rounded-[24px] border p-4 shadow-[0_16px_45px_rgba(15,23,42,0.06)] backdrop-blur-2xl lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1">
         <div className="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -446,14 +446,14 @@ export default function ProgressiveActivitiesList({
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-col gap-5">
-        {filteredActivities.length > 0 && (
-          <TimelineBar
-            entries={timelineEntries}
-            onSelectEntry={selectTimelineEntry}
-          />
-        )}
+      {filteredActivities.length > 0 && (
+        <TimelineBar
+          entries={timelineEntries}
+          onSelectEntry={selectTimelineEntry}
+        />
+      )}
 
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1 lg:pr-12 xl:pr-8">
         <section className="relative z-10 flex min-w-0 flex-col gap-6">
           {filteredActivities.length === 0 ? (
             <div className="border-border/70 bg-background/60 text-muted-foreground rounded-3xl border border-dashed px-6 py-16 text-center text-sm">
