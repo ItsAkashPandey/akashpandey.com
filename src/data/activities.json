@@ -1,8 +1,23 @@
 {
   "activities": [
     {
+      "name": "KrishiTech Synapse 2026 — Third-Round Expert Evaluation",
+      "description": "I participated in the third round of KrishiTech Synapse 2026, an IHFC–IIT Delhi programme designed to accelerate deep-tech agricultural innovations from prototype to real-world deployment.\n\nDuring the in-person prototype showcase and expert evaluation, we presented the CropLizer GeoAI Suite—an integrated AI and geospatial intelligence platform for climate-smart agriculture. The proposed suite brings CropLizer's agronomic intelligence together with Bhoomicam's satellite, UAV, IoT, dashboard, and commercial GeoAI infrastructure for pre-, in-, and post-season decision support.\n\nWith: Prof. Idhayachandhiran Ilampooranan and Mukund Narayanan",
+      "date": "2026-07-02",
+      "location": "IHFC, Block A, Research & Innovation Park, IIT Delhi, Hauz Khas, New Delhi",
+      "imageFolder": "KrishiTech_IIT_Delhi",
+      "links": [
+        {
+          "name": "KrishiTech Synapse",
+          "href": "https://www.ihfc.co.in/archive/krishitech-synapse/",
+          "icon": "globe"
+        }
+      ],
+      "resolvedImages": []
+    },
+    {
       "name": "IN-SPACe Industry Connect - 10",
-      "description": "I represented Bhoomicam at IN-SPACe Industry Connect - 10, the annual Indian space-sector industry meet held on 10-11 June 2026 in Ahmedabad.\n\nBhoomicam showcased its AI-powered geospatial intelligence work and was recognized among the top 3 grantees under the IN-SPACe Department of Space Seed Fund Scheme, with Rs. 40 lakh support for a national pilot on crop pest, disease, and biotic-stress monitoring.\n\nWith: Prof. Siddhartha Khare and Bhoomicam team",
+      "description": "I represented Bhoomicam at IN-SPACe Industry Connect - 10, the annual Indian space-sector industry meet held on 10-11 June 2026 in Ahmedabad.\n\nBhoomicam showcased its AI-powered geospatial intelligence work and was recognized among the top 3 grantees under the IN-SPACe Department of Space Seed Fund Scheme, with Rs. 40 lakh support for a national pilot on crop pest, disease, and biotic-stress monitoring.",
       "date": "2026-06-11",
       "location": "The Forum, Hotel & Convention, Shela, Ahmedabad",
       "imageFolder": "INSPACe_Industry_Connect_2026",
@@ -14,7 +29,7 @@
         },
         {
           "name": "Bhoomicam Post",
-          "href": "https://www.linkedin.com/posts/bhoomicam-private-limited_bhoomicam-inspace-iitroorkee-activity-7447974024288178176-KfmI",
+          "href": "https://www.linkedin.com/posts/bhoomicam-private-limited_industry-connect-india-ugcPost-7471549657282805761-Xr4E?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
           "icon": "linkedin"
         }
       ],

@@ -34,8 +34,8 @@ export default function ActivitySwipeCards({
         imageWidth={300}
         imageHeight={220}
         sizes="(max-width: 640px) min(280px, calc(100vw - 4rem)), 300px"
-        quality={75}
-        idleQuality={70}
+        quality={84}
+        idleQuality={84}
         priority={priority}
         showCounter
         className={cn(

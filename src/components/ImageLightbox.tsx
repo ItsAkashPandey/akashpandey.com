@@ -13,6 +13,7 @@ import {
   useMotionValue,
 } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -26,6 +27,11 @@ interface ImageLightboxProps {
 
 function wrapIndex(index: number, length: number) {
   return ((index % length) + length) % length;
+}
+
+function wrappedDistance(index: number, current: number, total: number) {
+  const direct = Math.abs(index - current);
+  return Math.min(direct, total - direct);
 }
 
 function getVisibleIndexes(currentIndex: number, total: number) {
@@ -196,9 +202,9 @@ export default function ImageLightbox({
             dragMomentum={false}
             onDragEnd={(_, info) => {
               if (info.offset.x > 80 && images.length > 1) {
-                goNext();
-              } else if (info.offset.x < -80 && images.length > 1) {
                 goPrev();
+              } else if (info.offset.x < -80 && images.length > 1) {
+                goNext();
               }
               animate(dragX, 0, {
                 type: "spring",
@@ -272,12 +278,18 @@ export default function ImageLightbox({
                     )}
                     aria-label={`Go to image ${index + 1}`}
                   >
-                    <img
+                    <Image
                       src={src}
                       alt=""
-                      className="h-full w-full object-cover"
-                      loading={index < 8 ? "eager" : "lazy"}
-                      decoding="async"
+                      fill
+                      sizes="64px"
+                      quality={75}
+                      className="object-cover"
+                      loading={
+                        wrappedDistance(index, currentIndex, images.length) <= 4
+                          ? "eager"
+                          : "lazy"
+                      }
                       draggable={false}
                       onLoad={() => markLoaded(src)}
                       style={{ imageOrientation: "from-image" }}

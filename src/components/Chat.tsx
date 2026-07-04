@@ -88,15 +88,15 @@ export default function Chat() {
       >
         <AccordionItem
           value="item-1"
-          className={`fixed bottom-3 overflow-hidden border border-white/55 bg-white/55 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-3xl transition-all duration-300 ease-out sm:right-8 sm:bottom-8 sm:left-auto dark:border-white/10 dark:bg-zinc-950/68 dark:shadow-[0_24px_80px_rgba(0,0,0,0.36)] ${
+          className={`fixed bottom-4 overflow-hidden border border-white/60 bg-white/72 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-3xl transition-all duration-300 ease-out sm:right-8 sm:bottom-8 sm:left-auto dark:border-white/10 dark:bg-zinc-950/76 dark:shadow-[0_24px_80px_rgba(0,0,0,0.36)] ${
             isExpanded
-              ? "right-3 left-3 w-auto rounded-[1.65rem] sm:left-auto sm:w-[410px]"
-              : "right-3 w-16 rounded-[1.35rem]"
+              ? "right-4 left-4 w-auto rounded-[1.65rem] sm:left-auto sm:w-[420px]"
+              : "right-4 w-[172px] rounded-[1.35rem]"
           }`}
         >
           <AccordionTrigger
-            className={`border-white/20 transition-colors hover:bg-white/20 dark:border-white/10 dark:hover:bg-white/5 ${
-              isExpanded ? "border-b px-5 py-3.5" : "size-16 justify-center p-0"
+            className={`border-white/20 transition-colors hover:bg-white/24 hover:no-underline dark:border-white/10 dark:hover:bg-white/5 [&>svg:last-child]:hidden ${
+              isExpanded ? "border-b px-5 py-3.5" : "h-[64px] px-3 py-2"
             }`}
           >
             <ChatHeader compact={!isExpanded} />

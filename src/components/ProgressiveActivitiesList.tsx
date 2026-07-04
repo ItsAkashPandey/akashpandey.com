@@ -1,7 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Activity } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
+import {
+  ArrowUpDown,
+  CalendarDays,
+  GraduationCap,
+  Layers2,
+  RotateCcw,
+  Rocket,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import LazyActivity from "./LazyActivity";
 import TimelineBar from "./TimelineBar";
 import { Button } from "./ui/Button";
@@ -14,16 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import {
-  ArrowUpDown,
-  CalendarDays,
-  GraduationCap,
-  Layers2,
-  RotateCcw,
-  Rocket,
-  Search,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 
 type ActivityWithMeta = Activity & {
   elementId: string;
@@ -160,15 +161,12 @@ export default function ProgressiveActivitiesList({
         if (normalizedQuery && !haystack.includes(normalizedQuery)) {
           return false;
         }
-
         if (selectedYear !== "all" && activityYear !== selectedYear) {
           return false;
         }
-
         if (selectedType !== "all" && activityType !== selectedType) {
           return false;
         }
-
         return true;
       })
       .sort((a, b) => {
@@ -207,7 +205,6 @@ export default function ProgressiveActivitiesList({
       setVisibleCount((current) =>
         Math.max(current, Math.min(index + 1, filteredActivities.length)),
       );
-
       scrollToRenderedActivity(`activity-${index}`, "smooth");
     };
 
@@ -218,10 +215,9 @@ export default function ProgressiveActivitiesList({
 
   const loadMore = useCallback(() => {
     if (!hasMore) return;
-    setVisibleCount((prev) =>
-      Math.min(prev + BATCH_SIZE, filteredActivities.length),
+    setVisibleCount((previous) =>
+      Math.min(previous + BATCH_SIZE, filteredActivities.length),
     );
-    // Let TimelineBar recalculate sizes after DOM settles
     requestAnimationFrame(() => {
       window.dispatchEvent(new Event("timeline-measure"));
     });
@@ -239,9 +235,7 @@ export default function ProgressiveActivitiesList({
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
-          loadMore();
-        }
+        if (entries[0].isIntersecting) loadMore();
       },
       { rootMargin: "800px" },
     );
@@ -258,9 +252,7 @@ export default function ProgressiveActivitiesList({
         document.documentElement.scrollHeight -
         window.scrollY -
         window.innerHeight;
-      if (remaining < 900) {
-        loadMore();
-      }
+      if (remaining < 900) loadMore();
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -293,110 +285,130 @@ export default function ProgressiveActivitiesList({
   );
 
   return (
-    <div className="relative flex flex-col gap-8">
-      <section className="border-border/60 bg-background/85 supports-[backdrop-filter]:bg-background/70 z-30 rounded-2xl border p-3 shadow-sm backdrop-blur-2xl sm:p-4 lg:sticky lg:top-20">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-muted-foreground text-sm">
+    <div className="relative grid min-w-0 gap-6 lg:grid-cols-[248px_minmax(0,1fr)] lg:items-start xl:gap-8">
+      <aside className="border-border/60 bg-background/88 supports-[backdrop-filter]:bg-background/72 rounded-[24px] border p-4 shadow-[0_16px_45px_rgba(15,23,42,0.06)] backdrop-blur-2xl lg:sticky lg:top-24">
+        <div className="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="size-4" />
+              <h2 className="text-sm font-semibold">Explore</h2>
+            </div>
+            <p className="text-muted-foreground mt-1 text-xs">
               {filteredActivities.length} activit
-              {filteredActivities.length === 1 ? "y" : "ies"} found
+              {filteredActivities.length === 1 ? "y" : "ies"}
             </p>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={resetFilters}
-              disabled={!isFiltered}
-              className="text-muted-foreground hover:text-foreground h-10 rounded-xl px-3 sm:w-auto"
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={resetFilters}
+            disabled={!isFiltered}
+            className="text-muted-foreground hover:text-foreground size-9 rounded-xl"
+            title="Reset filters"
+          >
+            <RotateCcw className="size-3.5" />
+            <span className="sr-only">Reset filters</span>
+          </Button>
+        </div>
+
+        <div className="flex flex-col gap-5">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <Label
+              htmlFor="activity-search"
+              className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
             >
-              <RotateCcw className="size-4" />
-              <span>Reset</span>
-            </Button>
+              Search
+            </Label>
+            <div className="relative min-w-0">
+              <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
+                <Search className="text-muted-foreground size-3.5" />
+              </span>
+              <Input
+                id="activity-search"
+                type="search"
+                placeholder="Topic or place"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                className="border-border/60 bg-background/70 h-10 rounded-xl pl-10 text-sm shadow-none"
+              />
+            </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            {(["all", "academics", "startups"] as ActivityTypeFilter[]).map(
-              (type) => {
-                const config = activityTypeStyles[type];
-                const Icon = config.Icon;
-                const count =
-                  type === "all"
-                    ? allActivities.length
-                    : activityTypeCounts[type];
+          <div className="flex flex-col gap-2">
+            <p className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase">
+              Focus
+            </p>
+            <div className="grid grid-cols-3 gap-2 lg:grid-cols-1">
+              {(["all", "academics", "startups"] as ActivityTypeFilter[]).map(
+                (type) => {
+                  const config = activityTypeStyles[type];
+                  const Icon = config.Icon;
+                  const count =
+                    type === "all"
+                      ? allActivities.length
+                      : activityTypeCounts[type];
 
-                return (
-                  <button
-                    key={type}
-                    type="button"
-                    onClick={() => setSelectedType(type)}
-                    className={cn(
-                      "group bg-background/75 flex min-h-[78px] items-center gap-3 rounded-xl border p-3 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm",
-                      selectedType === type
-                        ? "border-foreground/30 ring-foreground/10 ring-2"
-                        : "border-border/60 hover:border-border",
-                    )}
-                  >
-                    <span
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setSelectedType(type)}
                       className={cn(
-                        "flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-105",
-                        config.soft,
+                        "group flex min-w-0 items-center gap-2.5 rounded-xl border p-2 text-left transition-all",
+                        selectedType === type
+                          ? "border-foreground/25 bg-foreground/[0.055] shadow-sm"
+                          : "hover:border-border/70 hover:bg-muted/55 border-transparent",
                       )}
                     >
-                      <Icon className="size-5" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm leading-tight font-semibold">
-                        {config.label}
+                      <span
+                        className={cn(
+                          "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                          config.soft,
+                        )}
+                      >
+                        <Icon className="size-4" />
                       </span>
-                      <span className="text-muted-foreground mt-1 block text-xs">
-                        {count} item{count === 1 ? "" : "s"}
+                      <span className="hidden min-w-0 lg:block">
+                        <span className="block truncate text-xs font-semibold">
+                          {config.label}
+                        </span>
+                        <span className="text-muted-foreground block text-[10px]">
+                          {count} items
+                        </span>
                       </span>
-                    </span>
-                  </button>
-                );
-              },
-            )}
+                      <span className="truncate text-[10px] font-semibold lg:hidden">
+                        {type === "all"
+                          ? "All"
+                          : type === "academics"
+                            ? "Academic"
+                            : "Startup"}
+                      </span>
+                    </button>
+                  );
+                },
+              )}
+            </div>
           </div>
 
-          <div className="grid items-end gap-3 lg:grid-cols-[minmax(280px,1fr)_140px_160px]">
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <Label
-                htmlFor="activity-search"
-                className="text-muted-foreground px-1 text-[11px] font-medium"
-              >
-                Search
-              </Label>
-              <div className="relative min-w-0">
-                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
-                  <Search className="text-muted-foreground size-4" />
-                </span>
-                <Input
-                  id="activity-search"
-                  type="search"
-                  placeholder="Search activities..."
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  className="border-border/60 bg-background/70 h-11 rounded-xl pl-11 text-sm shadow-none"
-                />
-              </div>
-            </div>
-
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <div className="flex min-w-0 flex-col gap-1.5">
               <Label
                 htmlFor="activity-year-filter"
-                className="text-muted-foreground px-1 text-[11px] font-medium"
+                className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
               >
                 Year
               </Label>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
                 <SelectTrigger
                   id="activity-year-filter"
-                  className="border-border/60 bg-background/70 h-11 rounded-xl shadow-none"
+                  className="border-border/60 bg-background/70 h-10 w-full rounded-xl shadow-none"
                 >
-                  <CalendarDays className="text-muted-foreground mr-2 size-4 shrink-0" />
+                  <CalendarDays className="text-muted-foreground mr-2 size-3.5 shrink-0" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
+                  <SelectItem value="all">All years</SelectItem>
                   {years.map((year) => (
                     <SelectItem key={year} value={year.toString()}>
                       {year}
@@ -409,9 +421,9 @@ export default function ProgressiveActivitiesList({
             <div className="flex min-w-0 flex-col gap-1.5">
               <Label
                 htmlFor="activity-sort-filter"
-                className="text-muted-foreground px-1 text-[11px] font-medium"
+                className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
               >
-                Sort
+                Order
               </Label>
               <Select
                 value={sortBy}
@@ -419,66 +431,67 @@ export default function ProgressiveActivitiesList({
               >
                 <SelectTrigger
                   id="activity-sort-filter"
-                  className="border-border/60 bg-background/70 h-11 rounded-xl shadow-none"
+                  className="border-border/60 bg-background/70 h-10 w-full rounded-xl shadow-none"
                 >
-                  <ArrowUpDown className="text-muted-foreground mr-2 size-4 shrink-0" />
+                  <ArrowUpDown className="text-muted-foreground mr-2 size-3.5 shrink-0" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="oldest">Oldest First</SelectItem>
+                  <SelectItem value="newest">Newest first</SelectItem>
+                  <SelectItem value="oldest">Oldest first</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         </div>
-      </section>
+      </aside>
 
-      <section className="relative z-10 flex flex-col gap-8">
-        {filteredActivities.length === 0 ? (
-          <div className="border-border/70 bg-background/60 text-muted-foreground rounded-3xl border border-dashed px-6 py-16 text-center text-sm">
-            No activities found matching your filters.
-          </div>
-        ) : (
-          visibleActivities.map((activity, index) => (
-            <LazyActivity
-              key={activity.elementId}
-              activity={activity}
-              index={index}
-              initiallyVisible
-              searchQuery={query.trim()}
-            />
-          ))
+      <div className="flex min-w-0 flex-col gap-5">
+        {filteredActivities.length > 0 && (
+          <TimelineBar
+            entries={timelineEntries}
+            onSelectEntry={selectTimelineEntry}
+          />
         )}
 
-        {filteredActivities.length > 0 && hasMore ? (
-          <div ref={sentinelRef} className="flex justify-center py-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={loadMore}
-              className="rounded-xl"
-            >
-              Load more
-            </Button>
-          </div>
-        ) : filteredActivities.length > 0 ? (
-          /* End-of-list indicator */
-          <div className="flex flex-col items-center gap-3 py-8">
-            <div className="from-primary/20 h-12 w-px bg-gradient-to-b to-transparent" />
-            <p className="text-muted-foreground/60 text-xs font-medium tracking-widest uppercase">
-              You&apos;ve seen it all ✨
-            </p>
-          </div>
-        ) : null}
-      </section>
+        <section className="relative z-10 flex min-w-0 flex-col gap-6">
+          {filteredActivities.length === 0 ? (
+            <div className="border-border/70 bg-background/60 text-muted-foreground rounded-3xl border border-dashed px-6 py-16 text-center text-sm">
+              No activities found matching your filters.
+            </div>
+          ) : (
+            visibleActivities.map((activity, index) => (
+              <LazyActivity
+                key={activity.elementId}
+                activity={activity}
+                index={index}
+                initiallyVisible
+                searchQuery={query.trim()}
+              />
+            ))
+          )}
 
-      {filteredActivities.length > 0 && (
-        <TimelineBar
-          entries={timelineEntries}
-          onSelectEntry={selectTimelineEntry}
-        />
-      )}
+          {filteredActivities.length > 0 && hasMore ? (
+            <div ref={sentinelRef} className="flex justify-center py-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={loadMore}
+                className="rounded-xl"
+              >
+                Load more
+              </Button>
+            </div>
+          ) : filteredActivities.length > 0 ? (
+            <div className="flex flex-col items-center gap-3 py-8">
+              <div className="from-primary/20 h-12 w-px bg-gradient-to-b to-transparent" />
+              <p className="text-muted-foreground/60 text-xs font-medium tracking-widest uppercase">
+                You&apos;ve reached the beginning
+              </p>
+            </div>
+          ) : null}
+        </section>
+      </div>
     </div>
   );
 }

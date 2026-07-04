@@ -7,25 +7,32 @@ import { Button } from "./ui/Button";
 
 export default function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, [resolvedTheme]);
 
-  if (!mounted) {
-    return null;
-  }
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    const nextTheme = root.classList.contains("dark") ? "light" : "dark";
+    root.classList.remove("light", "dark");
+    root.classList.add(nextTheme);
+    root.style.colorScheme = nextTheme;
+    window.localStorage.setItem("theme", nextTheme);
+    setIsDark(nextTheme === "dark");
+    setTheme(nextTheme);
+  };
 
   return (
     <Button
       size="icon"
       variant="ghost"
-      onClick={() => {
-        setTheme(resolvedTheme === "dark" ? "light" : "dark");
-      }}
+      className="border-border/55 bg-background/60 size-10 rounded-xl border shadow-sm"
+      onClick={toggleTheme}
+      title={isDark ? "Use light theme" : "Use dark theme"}
     >
-      {resolvedTheme === "dark" ? (
+      {isDark ? (
         <SunIcon className="size-4 text-orange-300" />
       ) : (
         <MoonIcon className="size-4 text-indigo-500" />

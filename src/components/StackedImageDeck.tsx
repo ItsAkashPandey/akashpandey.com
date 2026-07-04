@@ -1,19 +1,9 @@
 "use client";
 
-import {
-  isBrowserImageCached,
-  markBrowserImageLoaded,
-  preloadBrowserImage,
-} from "@/lib/browser-image-cache";
 import { cn } from "@/lib/utils";
-import {
-  animate,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useTransform,
-} from "framer-motion";
-import type { MotionValue, PanInfo } from "framer-motion";
+import useEmblaCarousel from "embla-carousel-react";
+import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface StackedImageDeckProps {
@@ -35,19 +25,9 @@ interface StackedImageDeckProps {
   onImageClick?: (index: number) => void;
 }
 
-const SWIPE_THRESHOLD = 86;
-const DRAG_LIMIT = 170;
-const EXIT_DISTANCE = 430;
-
-const SPRING = {
-  type: "spring",
-  stiffness: 460,
-  damping: 42,
-  mass: 0.72,
-} as const;
-
-function wrapIndex(index: number, length: number) {
-  return ((index % length) + length) % length;
+function wrappedDistance(index: number, current: number, total: number) {
+  const direct = Math.abs(index - current);
+  return Math.min(direct, total - direct);
 }
 
 export default function StackedImageDeck({
@@ -56,198 +36,75 @@ export default function StackedImageDeck({
   className,
   cardClassName,
   imageClassName,
-  imageWidth,
-  imageHeight,
   sizes,
   priority = false,
-  quality = 75,
-  idleQuality = 70,
+  quality = 82,
+  idleQuality: _idleQuality,
   showCounter = false,
   labels,
   gridBackground = false,
-  stackSize = 3,
+  stackSize: _stackSize,
   onImageClick,
 }: StackedImageDeckProps) {
-  const [cursor, setCursor] = useState(0);
-  const [phase, setPhase] = useState<"idle" | "dragging" | "settling">("idle");
-  const [, setLoadedVersion] = useState(0);
-  const loadedImagesRef = useRef(new Set<string>());
-  const activeAnimationRef = useRef<ReturnType<typeof animate> | null>(null);
+  const [viewportRef, emblaApi] = useEmblaCarousel({
+    align: "start",
+    containScroll: false,
+    dragFree: false,
+    loop: images.length > 1,
+    skipSnaps: false,
+    duration: 24,
+  });
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+  const imageRefs = useRef(new Map<number, HTMLImageElement>());
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
-  const x = useMotionValue(0);
-  const shouldReduceMotion = useReducedMotion();
 
-  const markLoaded = useCallback((src: string) => {
-    markBrowserImageLoaded(src);
-    if (loadedImagesRef.current.has(src)) return;
-    loadedImagesRef.current.add(src);
-    setLoadedVersion((version) => version + 1);
-  }, []);
+  const updateCarouselState = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+    setCanScrollPrev(emblaApi.canScrollPrev());
+    setCanScrollNext(emblaApi.canScrollNext());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    updateCarouselState();
+    emblaApi.on("select", updateCarouselState);
+    emblaApi.on("reInit", updateCarouselState);
+    return () => {
+      emblaApi.off("select", updateCarouselState);
+      emblaApi.off("reInit", updateCarouselState);
+    };
+  }, [emblaApi, updateCarouselState]);
 
   useEffect(() => {
     if (!images.length) return;
 
-    const nearUrls = Array.from(
-      new Set(
-        [0, 1, -1, 2, -2].map(
-          (offset) => images[wrapIndex(cursor + offset, images.length)],
-        ),
-      ),
-    );
-    const restUrls = images.filter((src) => !nearUrls.includes(src));
-    let cancelled = false;
-
-    const warm = (src: string) => {
-      preloadBrowserImage(src).then(() => {
-        if (!cancelled) markLoaded(src);
-      });
-    };
-
-    nearUrls.forEach(warm);
-
-    const timeoutId = window.setTimeout(() => {
-      restUrls.forEach(warm);
-    }, 180);
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeoutId);
-    };
-  }, [cursor, images, markLoaded]);
-
-  useEffect(() => {
-    images.forEach((src) => {
-      if (isBrowserImageCached(src)) {
-        markLoaded(src);
-      }
-    });
-  }, [images, markLoaded]);
-
-  useEffect(() => {
-    return () => {
-      activeAnimationRef.current?.stop();
-    };
-  }, []);
-
-  const nextCards = useMemo(() => {
-    if (images.length <= 1) return [];
-
-    const visibleCount = Math.min(
-      Math.max(stackSize - 1, 1),
-      images.length - 1,
-    );
-
-    return Array.from({ length: visibleCount }, (_, offset) => {
-      const depth = offset + 1;
-      const index = wrapIndex(cursor + depth, images.length);
-      return { depth, index, src: images[index] };
-    }).reverse();
-  }, [cursor, images, stackSize]);
-
-  const previousCard = useMemo(() => {
-    if (images.length <= 1) return null;
-    const index = wrapIndex(cursor - 1, images.length);
-    return { depth: 1, index, src: images[index] };
-  }, [cursor, images]);
-
-  const frontRotate = useTransform(x, [-DRAG_LIMIT, 0, DRAG_LIMIT], [-7, 0, 7]);
-  const frontScale = useTransform(
-    x,
-    [-DRAG_LIMIT, 0, DRAG_LIMIT],
-    [0.965, 1, 0.965],
-  );
-  const frontOpacity = useTransform(
-    x,
-    [-EXIT_DISTANCE, -SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD, EXIT_DISTANCE],
-    [0, 0.95, 1, 0.95, 0],
-  );
-
-  const currentLabel = labels?.[cursor];
-  const currentSrc = images[cursor];
-  const knownLoaded = Boolean(
-    currentSrc &&
-    (loadedImagesRef.current.has(currentSrc) ||
-      isBrowserImageCached(currentSrc)),
-  );
-  const animationOptions = shouldReduceMotion
-    ? ({ duration: 0.12 } as const)
-    : SPRING;
-
-  const settleToCenter = useCallback(() => {
-    activeAnimationRef.current?.stop();
-    activeAnimationRef.current = animate(x, 0, animationOptions);
-    void activeAnimationRef.current.then(() => setPhase("idle"));
-  }, [animationOptions, x]);
-
-  const completeSwipe = useCallback(
-    (direction: 1 | -1, velocity: number) => {
-      activeAnimationRef.current?.stop();
-      setPhase("settling");
-
-      activeAnimationRef.current = animate(
-        x,
-        direction * EXIT_DISTANCE,
-        shouldReduceMotion
-          ? { duration: 0.12 }
-          : {
-              ...SPRING,
-              velocity,
-            },
+    const nearIndexes = images
+      .map((_, index) => index)
+      .filter(
+        (index) => wrappedDistance(index, selectedIndex, images.length) <= 2,
       );
 
-      void activeAnimationRef.current.then(() => {
-        setCursor((value) => wrapIndex(value + direction, images.length));
-        x.set(0);
-        setPhase("idle");
-      });
-    },
-    [images.length, shouldReduceMotion, x],
-  );
-
-  const handleDragStart = () => {
-    if (phase === "settling") return;
-    activeAnimationRef.current?.stop();
-    setPhase("dragging");
-  };
-
-  const handleDragEnd = (
-    _event: MouseEvent | TouchEvent | PointerEvent,
-    info: PanInfo,
-  ) => {
-    if (phase === "settling") return;
-
-    const finalX = x.get();
-    const hasSwipeIntent =
-      Math.abs(finalX) >= SWIPE_THRESHOLD || Math.abs(info.velocity.x) > 620;
-
-    if (hasSwipeIntent && images.length > 1) {
-      completeSwipe(finalX >= 0 ? 1 : -1, info.velocity.x);
-      return;
+    for (const index of nearIndexes) {
+      const image = imageRefs.current.get(index);
+      if (image?.decode) {
+        void image.decode().catch(() => {
+          // The load event will finish decoding if the request is still in flight.
+        });
+      }
     }
+  }, [images, selectedIndex]);
 
-    settleToCenter();
-  };
+  const visibleProgress = useMemo(() => {
+    if (images.length <= 1) return 1;
+    return (selectedIndex + 1) / images.length;
+  }, [images.length, selectedIndex]);
 
-  const openCurrentImage = () => {
-    if (phase !== "idle") return;
-    onImageClick?.(cursor);
-  };
-
-  const handlePointerDownCapture = (event: React.PointerEvent) => {
-    pointerStartRef.current = { x: event.clientX, y: event.clientY };
-  };
-
-  const handlePointerUpCapture = (event: React.PointerEvent) => {
-    const start = pointerStartRef.current;
-    pointerStartRef.current = null;
-    if (!start || phase !== "idle") return;
-
-    const dx = Math.abs(event.clientX - start.x);
-    const dy = Math.abs(event.clientY - start.y);
-    if (dx <= 6 && dy <= 6) {
-      openCurrentImage();
-    }
-  };
+  const openSelectedImage = useCallback(() => {
+    onImageClick?.(selectedIndex);
+  }, [onImageClick, selectedIndex]);
 
   if (images.length === 0) {
     return (
@@ -263,326 +120,163 @@ export default function StackedImageDeck({
     <div
       data-stacked-deck
       className={cn(
-        "relative grid place-items-center overflow-visible",
+        "group/gallery border-border/60 bg-muted/30 relative isolate overflow-hidden rounded-[20px] border shadow-[0_12px_34px_rgba(15,23,42,0.10)]",
         className,
       )}
+      style={
+        gridBackground
+          ? {
+              backgroundImage:
+                "linear-gradient(hsl(var(--border)/0.65) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)/0.65) 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }
+          : undefined
+      }
+      role="button"
+      tabIndex={0}
+      aria-label={`Open ${alt}`}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          emblaApi?.scrollPrev();
+        } else if (event.key === "ArrowRight") {
+          event.preventDefault();
+          emblaApi?.scrollNext();
+        } else if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openSelectedImage();
+        }
+      }}
+      onPointerDownCapture={(event) => {
+        pointerStartRef.current = { x: event.clientX, y: event.clientY };
+      }}
+      onPointerUpCapture={(event) => {
+        const start = pointerStartRef.current;
+        pointerStartRef.current = null;
+        if (!start) return;
+
+        const dx = Math.abs(event.clientX - start.x);
+        const dy = Math.abs(event.clientY - start.y);
+        if (dx <= 6 && dy <= 6) openSelectedImage();
+      }}
     >
-      {nextCards.map((card) => (
-        <NextLayerCard
-          key={`next-${card.depth}-${card.index}`}
-          cardClassName={cardClassName}
-          depth={card.depth}
-          dragX={x}
-          gridBackground={gridBackground}
-          idleQuality={idleQuality}
-          imageClassName={imageClassName}
-          imageHeight={imageHeight}
-          imageWidth={imageWidth}
-          isLoaded={loadedImagesRef.current.has(card.src)}
-          markLoaded={markLoaded}
-          sizes={sizes}
-          src={card.src}
-        />
-      ))}
+      <div ref={viewportRef} className="h-full overflow-hidden">
+        <div className="flex h-full touch-pan-y">
+          {images.map((src, index) => {
+            const distance = wrappedDistance(
+              index,
+              selectedIndex,
+              images.length,
+            );
+            const isCurrent = index === selectedIndex;
 
-      {previousCard && (
-        <PreviousLayerCard
-          key={`previous-${previousCard.index}`}
-          cardClassName={cardClassName}
-          dragX={x}
-          gridBackground={gridBackground}
-          idleQuality={idleQuality}
-          imageClassName={imageClassName}
-          imageHeight={imageHeight}
-          imageWidth={imageWidth}
-          isLoaded={loadedImagesRef.current.has(previousCard.src)}
-          markLoaded={markLoaded}
-          sizes={sizes}
-          src={previousCard.src}
-        />
-      )}
-
-      <motion.div
-        data-deck-card="front"
-        data-deck-index={cursor}
-        key={`front-${cursor}`}
-        drag={images.length > 1 && phase !== "settling" ? "x" : false}
-        dragConstraints={{ left: -DRAG_LIMIT, right: DRAG_LIMIT }}
-        dragElastic={0.18}
-        dragMomentum={false}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onPointerDownCapture={handlePointerDownCapture}
-        onPointerUpCapture={handlePointerUpCapture}
-        onClick={openCurrentImage}
-        onTap={openCurrentImage}
-        role="button"
-        tabIndex={0}
-        aria-label={`Open ${alt}`}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            openCurrentImage();
-          }
-        }}
-        className={cn(
-          "absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-zinc-200 shadow-[0_18px_45px_rgba(15,23,42,0.18)] will-change-transform dark:border-white/10 dark:bg-zinc-900",
-          "cursor-grab touch-pan-y active:cursor-grabbing",
-          cardClassName,
-        )}
-        style={{
-          x,
-          rotate: frontRotate,
-          scale: frontScale,
-          opacity: frontOpacity,
-          zIndex: 30,
-          backgroundImage: gridBackground
-            ? "linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)"
-            : undefined,
-          backgroundSize: gridBackground ? "20px 20px" : undefined,
-        }}
-      >
-        <DeckImage
-          alt={alt}
-          imageClassName={imageClassName}
-          imageHeight={imageHeight}
-          imageWidth={imageWidth}
-          isLoaded={knownLoaded}
-          loading={priority ? "eager" : "lazy"}
-          markLoaded={markLoaded}
-          priority={priority}
-          quality={quality}
-          sizes={sizes}
-          src={currentSrc}
-        />
-      </motion.div>
-
-      {(currentLabel || (showCounter && images.length > 1)) && (
-        <div className="pointer-events-none absolute right-2 bottom-2 left-2 z-40 flex items-center justify-between gap-2">
-          {currentLabel && (
-            <span className="truncate rounded-full bg-black/45 px-2 py-1 text-[10px] font-semibold text-white/90 backdrop-blur-md">
-              {currentLabel}
-            </span>
-          )}
-          {showCounter && images.length > 1 && (
-            <span className="ml-auto rounded-full bg-black/45 px-2 py-1 text-[10px] font-semibold text-white/90 backdrop-blur-md">
-              {cursor + 1}/{images.length}
-            </span>
-          )}
+            return (
+              <div
+                key={`${src}-${index}`}
+                data-deck-card={isCurrent ? "front" : "slide"}
+                data-deck-index={index}
+                className="relative h-full min-w-0 flex-[0_0_100%]"
+              >
+                <div
+                  className={cn(
+                    "bg-muted relative h-full w-full overflow-hidden",
+                    cardClassName,
+                  )}
+                >
+                  <Image
+                    ref={(node) => {
+                      if (node) imageRefs.current.set(index, node);
+                      else imageRefs.current.delete(index);
+                    }}
+                    src={src}
+                    alt={isCurrent ? alt : ""}
+                    fill
+                    draggable={false}
+                    sizes={sizes}
+                    quality={quality}
+                    loading={priority || distance <= 1 ? "eager" : "lazy"}
+                    fetchPriority={
+                      priority && index === 0
+                        ? "high"
+                        : distance <= 1
+                          ? "auto"
+                          : "low"
+                    }
+                    className={cn(
+                      "pointer-events-none select-none",
+                      imageClassName,
+                    )}
+                    style={{ imageOrientation: "from-image" }}
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
+      </div>
+
+      <div className="pointer-events-none absolute inset-0 z-10 rounded-[inherit] ring-1 ring-white/30 ring-inset dark:ring-white/10" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-gradient-to-t from-black/45 via-black/12 to-transparent" />
+
+      <div className="pointer-events-none absolute right-2.5 bottom-2.5 left-2.5 z-20 flex items-end justify-between gap-2">
+        <div className="min-w-0">
+          {labels?.[selectedIndex] ? (
+            <span className="block max-w-[190px] truncate rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-md">
+              {labels[selectedIndex]}
+            </span>
+          ) : images.length > 1 ? (
+            <span className="flex items-center gap-1.5 text-[10px] font-medium text-white/80">
+              <span className="h-px w-4 bg-white/65" />
+              swipe
+            </span>
+          ) : null}
+        </div>
+
+        {(showCounter || images.length > 1) && (
+          <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-white/15 bg-black/40 px-2.5 py-1 text-[10px] font-semibold text-white tabular-nums backdrop-blur-md">
+            <Maximize2 className="size-2.5" />
+            {selectedIndex + 1}/{images.length}
+          </span>
+        )}
+      </div>
+
+      {images.length > 1 && (
+        <>
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 h-[3px] bg-white/20">
+            <div
+              className="h-full origin-left bg-white transition-transform duration-300 ease-out"
+              style={{ transform: `scaleX(${visibleProgress})` }}
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              emblaApi?.scrollPrev();
+            }}
+            onPointerDown={(event) => event.stopPropagation()}
+            disabled={!canScrollPrev}
+            className="pointer-events-auto absolute top-1/2 left-2 z-30 hidden size-8 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/35 text-white opacity-0 shadow-lg backdrop-blur-md transition group-hover/gallery:opacity-100 hover:bg-black/55 sm:grid"
+            aria-label="Previous image"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              emblaApi?.scrollNext();
+            }}
+            onPointerDown={(event) => event.stopPropagation()}
+            disabled={!canScrollNext}
+            className="pointer-events-auto absolute top-1/2 right-2 z-30 hidden size-8 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/35 text-white opacity-0 shadow-lg backdrop-blur-md transition group-hover/gallery:opacity-100 hover:bg-black/55 sm:grid"
+            aria-label="Next image"
+          >
+            <ChevronRight className="size-4" />
+          </button>
+        </>
       )}
     </div>
-  );
-}
-
-function NextLayerCard({
-  cardClassName,
-  depth,
-  dragX,
-  gridBackground,
-  idleQuality,
-  imageClassName,
-  imageHeight,
-  imageWidth,
-  isLoaded,
-  markLoaded,
-  sizes,
-  src,
-}: {
-  cardClassName?: string;
-  depth: number;
-  dragX: MotionValue<number>;
-  gridBackground: boolean;
-  idleQuality: number;
-  imageClassName?: string;
-  imageHeight: number;
-  imageWidth: number;
-  isLoaded: boolean;
-  markLoaded: (src: string) => void;
-  sizes: string;
-  src: string;
-}) {
-  const x = useTransform(
-    dragX,
-    [0, SWIPE_THRESHOLD],
-    [-depth * 10, -Math.max(depth - 1, 0) * 8],
-  );
-  const y = useTransform(
-    dragX,
-    [0, SWIPE_THRESHOLD],
-    [depth * 10, Math.max(depth - 1, 0) * 8],
-  );
-  const rotate = useTransform(
-    dragX,
-    [0, SWIPE_THRESHOLD],
-    [-depth * 3.2, -Math.max(depth - 1, 0) * 2.4],
-  );
-  const scale = useTransform(
-    dragX,
-    [0, SWIPE_THRESHOLD],
-    [0.92 - depth * 0.035, 0.96 - depth * 0.018],
-  );
-  const opacity = useTransform(
-    dragX,
-    [-SWIPE_THRESHOLD, 0, SWIPE_THRESHOLD],
-    [0.12, 0.88 - depth * 0.13, 0.96 - depth * 0.07],
-  );
-
-  return (
-    <motion.div
-      data-deck-card="next"
-      className={cn(
-        "pointer-events-none absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-zinc-200 shadow-[0_18px_45px_rgba(15,23,42,0.16)] will-change-transform dark:border-white/10 dark:bg-zinc-900",
-        cardClassName,
-      )}
-      style={{
-        x,
-        y,
-        rotate,
-        scale,
-        opacity,
-        zIndex: 20 - depth,
-        backgroundImage: gridBackground
-          ? "linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)"
-          : undefined,
-        backgroundSize: gridBackground ? "20px 20px" : undefined,
-      }}
-    >
-      <DeckImage
-        alt=""
-        imageClassName={imageClassName}
-        imageHeight={imageHeight}
-        imageWidth={imageWidth}
-        isLoaded={isLoaded}
-        loading="lazy"
-        markLoaded={markLoaded}
-        priority={false}
-        quality={idleQuality}
-        sizes={sizes}
-        src={src}
-      />
-    </motion.div>
-  );
-}
-
-function PreviousLayerCard({
-  cardClassName,
-  dragX,
-  gridBackground,
-  idleQuality,
-  imageClassName,
-  imageHeight,
-  imageWidth,
-  isLoaded,
-  markLoaded,
-  sizes,
-  src,
-}: {
-  cardClassName?: string;
-  dragX: MotionValue<number>;
-  gridBackground: boolean;
-  idleQuality: number;
-  imageClassName?: string;
-  imageHeight: number;
-  imageWidth: number;
-  isLoaded: boolean;
-  markLoaded: (src: string) => void;
-  sizes: string;
-  src: string;
-}) {
-  const x = useTransform(dragX, [-SWIPE_THRESHOLD, 0], [0, 10]);
-  const y = useTransform(dragX, [-SWIPE_THRESHOLD, 0], [4, 10]);
-  const rotate = useTransform(dragX, [-SWIPE_THRESHOLD, 0], [1.2, 3.2]);
-  const scale = useTransform(dragX, [-SWIPE_THRESHOLD, 0], [0.97, 0.92]);
-  const opacity = useTransform(
-    dragX,
-    [-SWIPE_THRESHOLD, -12, 0, SWIPE_THRESHOLD],
-    [0.94, 0.45, 0.02, 0.02],
-  );
-
-  return (
-    <motion.div
-      data-deck-card="previous"
-      className={cn(
-        "pointer-events-none absolute inset-0 overflow-hidden rounded-[18px] border border-white/70 bg-zinc-200 shadow-[0_18px_45px_rgba(15,23,42,0.16)] will-change-transform dark:border-white/10 dark:bg-zinc-900",
-        cardClassName,
-      )}
-      style={{
-        x,
-        y,
-        rotate,
-        scale,
-        opacity,
-        zIndex: 26,
-        backgroundImage: gridBackground
-          ? "linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)"
-          : undefined,
-        backgroundSize: gridBackground ? "20px 20px" : undefined,
-      }}
-    >
-      <DeckImage
-        alt=""
-        imageClassName={imageClassName}
-        imageHeight={imageHeight}
-        imageWidth={imageWidth}
-        isLoaded={isLoaded}
-        loading="lazy"
-        markLoaded={markLoaded}
-        priority={false}
-        quality={idleQuality}
-        sizes={sizes}
-        src={src}
-      />
-    </motion.div>
-  );
-}
-
-function DeckImage({
-  alt,
-  imageClassName,
-  imageHeight,
-  imageWidth,
-  isLoaded,
-  loading,
-  markLoaded,
-  priority,
-  quality,
-  sizes,
-  src,
-}: {
-  alt: string;
-  imageClassName?: string;
-  imageHeight: number;
-  imageWidth: number;
-  isLoaded: boolean;
-  loading: "eager" | "lazy";
-  markLoaded: (src: string) => void;
-  priority: boolean;
-  quality: number;
-  sizes: string;
-  src: string;
-}) {
-  return (
-    <img
-      src={src}
-      alt={alt}
-      width={imageWidth}
-      height={imageHeight}
-      sizes={sizes}
-      draggable={false}
-      data-loaded={isLoaded ? "true" : "false"}
-      className={cn(
-        "pointer-events-none h-full w-full bg-zinc-200 select-none dark:bg-zinc-900",
-        imageClassName,
-      )}
-      fetchPriority={priority ? "high" : "low"}
-      loading={loading}
-      onLoad={() => markLoaded(src)}
-      onError={() => markLoaded(src)}
-      decoding="async"
-      style={{
-        imageOrientation: "from-image",
-      }}
-    />
   );
 }

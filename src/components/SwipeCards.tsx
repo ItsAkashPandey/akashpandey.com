@@ -23,8 +23,8 @@ export default function SwipeCards({ className, images }: SwipeCardsProps) {
       imageWidth={280}
       imageHeight={320}
       sizes="(max-width: 640px) 175px, 280px"
-      quality={75}
-      idleQuality={70}
+      quality={84}
+      idleQuality={84}
       priority
       stackSize={4}
       className={cn("h-[233px] w-[175px] rounded-xl", className)}

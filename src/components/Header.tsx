@@ -29,7 +29,7 @@ export default function Header() {
 
   return (
     <header className="border-border/10 bg-background/75 sticky top-0 z-50 border-b backdrop-blur-md">
-      <div className="mx-auto max-w-4xl px-6 py-4 sm:px-8">
+      <div className="mx-auto max-w-7xl px-5 py-3.5 sm:px-8 lg:px-10">
         <nav className="flex items-center justify-between">
           {/* Desktop Navigation */}
           <ul className="hidden gap-8 md:flex">
