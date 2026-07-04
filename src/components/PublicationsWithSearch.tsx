@@ -17,6 +17,7 @@ import {
   Presentation,
   RotateCcw,
   Search,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -244,109 +245,119 @@ export default function PublicationsWithSearch({ publications }: Props) {
     sortBy !== "newest";
 
   return (
-    <div className="flex flex-col gap-8 lg:gap-10">
-      <section className="border-border/60 bg-background/85 supports-[backdrop-filter]:bg-background/70 z-30 rounded-2xl border p-3 shadow-sm backdrop-blur-2xl sm:p-4 lg:sticky lg:top-20">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-muted-foreground text-sm">
-              {filtered.length} publication{filtered.length !== 1 ? "s" : ""}{" "}
-              found
+    <div className="grid min-w-0 gap-6 lg:grid-cols-[248px_minmax(0,1fr)] lg:items-start xl:gap-8">
+      <aside className="border-border/60 bg-background/88 supports-[backdrop-filter]:bg-background/72 rounded-[24px] border p-4 shadow-[0_16px_45px_rgba(15,23,42,0.06)] backdrop-blur-2xl lg:sticky lg:top-24">
+        <div className="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className="size-4" />
+              <h2 className="text-sm font-semibold">Library</h2>
+            </div>
+            <p className="text-muted-foreground mt-1 text-xs">
+              {filtered.length} publication{filtered.length !== 1 ? "s" : ""}
             </p>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={resetFilters}
-              disabled={!isFiltered}
-              className="text-muted-foreground hover:text-foreground h-10 rounded-xl px-3 sm:w-auto"
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={resetFilters}
+            disabled={!isFiltered}
+            className="text-muted-foreground hover:text-foreground size-9 rounded-xl"
+            title="Reset filters"
+          >
+            <RotateCcw className="size-3.5" />
+            <span className="sr-only">Reset filters</span>
+          </Button>
+        </div>
+
+        <div className="flex flex-col gap-5">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <Label
+              htmlFor="publication-search"
+              className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
             >
-              <RotateCcw className="size-4" />
-              <span>Reset</span>
-            </Button>
+              Search
+            </Label>
+            <div className="relative min-w-0">
+              <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
+                <Search className="text-muted-foreground size-3.5" />
+              </span>
+              <Input
+                id="publication-search"
+                type="search"
+                placeholder="Title, author, venue"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                className="border-border/60 bg-background/70 h-10 rounded-xl pl-10 text-sm shadow-none"
+              />
+            </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {publicationTypes.map((type) => {
-              const config = typeStyles[type];
-              const Icon = config.Icon;
-
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() =>
-                    setSelectedType((current) =>
-                      current === type ? "all" : type,
-                    )
-                  }
-                  className={cn(
-                    "group bg-background/75 flex min-h-[78px] items-center gap-3 rounded-xl border p-3 text-left transition-all duration-300 hover:-translate-y-0.5 hover:shadow-sm",
-                    selectedType === type
-                      ? "border-foreground/30 ring-foreground/10 ring-2"
-                      : "border-border/60 hover:border-border",
-                  )}
-                >
-                  <span
+          <div className="flex flex-col gap-2">
+            <p className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase">
+              Format
+            </p>
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+              {publicationTypes.map((type) => {
+                const config = typeStyles[type];
+                const Icon = config.Icon;
+                return (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() =>
+                      setSelectedType((current) =>
+                        current === type ? "all" : type,
+                      )
+                    }
                     className={cn(
-                      "flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-300 group-hover:scale-105",
-                      config.soft,
+                      "group flex min-w-0 items-center gap-2.5 rounded-xl border p-2 text-left transition-all",
+                      selectedType === type
+                        ? "border-foreground/25 bg-foreground/[0.055] shadow-sm"
+                        : "hover:border-border/70 hover:bg-muted/55 border-transparent",
                     )}
                   >
-                    <Icon className="size-5" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm leading-tight font-semibold">
-                      {publicationTypeLabels[type]}
+                    <span
+                      className={cn(
+                        "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                        config.soft,
+                      )}
+                    >
+                      <Icon className="size-4" />
                     </span>
-                    <span className="text-muted-foreground mt-1 block text-xs">
-                      {typeCounts[type]} item
-                      {typeCounts[type] === 1 ? "" : "s"}
+                    <span className="min-w-0">
+                      <span className="block truncate text-xs font-semibold">
+                        {publicationTypeLabels[type]}
+                      </span>
+                      <span className="text-muted-foreground block text-[10px]">
+                        {typeCounts[type]} items
+                      </span>
                     </span>
-                  </span>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="grid items-end gap-3 lg:grid-cols-[minmax(280px,1fr)_140px_160px]">
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <Label
-                htmlFor="publication-search"
-                className="text-muted-foreground px-1 text-[11px] font-medium"
-              >
-                Search
-              </Label>
-              <div className="relative min-w-0">
-                <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center">
-                  <Search className="text-muted-foreground size-4" />
-                </span>
-                <Input
-                  id="publication-search"
-                  type="search"
-                  placeholder="Search publications, authors, venues..."
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  className="border-border/60 bg-background/70 h-11 rounded-xl pl-11 text-sm shadow-none"
-                />
-              </div>
-            </div>
-
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <div className="flex min-w-0 flex-col gap-1.5">
               <Label
                 htmlFor="year-filter"
-                className="text-muted-foreground px-1 text-[11px] font-medium"
+                className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
               >
                 Year
               </Label>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
                 <SelectTrigger
-                  className="border-border/60 bg-background/70 h-11 rounded-xl shadow-none"
+                  className="border-border/60 bg-background/70 h-10 w-full rounded-xl shadow-none"
                   id="year-filter"
                 >
-                  <CalendarDays className="text-muted-foreground mr-2 size-4 shrink-0" />
+                  <CalendarDays className="text-muted-foreground mr-2 size-3.5 shrink-0" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
+                  <SelectItem value="all">All years</SelectItem>
                   {years.map((year) => (
                     <SelectItem key={year} value={year.toString()}>
                       {year}
@@ -359,33 +370,33 @@ export default function PublicationsWithSearch({ publications }: Props) {
             <div className="flex min-w-0 flex-col gap-1.5">
               <Label
                 htmlFor="sort-filter"
-                className="text-muted-foreground px-1 text-[11px] font-medium"
+                className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
               >
-                Sort
+                Order
               </Label>
               <Select
                 value={sortBy}
                 onValueChange={(value) => setSortBy(value as SortOption)}
               >
                 <SelectTrigger
-                  className="border-border/60 bg-background/70 h-11 rounded-xl shadow-none"
+                  className="border-border/60 bg-background/70 h-10 w-full rounded-xl shadow-none"
                   id="sort-filter"
                 >
-                  <ArrowUpDown className="text-muted-foreground mr-2 size-4 shrink-0" />
+                  <ArrowUpDown className="text-muted-foreground mr-2 size-3.5 shrink-0" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent align="end">
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="oldest">Oldest First</SelectItem>
-                  <SelectItem value="title">By Title</SelectItem>
+                  <SelectItem value="newest">Newest first</SelectItem>
+                  <SelectItem value="oldest">Oldest first</SelectItem>
+                  <SelectItem value="title">Title A–Z</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         </div>
-      </section>
+      </aside>
 
-      <div className="space-y-4">
+      <div className="min-w-0 space-y-4">
         {filtered.length === 0 ? (
           <div className="border-border/70 bg-background/60 text-muted-foreground rounded-2xl border border-dashed px-6 py-16 text-center text-sm">
             No publications found matching your criteria.
@@ -565,8 +576,8 @@ function PublicationMediaPreview({ media }: { media: PublicationMedia[] }) {
         imageWidth={900}
         imageHeight={680}
         sizes="(max-width: 1024px) calc(100vw - 3rem), 300px"
-        quality={85}
-        idleQuality={80}
+        quality={88}
+        idleQuality={88}
         stackSize={Math.min(3, media.length)}
         className="h-[250px] w-full max-w-[280px] rounded-xl"
         cardClassName="p-1.5"

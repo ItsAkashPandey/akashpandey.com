@@ -161,9 +161,30 @@ function inferIntent(text: string) {
   return "general";
 }
 
+function isCodeRequest(text: string) {
+  const lower = text.toLowerCase();
+  return (
+    /```|<script|<\/?[a-z][^>]*>|(?:code|coding|program|script|function|component|api|sql|regex|algorithm)/i.test(
+      text,
+    ) ||
+    /(?:write|generate|give|show|build|create|implement|debug|fix|refactor|explain)\s+(?:me\s+)?(?:a\s+|the\s+)?(?:python|javascript|typescript|react|next\.?js|java|c\+\+|c#|html|css|code)/i.test(
+      lower,
+    )
+  );
+}
+
+function getCodeRequestAttempt(message: string, history: ChatHistoryMessage[]) {
+  if (!isCodeRequest(message)) return 0;
+  const previousRequests = history.filter(
+    (item) => item.role === "user" && isCodeRequest(item.content),
+  ).length;
+  return previousRequests + 1;
+}
+
 function buildSystemPrompt(opts: {
   knowledgePrompt: string;
   actions: ChatAction[];
+  codeRequestAttempt: number;
 }) {
   const actionLines = opts.actions
     .filter((action) => action.href)
@@ -178,6 +199,10 @@ function buildSystemPrompt(opts: {
     "Use Markdown. Use a compact table only when it improves scanning.",
     "When a useful page exists, mention the exact link path naturally.",
     "Never claim you can see private files or admin logs.",
+    "Adapt to the visitor's register and energy: concise to concise, playful to playful, romantic to warmly romantic, and blunt to direct.",
+    "Do not escalate harassment, demeaning language, hate, threats, or sexually explicit content. Keep tone-matching clever and bounded.",
+    "If this is code request attempt 1 or 2, provide a genuinely useful answer and working code when the request is safe.",
+    `Code request attempt in this conversation: ${opts.codeRequestAttempt || "none"}.`,
     "",
     "Relevant website context:",
     opts.knowledgePrompt,
@@ -309,15 +334,37 @@ export async function POST(req: Request) {
     const systemPrompt = buildSystemPrompt({
       knowledgePrompt: buildKnowledgePrompt(retrieval.docs),
       actions: retrieval.actions,
+      codeRequestAttempt: getCodeRequestAttempt(message, history),
     });
 
-    const { reply, modelUsed } = await askOpenRouter({
-      apiKey,
-      model,
-      systemPrompt,
-      history,
-      message,
-    });
+    const codeRequestAttempt = getCodeRequestAttempt(message, history);
+    let reply: string;
+    let modelUsed: string;
+
+    if (codeRequestAttempt >= 3) {
+      reply =
+        "I’m going to stop the coding detour here. Kasi is Akash’s portfolio guide, not a general coding workspace. I can still help you explore Akash’s research, activities, publications, skills, or contact details.";
+      modelUsed = "local/code-request-boundary";
+    } else {
+      const modelResponse = await askOpenRouter({
+        apiKey,
+        model,
+        systemPrompt,
+        history,
+        message,
+      });
+      modelUsed = modelResponse.modelUsed;
+
+      const warning =
+        codeRequestAttempt === 1
+          ? "Quick heads-up: I’ll help with this, but Kasi lives on Akash’s portfolio—a coding workspace is a better home for sustained technical work."
+          : codeRequestAttempt === 2
+            ? "I’ll help once more, but this is the second coding detour. After this, I’ll keep the conversation focused on Akash’s portfolio."
+            : "";
+      reply = warning
+        ? `${warning}\n\n${modelResponse.reply}`
+        : modelResponse.reply;
+    }
 
     const latencyMs = Date.now() - startedAt;
     const turnId = crypto.randomUUID();

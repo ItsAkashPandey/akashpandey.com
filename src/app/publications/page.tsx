@@ -7,8 +7,11 @@ export default function PublicationsPage() {
   const publications = publicationsData.publications as any[];
 
   return (
-    <article className="mt-8 flex flex-col gap-8 pb-16">
-      <section className="flex max-w-4xl flex-col gap-4">
+    <article className="mt-10 flex flex-col gap-8 pb-16">
+      <section className="flex max-w-3xl flex-col gap-3">
+        <p className="text-muted-foreground text-xs font-semibold tracking-[0.18em] uppercase">
+          Research archive
+        </p>
         <h1 className="title">my publications.</h1>
         <p className="text-muted-foreground text-base leading-relaxed text-balance sm:text-lg">
           Peer-reviewed journals, international conferences, book chapters, and

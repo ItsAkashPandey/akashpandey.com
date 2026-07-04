@@ -35,33 +35,25 @@ export function ActivityCard({
         : [];
 
   // Format date nicely
-  const formattedDate = new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const formattedDate = new Date(`${date}T12:00:00`).toLocaleDateString(
+    "en-US",
+    {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    },
+  );
 
   return (
-    <article
-      style={{
-        background: "rgba(255, 255, 255, 0.40)",
-        backdropFilter: "blur(24px) saturate(160%)",
-        WebkitBackdropFilter: "blur(24px) saturate(160%)",
-        border: "1px solid rgba(255, 255, 255, 0.6)",
-        boxShadow:
-          "inset 0 0 0 1px rgba(255,255,255,0.4), 0 8px 32px 0 rgba(0, 0, 0, 0.04)",
-      }}
-      className="group dark:hover:shadow-primary/10 relative max-w-full overflow-hidden rounded-3xl p-4 transition-all duration-300 hover:shadow-[0_12px_48px_rgba(0,0,0,0.08)] sm:p-7 dark:!border-white/10 dark:!bg-white/[0.08] dark:!shadow-[0_4px_30px_rgba(0,0,0,0.3)]"
-    >
-      {/* Subtle glass highlight on top edge */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px rounded-t-2xl bg-gradient-to-r from-transparent via-white/60 to-transparent dark:via-white/10" />
+    <article className="group border-border/60 bg-card/62 hover:border-border relative max-w-full overflow-hidden rounded-[28px] border p-4 shadow-[0_14px_40px_rgba(15,23,42,0.06)] transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_55px_rgba(15,23,42,0.10)] sm:p-6 dark:bg-white/[0.035] dark:shadow-[0_16px_48px_rgba(0,0,0,0.22)]">
+      <div className="bg-foreground absolute top-0 left-8 h-[3px] w-12 rounded-b-full opacity-80" />
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-[300px_1fr] sm:items-center">
         {/* Left Column — Date, Location & Photo */}
         <div className="flex flex-col items-center gap-3 sm:items-start">
           {/* Date & Location */}
           <div className="flex w-full flex-col gap-1.5">
-            <div className="text-primary/80 inline-flex items-center gap-1.5 text-xs font-medium">
+            <div className="text-foreground inline-flex items-center gap-1.5 text-xs font-semibold">
               <Calendar className="size-3.5" />
               <time dateTime={date}>{formattedDate}</time>
             </div>
@@ -104,7 +96,7 @@ export function ActivityCard({
           </h2>
 
           {/* Accent line */}
-          <div className="from-primary/40 h-0.5 w-10 rounded-full bg-gradient-to-r to-transparent" />
+          <div className="bg-border h-px w-full" />
 
           {/* Description & Collaborators */}
           <div className="prose text-muted-foreground dark:prose-invert max-w-full text-left font-sans text-sm leading-relaxed sm:text-justify">

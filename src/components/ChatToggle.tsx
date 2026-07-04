@@ -1,7 +1,7 @@
 "use client";
 
 import { useChatbot } from "@/contexts/ChatContext";
-import { MessageCircle, MessageCircleOff, Sparkles } from "lucide-react";
+import KasiMark from "./KasiMark";
 import { Button } from "./ui/Button";
 
 export default function ChatToggle() {
@@ -12,18 +12,11 @@ export default function ChatToggle() {
       size="icon"
       variant="ghost"
       onClick={toggleChatbot}
-      className="relative rounded-xl"
-      title={isVisible ? "Hide chat" : "Show chat"}
+      className="border-border/55 bg-background/60 relative size-10 rounded-xl border shadow-sm"
+      title={isVisible ? "Hide Kasi" : "Show Kasi"}
     >
-      {isVisible ? (
-        <>
-          <MessageCircle className="size-5" />
-          <Sparkles className="text-primary absolute top-1.5 right-1.5 size-2.5" />
-        </>
-      ) : (
-        <MessageCircleOff className="size-5" />
-      )}
-      <span className="sr-only">Chat Toggle</span>
+      <KasiMark active={isVisible} size="sm" />
+      <span className="sr-only">{isVisible ? "Hide Kasi" : "Show Kasi"}</span>
     </Button>
   );
 }

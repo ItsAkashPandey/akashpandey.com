@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { CalendarDays } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface TimelineEntry {
   id: string;
@@ -14,55 +14,70 @@ interface Props {
   onSelectEntry?: (id: string) => void;
 }
 
-type TimelineStop = {
+type MonthStop = {
   id: string;
-  label: string;
+  entryIds: string[];
   month: string;
+  monthLong: string;
+  monthIndex: number;
   year: number;
-  dateText: string;
   count: number;
 };
 
-function toStop(entry: TimelineEntry): TimelineStop {
-  const date = new Date(entry.date);
-  return {
-    id: entry.id,
-    label: date.toLocaleDateString("en-US", {
-      month: "short",
-      year: "numeric",
-    }),
-    month: date.toLocaleDateString("en-US", { month: "short" }),
-    year: date.getFullYear(),
-    dateText: date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-    }),
-    count: 1,
-  };
-}
+type YearGroup = {
+  year: number;
+  firstId: string;
+  count: number;
+  months: MonthStop[];
+};
 
-function groupStops(entries: TimelineEntry[]) {
-  const stops: TimelineStop[] = [];
-  const entryToStopId = new Map<string, string>();
+function buildTimeline(entries: TimelineEntry[]) {
+  const groups: YearGroup[] = [];
+  const entryToMonth = new Map<string, MonthStop>();
 
   for (const entry of entries) {
-    const stop = toStop(entry);
-    const previous = stops[stops.length - 1];
-    if (previous && previous.label === stop.label) {
-      previous.count += 1;
-      entryToStopId.set(entry.id, previous.id);
-      continue;
+    const date = new Date(`${entry.date}T12:00:00`);
+    const year = date.getFullYear();
+    const monthIndex = date.getMonth();
+    let yearGroup = groups.find((group) => group.year === year);
+
+    if (!yearGroup) {
+      yearGroup = {
+        year,
+        firstId: entry.id,
+        count: 0,
+        months: [],
+      };
+      groups.push(yearGroup);
     }
-    stops.push(stop);
-    entryToStopId.set(entry.id, stop.id);
+
+    let month = yearGroup.months.find(
+      (candidate) => candidate.monthIndex === monthIndex,
+    );
+    if (!month) {
+      month = {
+        id: entry.id,
+        entryIds: [],
+        month: date.toLocaleDateString("en-US", { month: "short" }),
+        monthLong: date.toLocaleDateString("en-US", { month: "long" }),
+        monthIndex,
+        year,
+        count: 0,
+      };
+      yearGroup.months.push(month);
+    }
+
+    month.entryIds.push(entry.id);
+    month.count += 1;
+    yearGroup.count += 1;
+    entryToMonth.set(entry.id, month);
   }
 
-  return { entryToStopId, stops };
+  return { groups, entryToMonth };
 }
 
 function getClosestEntryId(entries: TimelineEntry[]) {
-  const targetY = window.innerHeight * 0.38;
+  const targetY = window.innerHeight * 0.34;
   let closestId = entries[0]?.id ?? "";
   let closestDistance = Number.POSITIVE_INFINITY;
 
@@ -78,145 +93,256 @@ function getClosestEntryId(entries: TimelineEntry[]) {
     }
   }
 
-  return closestId || entries[0]?.id || "";
+  return closestId;
 }
 
 export default function TimelineBar({ entries, onSelectEntry }: Props) {
-  const { entryToStopId, stops } = useMemo(() => groupStops(entries), [entries]);
+  const { groups, entryToMonth } = useMemo(
+    () => buildTimeline(entries),
+    [entries],
+  );
   const [activeId, setActiveId] = useState(entries[0]?.id ?? "");
+  const [displayYear, setDisplayYear] = useState(groups[0]?.year ?? 0);
+  const monthRailRef = useRef<HTMLDivElement>(null);
+  const monthRefs = useRef(new Map<string, HTMLButtonElement>());
+  const yearRefs = useRef(new Map<number, HTMLButtonElement>());
 
   useEffect(() => {
-    setActiveId((current) =>
-      entries.some((entry) => entry.id === current)
-        ? current
-        : (entries[0]?.id ?? ""),
-    );
-  }, [entries]);
+    const nextId = entries.some((entry) => entry.id === activeId)
+      ? activeId
+      : (entries[0]?.id ?? "");
+    setActiveId(nextId);
 
-  const scrollToEntry = useCallback((id: string) => {
-    if (onSelectEntry) {
-      onSelectEntry(id);
-      return;
-    }
+    const activeMonth = entryToMonth.get(nextId);
+    if (activeMonth) setDisplayYear(activeMonth.year);
+  }, [activeId, entries, entryToMonth]);
 
-    const element = document.getElementById(id);
-    if (!element) return;
+  const selectEntry = useCallback(
+    (id: string) => {
+      if (onSelectEntry) {
+        onSelectEntry(id);
+        return;
+      }
 
-    element.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
-  }, [onSelectEntry]);
+      document.getElementById(id)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    },
+    [onSelectEntry],
+  );
 
   useEffect(() => {
     if (!entries.length) return;
 
     let frame = 0;
-
-    const commitActive = () => {
+    const measure = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        setActiveId(getClosestEntryId(entries));
+        const nextId = getClosestEntryId(entries);
+        if (nextId) setActiveId(nextId);
       });
     };
 
-    const handleScroll = () => commitActive();
-    const handleResize = () => commitActive();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("timeline-measure", handleScroll);
-    commitActive();
+    window.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure);
+    window.addEventListener("timeline-measure", measure);
+    measure();
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("timeline-measure", handleScroll);
+      window.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("timeline-measure", measure);
       cancelAnimationFrame(frame);
     };
   }, [entries]);
 
-  if (!stops.length) return null;
+  const activeMonth = entryToMonth.get(activeId);
+  const activeYear = activeMonth?.year ?? displayYear;
+  const displayedGroup =
+    groups.find((group) => group.year === displayYear) ?? groups[0];
 
-  const activeStopId = entryToStopId.get(activeId) ?? stops[0]?.id ?? "";
-  const activeIndex = Math.max(
+  useEffect(() => {
+    if (!activeMonth) return;
+    setDisplayYear(activeMonth.year);
+
+    requestAnimationFrame(() => {
+      yearRefs.current.get(activeMonth.year)?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+      monthRefs.current.get(activeMonth.id)?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "center",
+      });
+    });
+  }, [activeMonth]);
+
+  if (!groups.length || !displayedGroup) return null;
+
+  const displayedMonthIndex = Math.max(
     0,
-    stops.findIndex((stop) => stop.id === activeStopId),
+    displayedGroup.months.findIndex((month) => month.id === activeMonth?.id),
   );
-  const progress =
-    stops.length <= 1 ? 0 : Math.min(1, activeIndex / (stops.length - 1));
+  const monthProgress =
+    displayedGroup.months.length <= 1
+      ? 1
+      : (displayedMonthIndex + 1) / displayedGroup.months.length;
 
   return (
-    <aside
-      aria-label="Activities timeline"
-      className="fixed top-28 right-4 z-20 hidden w-[196px] lg:block"
+    <section
+      aria-label="Activity timeline"
+      className="border-border/60 bg-background/90 supports-[backdrop-filter]:bg-background/76 sticky top-[73px] z-30 overflow-hidden rounded-[22px] border shadow-[0_16px_45px_rgba(15,23,42,0.08)] backdrop-blur-2xl"
     >
-      <div className="border-border/60 bg-background/72 shadow-primary/5 rounded-2xl border p-3 shadow-xl backdrop-blur-2xl">
-        <div className="text-muted-foreground mb-3 flex items-center gap-2 px-1 text-[11px] font-semibold tracking-[0.18em] uppercase">
-          <CalendarDays className="size-3.5" />
-          Timeline
+      <div className="border-border/50 flex items-center justify-between gap-3 border-b px-4 py-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="bg-foreground text-background grid size-8 shrink-0 place-items-center rounded-xl">
+            <CalendarRange className="size-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold tracking-[0.16em] uppercase">
+              Time navigator
+            </p>
+            <p className="text-muted-foreground truncate text-xs">
+              {activeMonth
+                ? `${activeMonth.monthLong} ${activeMonth.year}`
+                : "Swipe or choose a period"}
+            </p>
+          </div>
         </div>
+        <span className="bg-muted text-muted-foreground rounded-full px-2.5 py-1 text-[10px] font-semibold tabular-nums">
+          {entries.length} moments
+        </span>
+      </div>
 
-        <div className="relative max-h-[calc(100vh-13rem)] overflow-hidden">
-          <div className="bg-border/70 absolute top-2 bottom-2 left-[18px] w-px rounded-full" />
-          <div
-            className="from-primary to-primary/15 absolute top-2 left-[18px] w-px rounded-full bg-gradient-to-b"
-            style={{
-              height: `calc((100% - 1rem) * ${progress})`,
-            }}
-          />
-
-          <nav className="relative flex flex-col gap-1">
-            {stops.map((stop, index) => {
-              const isActive = stop.id === activeStopId;
-              const isPassed = index < activeIndex;
+      <div className="space-y-3 px-3 py-3">
+        <div className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-2">
+          <span className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.14em] uppercase">
+            Year
+          </span>
+          <div className="flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {groups.map((group) => {
+              const isActive = group.year === activeYear;
+              const isDisplayed = group.year === displayYear;
 
               return (
                 <button
-                  key={stop.id}
+                  key={group.year}
+                  ref={(node) => {
+                    if (node) yearRefs.current.set(group.year, node);
+                    else yearRefs.current.delete(group.year);
+                  }}
                   type="button"
-                  onClick={() => scrollToEntry(stop.id)}
+                  onClick={() => {
+                    setDisplayYear(group.year);
+                    selectEntry(group.firstId);
+                  }}
                   className={cn(
-                    "group relative grid grid-cols-[38px_1fr] items-center rounded-xl py-1.5 pr-2 text-left transition-all duration-200",
-                    isActive
-                      ? "bg-primary/8"
-                      : "hover:bg-muted/60 text-muted-foreground",
+                    "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold tabular-nums transition-all",
+                    isDisplayed
+                      ? "bg-foreground text-background shadow-sm"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    isActive && !isDisplayed && "ring-foreground/20 ring-1",
                   )}
-                  title={stop.dateText}
-                  aria-current={isActive ? "true" : undefined}
+                  aria-current={isActive ? "date" : undefined}
                 >
-                  <span className="relative flex h-7 items-center justify-center">
-                    <span
-                      className={cn(
-                        "absolute z-10 rounded-full border transition-all duration-200",
-                        isActive
-                          ? "border-primary bg-primary size-3.5 shadow-[0_0_0_5px_hsl(var(--primary)/0.13)]"
-                          : isPassed
-                            ? "border-primary bg-primary/80 size-2.5"
-                            : "border-border bg-background size-2.5",
-                      )}
-                    />
-                  </span>
-
-                  <span className="min-w-0">
-                    <span
-                      className={cn(
-                        "block truncate text-xs font-semibold transition-colors",
-                        isActive ? "text-foreground" : "text-muted-foreground",
-                      )}
-                    >
-                      {stop.month}
-                    </span>
-                    <span className="text-muted-foreground/80 block truncate text-[10px]">
-                      {stop.year}
-                      {stop.count > 1 ? ` · ${stop.count}` : ""}
-                    </span>
-                  </span>
+                  {group.year}
+                  <span className="ml-1.5 opacity-55">{group.count}</span>
                 </button>
               );
             })}
-          </nav>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-[52px_minmax(0,1fr)] items-center gap-2">
+          <span className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.14em] uppercase">
+            Month
+          </span>
+          <div className="relative min-w-0">
+            <button
+              type="button"
+              onClick={() =>
+                monthRailRef.current?.scrollBy({
+                  left: -220,
+                  behavior: "smooth",
+                })
+              }
+              className="border-border/60 bg-background absolute top-1/2 left-0 z-10 grid size-7 -translate-y-1/2 place-items-center rounded-full border shadow-sm"
+              aria-label="Earlier months"
+            >
+              <ChevronLeft className="size-3.5" />
+            </button>
+            <div
+              ref={monthRailRef}
+              className="flex snap-x snap-mandatory gap-2 overflow-x-auto px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {displayedGroup.months.map((month) => {
+                const isActive = month.id === activeMonth?.id;
+                return (
+                  <button
+                    key={month.id}
+                    ref={(node) => {
+                      if (node) monthRefs.current.set(month.id, node);
+                      else monthRefs.current.delete(month.id);
+                    }}
+                    type="button"
+                    onClick={() => selectEntry(month.id)}
+                    className={cn(
+                      "group/month relative min-w-[88px] snap-center rounded-xl border px-3 py-2 text-left transition-all",
+                      isActive
+                        ? "border-foreground/30 bg-foreground/[0.06] shadow-sm"
+                        : "border-border/55 bg-background/60 hover:border-border hover:bg-muted/55",
+                    )}
+                    aria-current={isActive ? "date" : undefined}
+                  >
+                    <span
+                      className={cn(
+                        "block text-xs font-semibold",
+                        isActive
+                          ? "text-foreground"
+                          : "text-muted-foreground group-hover/month:text-foreground",
+                      )}
+                    >
+                      {month.month}
+                    </span>
+                    <span className="text-muted-foreground/75 mt-0.5 block text-[10px]">
+                      {month.count} {month.count === 1 ? "event" : "events"}
+                    </span>
+                    <span
+                      className={cn(
+                        "absolute top-2 right-2 size-1.5 rounded-full transition",
+                        isActive ? "bg-emerald-500" : "bg-border",
+                      )}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                monthRailRef.current?.scrollBy({
+                  left: 220,
+                  behavior: "smooth",
+                })
+              }
+              className="border-border/60 bg-background absolute top-1/2 right-0 z-10 grid size-7 -translate-y-1/2 place-items-center rounded-full border shadow-sm"
+              aria-label="Later months"
+            >
+              <ChevronRight className="size-3.5" />
+            </button>
+          </div>
         </div>
       </div>
-    </aside>
+
+      <div className="bg-border/60 h-0.5 w-full">
+        <div
+          className="bg-foreground h-full origin-left transition-transform duration-300"
+          style={{ transform: `scaleX(${monthProgress})` }}
+        />
+      </div>
+    </section>
   );
 }
