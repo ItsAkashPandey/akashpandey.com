@@ -17,38 +17,48 @@ interface Props {
 }
 
 const verifiedLinkedInProfiles: Record<string, string> = {
-  "prof. idhayachandhiran ilampooranan":
-    "https://www.linkedin.com/in/idhaya/",
+  "prof. idhayachandhiran ilampooranan": "https://www.linkedin.com/in/idhaya/",
   "idhayachandhiran ilampooranan": "https://www.linkedin.com/in/idhaya/",
-  "mukund narayanan":
-    "https://www.linkedin.com/in/mukund-narayanan-0b63a310b/",
+  "mukund narayanan": "https://www.linkedin.com/in/mukund-narayanan-0b63a310b/",
   "prof. siddhartha khare":
     "https://www.linkedin.com/in/siddhartha-khare-503a4429/",
-  "siddhartha khare":
-    "https://www.linkedin.com/in/siddhartha-khare-503a4429/",
+  "siddhartha khare": "https://www.linkedin.com/in/siddhartha-khare-503a4429/",
   "prof. saurabh vijay":
     "https://www.linkedin.com/in/saurabh-vijay-phd-b93a1429/",
-  "saurabh vijay":
-    "https://www.linkedin.com/in/saurabh-vijay-phd-b93a1429/",
+  "saurabh vijay": "https://www.linkedin.com/in/saurabh-vijay-phd-b93a1429/",
   "tushar bharadwaj": "https://www.linkedin.com/in/tusharbharadwaj/",
   "shreyas goswami": "https://www.linkedin.com/in/goswami-shreyas/",
-  "apurwa chaurasia":
-    "https://www.linkedin.com/in/apurwa-chaurasia-6a9969b1/",
+  "apurwa chaurasia": "https://www.linkedin.com/in/apurwa-chaurasia-6a9969b1/",
   "peeyush jasaiwal": "https://www.linkedin.com/in/peeyush-jasaiwal/",
   "amarjeet kumar mahato":
     "https://www.linkedin.com/in/amarjeet-kumar-mahato-630619160/",
   "gaurav singh bareth": "https://www.linkedin.com/in/g2306/",
-  "ishfaqul haque":
-    "https://www.linkedin.com/in/ishfaqul-haque-a24a61251/",
-  "isfaqul haque":
-    "https://www.linkedin.com/in/ishfaqul-haque-a24a61251/",
+  "ishfaqul haque": "https://www.linkedin.com/in/ishfaqul-haque-a24a61251/",
+  "isfaqul haque": "https://www.linkedin.com/in/ishfaqul-haque-a24a61251/",
   "nitin lodhi": "https://www.linkedin.com/in/nitin-lodhi-215b72260/",
-  "prashant singh":
-    "https://www.linkedin.com/in/prashant-singh-356409b1/",
+  "prashant singh": "https://www.linkedin.com/in/prashant-singh-356409b1/",
   "sahil kundal": "https://www.linkedin.com/in/skundal1/",
   "sushmit srivastava":
     "https://www.linkedin.com/in/sushmit-srivastava-598403206/",
+  "akash a": "https://www.linkedin.com/in/akash-anilraj/",
+  "suyash khare": "https://www.linkedin.com/in/suyash-khare-6450341b6/",
+  "geospatial engineering group, iitr":
+    "https://www.linkedin.com/company/geospatial-engineering-group-indian-institute-of-technology-roorkee/posts/?feedView=all",
+  "geospatial engineering group":
+    "https://www.linkedin.com/company/geospatial-engineering-group-indian-institute-of-technology-roorkee/posts/?feedView=all",
+  "prof. vivek malik": "https://www.linkedin.com/in/vivek-malik-57839415/",
+  "vivek malik": "https://www.linkedin.com/in/vivek-malik-57839415/",
+  "dr. neeraj pant": "https://www.linkedin.com/in/neeraj-pant-2508322b4/",
+  "neeraj pant": "https://www.linkedin.com/in/neeraj-pant-2508322b4/",
+  "shivani noolu": "https://www.linkedin.com/in/shivani-noolu-647a79214/",
+  shivani: "https://www.linkedin.com/in/shivani-noolu-647a79214/",
 };
+
+const collaboratorsWithoutLinkedIn = new Set([
+  "geetu saini",
+  "mr. umesh saxena",
+  "umesh saxena",
+]);
 
 function collaboratorHref(name: string) {
   const normalized = name
@@ -56,6 +66,8 @@ function collaboratorHref(name: string) {
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
+  if (collaboratorsWithoutLinkedIn.has(normalized)) return null;
+
   return (
     verifiedLinkedInProfiles[normalized] ??
     `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(
@@ -64,28 +76,37 @@ function collaboratorHref(name: string) {
   );
 }
 
-function CollaboratorLinks({
-  text,
-  query,
-}: {
-  text: string;
-  query: string;
-}) {
+function CollaboratorLinks({ text, query }: { text: string; query: string }) {
+  const protectedText = text.replace(
+    /Geospatial Engineering Group,\s*IITR/gi,
+    "Geospatial Engineering Group__IITR__",
+  );
+
   return (
     <span className="not-prose flex flex-wrap items-center gap-x-1 gap-y-1">
-      {text
+      {protectedText
         .split(/(\s*,\s*|\s+and\s+|\s*&\s*)/i)
         .filter(Boolean)
         .map((part, index) => {
           if (/^\s*(,|and|&)\s*$/i.test(part)) {
-            return <span key={`${part}-${index}`}>{part.trim()}</span>;
+            return (
+              <span
+                key={`${part}-${index}`}
+                className="text-foreground font-semibold"
+              >
+                {part.trim()}
+              </span>
+            );
           }
 
           const prefixMatch = part.match(/^(\s*my supervisor\s*-\s*)/i);
           const prefix = prefixMatch?.[0] ?? "";
           const rawName = part.slice(prefix.length).trim();
           const suffix = rawName.match(/[.]+$/)?.[0] ?? "";
-          const name = rawName.replace(/[.]+$/g, "").trim();
+          const name = rawName
+            .replace("__IITR__", ", IITR")
+            .replace(/[.]+$/g, "")
+            .trim();
           const isGroup =
             !name ||
             /(organizers|participants|colleagues|volunteering tas|team|students|officers)/i.test(
@@ -100,11 +121,25 @@ function CollaboratorLinks({
             );
           }
 
+          const linkedInHref = collaboratorHref(name);
+          if (!linkedInHref) {
+            return (
+              <span
+                key={`${name}-${index}`}
+                className="text-foreground inline-flex items-center font-semibold"
+              >
+                {prefix && <span>{prefix.replace("-", "—")}</span>}
+                <HighlightText text={name} query={query} />
+                {suffix}
+              </span>
+            );
+          }
+
           return (
             <span key={`${name}-${index}`} className="inline-flex items-center">
               {prefix && <span>{prefix.replace("-", "—")}</span>}
               <a
-                href={collaboratorHref(name)}
+                href={linkedInHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-foreground decoration-border hover:decoration-foreground inline-flex items-center gap-1 font-semibold underline decoration-1 underline-offset-4 transition-colors"

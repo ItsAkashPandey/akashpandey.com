@@ -80,7 +80,7 @@ export default function ChatMessage({
         <KasiMark
           active
           size="sm"
-          className="mt-0.5 mr-2 size-7 shrink-0 rounded-[10px]"
+          className="mt-0.5 mr-2 size-7 shrink-0"
         />
       )}
       <div

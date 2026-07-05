@@ -11,6 +11,7 @@
     "format": "prettier --write .",
     "generate-profile": "ts-node scripts/generate-profile.ts",
     "extract": "ts-node scripts/extract-content.ts",
+    "colorize-skills": "node scripts/colorize-skill-icons.mjs",
     "push": "ts-node scripts/push-content.ts"
   },
   "dependencies": {
