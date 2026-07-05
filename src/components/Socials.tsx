@@ -3,6 +3,7 @@ import { socialSchema } from "@/lib/schemas";
 import type { IconType } from "react-icons";
 import { FaLinkedinIn } from "react-icons/fa6";
 import { HiOutlineEnvelope } from "react-icons/hi2";
+import { cn } from "@/lib/utils";
 import {
   SiGithub,
   SiGooglescholar,
@@ -21,24 +22,24 @@ const iconMap: Record<string, IconType> = {
 
 const brandStyles: Record<string, string> = {
   LinkedIn:
-    "text-[#376d98] dark:text-[#7aa8cb] [--brand:#376d98] dark:[--brand:#7aa8cb]",
+    "text-[#376d98] dark:text-[#7aa8cb] [--brand:#376d98] dark:[--brand:#7aa8cb] hover:border-[#376d98]/30 dark:hover:border-[#7aa8cb]/30",
   GitHub:
-    "text-[#414955] dark:text-[#c2c8d0] [--brand:#414955] dark:[--brand:#c2c8d0]",
+    "text-[#414955] dark:text-[#c2c8d0] [--brand:#414955] dark:[--brand:#c2c8d0] hover:border-[#414955]/30 dark:hover:border-[#c2c8d0]/30",
   ORCID:
-    "text-[#718f39] dark:text-[#a6c86c] [--brand:#718f39] dark:[--brand:#a6c86c]",
+    "text-[#718f39] dark:text-[#a6c86c] [--brand:#718f39] dark:[--brand:#a6c86c] hover:border-[#718f39]/30 dark:hover:border-[#a6c86c]/30",
   ResearchGate:
-    "text-[#2b897c] dark:text-[#75b8ad] [--brand:#2b897c] dark:[--brand:#75b8ad]",
+    "text-[#2b897c] dark:text-[#75b8ad] [--brand:#2b897c] dark:[--brand:#75b8ad] hover:border-[#2b897c]/30 dark:hover:border-[#75b8ad]/30",
   "Google Scholar":
-    "text-[#526f9d] dark:text-[#8da7cf] [--brand:#526f9d] dark:[--brand:#8da7cf]",
+    "text-[#526f9d] dark:text-[#8da7cf] [--brand:#526f9d] dark:[--brand:#8da7cf] hover:border-[#526f9d]/30 dark:hover:border-[#8da7cf]/30",
   Email:
-    "text-[#98685f] dark:text-[#c79a91] [--brand:#98685f] dark:[--brand:#c79a91]",
+    "text-[#98685f] dark:text-[#c79a91] [--brand:#98685f] dark:[--brand:#c79a91] hover:border-[#98685f]/30 dark:hover:border-[#c79a91]/30",
 };
 
 export default function Socials() {
   const socials = socialSchema.parse(data).socials;
 
   return (
-    <section className="flex flex-wrap gap-2" aria-label="Social profiles">
+    <section className="flex flex-wrap gap-2.5" aria-label="Social profiles">
       {socials.map((item) => {
         const Icon = iconMap[item.name];
         return (
@@ -46,18 +47,26 @@ export default function Socials() {
             href={item.href}
             key={item.name}
             target="_blank"
-            className={`group/social border-border/55 bg-background/66 hover:border-border relative flex min-w-[52px] flex-col items-center gap-1.5 overflow-hidden rounded-[14px] border px-2 py-2 shadow-[0_5px_16px_rgba(15,23,42,.05),inset_0_1px_0_rgba(255,255,255,.55)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_color-mix(in_srgb,var(--brand)_16%,transparent)] ${brandStyles[item.name] ?? "text-foreground [--brand:#64748b]"}`}
             rel="noopener noreferrer"
             title={item.name}
+            className={cn(
+              "group/social border-border/55 bg-background/60 hover:border-border relative flex size-9 items-center justify-center overflow-hidden rounded-xl border shadow-[0_4px_12px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:scale-105 hover:shadow-[0_8px_20px_color-mix(in_srgb,var(--brand)_20%,transparent)]",
+              brandStyles[item.name] ?? "text-foreground [--brand:#64748b]"
+            )}
           >
-            <span className="border-border/45 bg-muted/38 relative z-10 grid size-8 place-items-center rounded-[11px] border shadow-[inset_0_1px_0_rgba(255,255,255,.4)] transition-transform duration-300 group-hover/social:scale-105">
-              {Icon && <Icon className="size-4" aria-hidden />}
-              <span className="pointer-events-none absolute inset-px rounded-[10px] bg-[radial-gradient(circle_at_70%_15%,rgba(255,255,255,.62),transparent_32%)] opacity-55 dark:opacity-18" />
-            </span>
-            <span className="text-muted-foreground group-hover/social:text-foreground relative z-10 max-w-[66px] truncate text-[9px] leading-tight font-medium transition-colors">
-              {item.name}
-            </span>
-            <span className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 rotate-12 bg-gradient-to-r from-transparent via-white/55 to-transparent opacity-0 blur-[1px] transition-[left,opacity] duration-600 group-hover/social:left-[120%] group-hover/social:opacity-80 dark:via-white/20" />
+            {/* Background light gradient */}
+            <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_15%,rgba(255,255,255,0.15),transparent_45%)] dark:bg-[radial-gradient(circle_at_70%_15%,rgba(255,255,255,0.05),transparent_45%)]" />
+
+            {/* Icon */}
+            {Icon && (
+              <Icon
+                className="size-[17px] transition-transform duration-300 group-hover/social:scale-110"
+                aria-hidden
+              />
+            )}
+
+            {/* Crystal shine animation / White light sweep */}
+            <span className="pointer-events-none absolute inset-0 -skew-x-20 -translate-x-[150%] bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 ease-out group-hover/social:translate-x-[150%] dark:via-white/12" />
           </a>
         );
       })}

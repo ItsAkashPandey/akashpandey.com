@@ -4,7 +4,7 @@ import {
   createResearchTrafficLayer,
   researchTrafficLayerId,
 } from "@/lib/map-traffic-3d";
-import { LocateFixed, Navigation } from "lucide-react";
+import { Info, LocateFixed, Navigation } from "lucide-react";
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl";
 import Image from "next/image";
 import { useTheme } from "next-themes";
@@ -118,12 +118,21 @@ export default function LocationMap() {
       const map = new maplibregl.Map({
         container: mapContainer.current,
         style: resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE,
-        center: AKASH_LOCATION,
-        zoom: 4.7,
-        pitch: 34,
-        bearing: -7,
+        center: [78.5, 22.8],
+        zoom: 3.25,
+        pitch: 0,
+        bearing: 0,
+        dragPan: true,
+        dragRotate: false,
+        scrollZoom: true,
+        boxZoom: false,
+        doubleClickZoom: true,
+        keyboard: false,
+        touchZoomRotate: true,
+        touchPitch: false,
         attributionControl: false,
       });
+      map.touchZoomRotate.disableRotation();
       mapRef.current = map;
 
       const addTraffic = () => {
@@ -228,20 +237,6 @@ export default function LocationMap() {
     void installMarkersAndRoute();
     map.on("style.load", installMarkersAndRoute);
 
-    if (visitorLocation && map.getZoom() < 5.4) {
-      void import("maplibre-gl").then(({ default: maplibregl }) => {
-        if (cancelled) return;
-        const bounds = new maplibregl.LngLatBounds()
-          .extend(AKASH_LOCATION)
-          .extend(visitorLocation);
-        map.fitBounds(bounds, {
-          padding: 58,
-          maxZoom: 8.5,
-          duration: 2_200,
-        });
-      });
-    }
-
     return () => {
       cancelled = true;
       map.off("style.load", installMarkersAndRoute);
@@ -251,9 +246,6 @@ export default function LocationMap() {
   const zoomToMe = () => {
     mapRef.current?.flyTo({
       center: AKASH_LOCATION,
-      zoom: 12,
-      pitch: 44,
-      bearing: -12,
       duration: 1_600,
       essential: true,
     });
@@ -263,8 +255,6 @@ export default function LocationMap() {
     if (!visitorLocation) return;
     mapRef.current?.flyTo({
       center: visitorLocation,
-      zoom: 12,
-      pitch: 44,
       duration: 1_600,
       essential: true,
     });
@@ -316,7 +306,7 @@ export default function LocationMap() {
         <button
           type="button"
           onClick={zoomToMe}
-          title="Zoom to Akash"
+          title="Center on Akash"
           className="bg-background/68 text-foreground hover:bg-background/88 flex size-8 items-center justify-center rounded-lg border border-white/20 shadow-lg backdrop-blur-md transition hover:scale-105 active:scale-95"
         >
           <LocateFixed className="size-4 text-indigo-500" />
@@ -336,7 +326,7 @@ export default function LocationMap() {
           <button
             type="button"
             onClick={zoomToYou}
-            title="Zoom to you"
+            title="Center on you"
             className="bg-background/68 text-foreground hover:bg-background/88 flex size-8 items-center justify-center rounded-lg border border-white/20 shadow-lg backdrop-blur-md transition hover:scale-105 active:scale-95"
           >
             <Navigation className="size-4 text-sky-500" />
@@ -351,6 +341,17 @@ export default function LocationMap() {
       <div className="bg-background/78 text-muted-foreground/80 absolute right-2 bottom-2 rounded-md border border-white/5 px-2 py-1 font-mono text-[10px] tabular-nums shadow-sm backdrop-blur-md">
         {AKASH_LOCATION[1].toFixed(6)}°N, {AKASH_LOCATION[0].toFixed(6)}°E
       </div>
+
+      <a
+        href="/models/attribution.txt"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Map and model credits"
+        title="Map and model credits"
+        className="bg-background/72 text-muted-foreground hover:text-foreground absolute bottom-2 left-2 grid size-6 place-items-center rounded-full backdrop-blur-md transition-colors"
+      >
+        <Info className="size-3.5" />
+      </a>
     </div>
   );
 }

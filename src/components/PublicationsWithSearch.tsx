@@ -579,7 +579,6 @@ function PublicationMediaPreview({ media }: { media: PublicationMedia[] }) {
           idleQuality={88}
           stackSize={Math.min(3, media.length)}
           className="h-[250px] w-full max-w-[280px] rounded-xl"
-          imageClassName="object-contain"
           onImageClick={setLightboxIndex}
         />
       </aside>

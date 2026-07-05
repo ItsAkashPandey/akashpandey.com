@@ -1,27 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="space" x1="8" y1="5" x2="58" y2="61" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#102b52"/>
-      <stop offset=".56" stop-color="#174f83"/>
-      <stop offset="1" stop-color="#13737b"/>
+    <!-- Background Space Gradient -->
+    <linearGradient id="spaceGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#050b18" />
+      <stop offset="45%" stop-color="#1e40af" />
+      <stop offset="80%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0d9488" />
     </linearGradient>
-    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#8ed9f5"/>
-      <stop offset="1" stop-color="#447ec0"/>
+
+    <!-- Globe Gradient -->
+    <linearGradient id="globeGrad" x1="32" y1="18" x2="32" y2="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#1d4ed8" />
     </linearGradient>
+
+    <!-- Satellite Glow -->
+    <radialGradient id="satGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="40%" stop-color="#22d3ee" stop-opacity="1" />
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0" />
+    </radialGradient>
   </defs>
-  <rect x="3" y="3" width="58" height="58" rx="17" fill="url(#space)"/>
-  <path d="M8 39.5c9.8 9.4 27.8 11.4 41.5 3.8C57.7 38.7 60 31.5 55 27" fill="none" stroke="#d7f3ff" stroke-opacity=".34" stroke-width="2.2" stroke-linecap="round"/>
-  <circle cx="9.7" cy="38.9" r="2.3" fill="#a7f3d0"/>
-  <g transform="rotate(-34 32 31)">
-    <rect x="10" y="25" width="15" height="12" rx="3" fill="url(#panel)" stroke="#c9efff" stroke-width="1.5"/>
-    <path d="M15 25v12M20 25v12" stroke="#164c7a" stroke-opacity=".65" stroke-width="1.2"/>
-    <rect x="39" y="25" width="15" height="12" rx="3" fill="url(#panel)" stroke="#c9efff" stroke-width="1.5"/>
-    <path d="M44 25v12M49 25v12" stroke="#164c7a" stroke-opacity=".65" stroke-width="1.2"/>
-    <path d="M25 31h4M35 31h4" stroke="#e8fbff" stroke-width="2.4" stroke-linecap="round"/>
-    <rect x="27" y="23" width="10" height="16" rx="3.5" fill="#f7fbff" stroke="#d7ebf7" stroke-width="1.3"/>
-    <circle cx="32" cy="27.5" r="2.4" fill="#f0bb62"/>
-    <path d="M32 39v5M29.7 45.5c1.5-1.6 3.1-1.6 4.6 0" fill="none" stroke="#f7fbff" stroke-width="2" stroke-linecap="round"/>
-  </g>
-  <circle cx="51.5" cy="13.5" r="2" fill="#fff" fill-opacity=".9"/>
+
+  <!-- Outer Rounded Container -->
+  <rect x="3" y="3" width="58" height="58" rx="17" fill="url(#spaceGrad)" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+
+  <!-- Subtle Background Stars -->
+  <circle cx="16" cy="16" r="0.8" fill="#ffffff" opacity="0.6" />
+  <circle cx="48" cy="48" r="0.6" fill="#ffffff" opacity="0.4" />
+  <circle cx="14" cy="44" r="0.7" fill="#ffffff" opacity="0.5" />
+
+  <!-- Back Orbit (behind the globe) -->
+  <path d="M51.9 20.5 C 45 14, 25 16, 13.2 40.5" stroke="#06b6d4" stroke-width="2.5" stroke-dasharray="3 2" fill="none" opacity="0.6" />
+
+  <!-- The Globe -->
+  <circle cx="32" cy="32" r="14" fill="url(#globeGrad)" stroke="#ffffff" stroke-width="2" />
+
+  <!-- Globe Grid Lines (Geospatial theme) -->
+  <ellipse cx="32" cy="32" rx="14" ry="5.5" fill="none" stroke="rgba(255, 255, 255, 0.65)" stroke-width="1.5" />
+  <ellipse cx="32" cy="32" rx="5.5" ry="14" fill="none" stroke="rgba(255, 255, 255, 0.65)" stroke-width="1.5" />
+
+  <!-- Front Orbit (in front of the globe) -->
+  <path d="M13.2 40.5 C 19 47, 39 45, 51.9 20.5" stroke="#22d3ee" stroke-width="3" stroke-linecap="round" fill="none" />
+
+  <!-- Satellite Indicator -->
+  <circle cx="51.9" cy="20.5" r="5.5" fill="url(#satGlow)" />
+  <circle cx="51.9" cy="20.5" r="2.2" fill="#ffffff" />
 </svg>

@@ -195,12 +195,19 @@ export default function TimelineBar({ entries, onSelectEntry }: Props) {
   return (
     <aside
       aria-label="Activity date scrubber"
-      className="pointer-events-none fixed top-24 right-1 bottom-8 z-40 hidden w-[92px] lg:block"
+      className="pointer-events-none fixed top-24 right-1 bottom-28 z-40 hidden w-[94px] lg:block"
     >
-      <div className="pointer-events-auto relative h-full overflow-hidden rounded-[20px] border border-white/8 bg-zinc-950/88 shadow-[0_18px_50px_rgba(2,6,23,.28)] backdrop-blur-xl dark:bg-black/78">
+      <div className="pointer-events-auto relative h-full w-full">
         <div
           ref={trackRef}
-          className="absolute inset-y-4 right-3 left-2 cursor-ns-resize touch-none select-none"
+          role="slider"
+          aria-label="Scrub activity dates"
+          aria-valuetext={activeStop?.label}
+          aria-valuemin={0}
+          aria-valuemax={Math.max(0, stops.length - 1)}
+          aria-valuenow={Math.max(0, stops.indexOf(activeStop))}
+          tabIndex={0}
+          className="absolute inset-y-3 right-2 left-2 cursor-ns-resize touch-none outline-none select-none focus-visible:ring-2 focus-visible:ring-sky-400/60"
           onPointerDown={(event) => {
             setScrubbing(true);
             event.currentTarget.setPointerCapture(event.pointerId);
@@ -218,34 +225,54 @@ export default function TimelineBar({ entries, onSelectEntry }: Props) {
             setScrubbing(false);
             lastScrubbedId.current = "";
           }}
+          onKeyDown={(event) => {
+            const currentIndex = Math.max(0, stops.indexOf(activeStop));
+            if (event.key === "ArrowUp") {
+              event.preventDefault();
+              selectEntry(stops[Math.max(0, currentIndex - 1)].id);
+            }
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              selectEntry(
+                stops[Math.min(stops.length - 1, currentIndex + 1)].id,
+              );
+            }
+          }}
         >
-          <span className="absolute top-0 right-[6px] bottom-0 w-px bg-white/12" />
+          <span className="bg-border absolute top-0 right-[7px] bottom-0 w-px" />
 
           {years.map((year, index) => {
             const isActive = year.year === activeYear;
-            const height = Math.max(5, year.end - year.start);
+            const height = Math.max(4, year.end - year.start);
 
             return (
               <div
                 key={year.year}
                 className={cn(
-                  "absolute right-0 left-0 rounded-md transition-colors duration-300",
+                  "absolute right-0 left-0 border-t transition-colors duration-300",
                   isActive
-                    ? "bg-white/[0.075]"
+                    ? "border-sky-400/65"
                     : index % 2 === 0
-                      ? "bg-white/[0.018]"
-                      : "bg-transparent",
+                      ? "border-border/65"
+                      : "border-border/45",
                 )}
                 style={{ top: `${year.start}%`, height: `${height}%` }}
               >
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute top-0 right-[4px] h-px w-4",
+                    isActive ? "bg-sky-400/80" : "bg-border",
+                  )}
+                />
                 <button
                   type="button"
                   onClick={() => selectEntry(year.firstId)}
                   className={cn(
-                    "absolute top-1/2 right-3 -translate-y-1/2 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums transition",
+                    "absolute top-1/2 right-[17px] -translate-y-1/2 px-1 py-0.5 text-[10px] font-bold tabular-nums transition-colors duration-200",
                     isActive
-                      ? "bg-white text-zinc-950 shadow-sm"
-                      : "bg-black/42 text-white/66 hover:bg-white/12 hover:text-white",
+                      ? "text-sky-600 dark:text-sky-300"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                   aria-current={isActive ? "date" : undefined}
                 >
@@ -255,39 +282,39 @@ export default function TimelineBar({ entries, onSelectEntry }: Props) {
             );
           })}
 
-          {stops.map((stop) => (
-            <button
-              key={`${stop.year}-${stop.shortLabel}`}
-              type="button"
-              onClick={() => selectEntry(stop.id)}
-              aria-label={`Go to ${stop.label}`}
-              title={stop.label}
-              className={cn(
-                "absolute right-[4px] z-10 size-[5px] -translate-y-1/2 rounded-full transition-all",
-                stop === activeStop
-                  ? "scale-150 bg-sky-300 ring-2 ring-sky-300/20"
-                  : "bg-white/24 hover:scale-150 hover:bg-white/70",
-              )}
-              style={{ top: `${stop.position}%` }}
-            />
-          ))}
+          {stops.map((stop) => {
+            const isActive = stop === activeStop;
+            return (
+              <button
+                key={`${stop.year}-${stop.shortLabel}`}
+                type="button"
+                onClick={() => selectEntry(stop.id)}
+                aria-label={`Go to ${stop.label}`}
+                title={stop.label}
+                className={cn(
+                  "absolute right-0 z-10 h-3 w-5 -translate-y-1/2 before:absolute before:top-1/2 before:right-0 before:-translate-y-1/2 before:rounded-full before:transition-all before:duration-150",
+                  isActive
+                    ? "before:h-0.5 before:w-[18px] before:bg-sky-500 before:shadow-[0_0_0_3px_rgba(14,165,233,.10)]"
+                    : "before:bg-muted-foreground/35 hover:before:bg-foreground before:h-px before:w-2 hover:before:w-4",
+                )}
+                style={{ top: `${stop.position}%` }}
+              />
+            );
+          })}
 
           {activeStop && (
             <motion.div
-              className="pointer-events-none absolute right-[2px] left-0 z-20 -translate-y-1/2"
+              className="pointer-events-none absolute right-[22px] z-20 flex -translate-y-1/2 items-center justify-end"
               animate={{ top: `${activeStop.position}%` }}
               transition={{ type: "spring", stiffness: 420, damping: 38 }}
             >
-              <span className="absolute top-1/2 right-0 h-px w-5 bg-sky-300" />
-              <span className="absolute top-1/2 right-[17px] -translate-y-1/2 rounded-[7px] bg-zinc-900 px-2 py-1 text-[10px] font-bold whitespace-nowrap text-white shadow-lg ring-1 ring-white/10">
-                {activeStop.label}
+              <span className="text-foreground block border-b border-sky-500 px-1.5 py-0.5 text-[10px] font-bold whitespace-nowrap">
+                {activeStop.shortLabel}
               </span>
+              <span className="h-px w-2 bg-sky-500" />
             </motion.div>
           )}
         </div>
-
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-zinc-950 to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-zinc-950 to-transparent" />
       </div>
     </aside>
   );

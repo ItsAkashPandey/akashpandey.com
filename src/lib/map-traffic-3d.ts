@@ -5,15 +5,26 @@ import type {
 } from "maplibre-gl";
 import { MercatorCoordinate } from "maplibre-gl";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
+type TrafficKind = "plane" | "drone" | "satellite";
 type RoutePoint = [longitude: number, latitude: number, altitude: number];
 
-type TrafficItem = {
-  kind: "plane" | "drone" | "satellite";
-  route: RoutePoint[];
+type RoutePlan = {
+  points: RoutePoint[];
   duration: number;
-  phase: number;
+  gap: number;
+};
+
+type TrafficItem = {
+  kind: TrafficKind;
+  slot: number;
   group: THREE.Group;
+  routes: RoutePlan[];
+  routeIndex: number;
+  startedAt: number;
+  passes: number;
+  cycle: number;
 };
 
 type TrafficPose = {
@@ -26,246 +37,340 @@ type TrafficPose = {
 
 const TRAFFIC_LAYER_ID = "research-traffic-3d";
 
-const matte = (color: number, roughness = 0.78, metalness = 0.12) =>
-  new THREE.MeshStandardMaterial({ color, roughness, metalness });
+const modelSources: Record<TrafficKind, string> = {
+  plane: "/models/passenger-aircraft.glb",
+  drone: "/models/survey-drone.glb",
+  satellite: "/models/research-satellite.glb",
+};
 
-function box(
-  width: number,
-  height: number,
-  depth: number,
-  material: THREE.Material,
-) {
-  return new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
+const planeRoutes: RoutePlan[] = [
+  {
+    points: [
+      [77.1, 28.56, 9_800],
+      [68.9, 28.4, 10_600],
+      [55.36, 25.25, 9_900],
+    ],
+    duration: 58_000,
+    gap: 5_500,
+  },
+  {
+    points: [
+      [72.88, 19.08, 10_200],
+      [88.2, 15.4, 10_900],
+      [103.99, 1.36, 10_100],
+    ],
+    duration: 72_000,
+    gap: 6_500,
+  },
+  {
+    points: [
+      [2.55, 49.01, 10_700],
+      [39.4, 43.2, 11_100],
+      [77.1, 28.56, 10_200],
+    ],
+    duration: 88_000,
+    gap: 7_000,
+  },
+  {
+    points: [
+      [139.78, 35.55, 10_500],
+      [111.2, 33.5, 11_000],
+      [77.1, 28.56, 10_300],
+    ],
+    duration: 82_000,
+    gap: 6_000,
+  },
+  {
+    points: [
+      [100.75, 13.69, 9_700],
+      [88.4, 15.2, 10_200],
+      [77.7, 13.2, 9_600],
+    ],
+    duration: 54_000,
+    gap: 5_000,
+  },
+  {
+    points: [
+      [36.93, -1.32, 10_100],
+      [54.5, 10.4, 10_700],
+      [72.88, 19.08, 10_200],
+    ],
+    duration: 69_000,
+    gap: 7_500,
+  },
+  {
+    points: [
+      [-0.46, 51.47, 10_800],
+      [-36.2, 53.2, 11_300],
+      [-73.78, 40.64, 10_600],
+    ],
+    duration: 84_000,
+    gap: 6_500,
+  },
+];
+
+function surveyLoop(
+  longitude: number,
+  latitude: number,
+  spread: number,
+): RoutePoint[] {
+  return [
+    [longitude - spread, latitude - spread * 0.55, 118],
+    [longitude + spread, latitude - spread * 0.45, 132],
+    [longitude + spread * 0.8, latitude + spread * 0.62, 124],
+    [longitude - spread * 0.85, latitude + spread * 0.58, 136],
+    [longitude - spread, latitude - spread * 0.55, 118],
+  ];
 }
 
-function addGroundShadow(group: THREE.Group, width: number, height: number) {
-  const shadow = new THREE.Mesh(
-    new THREE.CircleGeometry(1, 28),
-    new THREE.MeshBasicMaterial({
-      color: 0x020617,
-      transparent: true,
-      opacity: 0.18,
-      depthWrite: false,
-    }),
-  );
-  shadow.scale.set(width, height, 1);
-  shadow.position.set(-2.2, 2.8, -4.4);
-  group.add(shadow);
-}
+const droneRoutes: RoutePlan[] = [
+  { points: surveyLoop(77.9, 29.86, 0.38), duration: 28_000, gap: 5_000 },
+  { points: surveyLoop(77.21, 28.61, 0.42), duration: 30_000, gap: 6_000 },
+  { points: surveyLoop(73.86, 18.52, 0.36), duration: 27_000, gap: 5_500 },
+  { points: surveyLoop(77.59, 12.97, 0.4), duration: 26_000, gap: 6_500 },
+  { points: surveyLoop(78.49, 17.38, 0.44), duration: 29_000, gap: 5_500 },
+  { points: surveyLoop(91.74, 26.14, 0.37), duration: 27_000, gap: 7_000 },
+];
 
-function prepareModel(group: THREE.Group) {
-  group.traverse((object) => {
+const satelliteRoutes: RoutePlan[] = [
+  {
+    points: [
+      [-168, -27, 62_000],
+      [2, 8, 67_000],
+      [168, 43, 62_000],
+    ],
+    duration: 52_000,
+    gap: 8_000,
+  },
+  {
+    points: [
+      [-158, 55, 64_000],
+      [12, 22, 69_000],
+      [162, -18, 64_000],
+    ],
+    duration: 60_000,
+    gap: 9_000,
+  },
+  {
+    points: [
+      [-145, 4, 66_000],
+      [28, 42, 71_000],
+      [155, 8, 65_000],
+    ],
+    duration: 56_000,
+    gap: 7_500,
+  },
+  {
+    points: [
+      [-172, 31, 63_000],
+      [35, -12, 68_000],
+      [171, -42, 63_000],
+    ],
+    duration: 64_000,
+    gap: 10_000,
+  },
+];
+
+const routesByKind: Record<TrafficKind, RoutePlan[]> = {
+  plane: planeRoutes,
+  drone: droneRoutes,
+  satellite: satelliteRoutes,
+};
+
+const targetPixelSize: Record<TrafficKind, number> = {
+  plane: 30,
+  drone: 14,
+  satellite: 21,
+};
+
+function preparePrototype(source: THREE.Object3D, kind: TrafficKind) {
+  const root = source.clone(true);
+  const bounds = new THREE.Box3().setFromObject(root);
+  const centre = bounds.getCenter(new THREE.Vector3());
+  const size = bounds.getSize(new THREE.Vector3());
+  const largestDimension = Math.max(size.x, size.y, size.z, 0.001);
+
+  // Centre before normalising so large source-space offsets are scaled too.
+  // Applying both transforms directly on `root` leaves its translation
+  // unscaled (Object3D uses T·R·S), which can push an otherwise loaded model
+  // well outside the map viewport.
+  root.position.copy(centre).multiplyScalar(-1);
+  const normalised = new THREE.Group();
+  normalised.scale.setScalar(1 / largestDimension);
+  normalised.add(root);
+  const oriented = new THREE.Group();
+  oriented.rotation.set(Math.PI / 2, 0, -Math.PI / 2);
+  oriented.add(normalised);
+
+  root.traverse((object) => {
     object.frustumCulled = false;
-  });
-  return group;
-}
+    if (!(object instanceof THREE.Mesh)) return;
 
-function createPlane() {
-  const group = new THREE.Group();
-  const bodyMaterial = matte(0x465569, 0.72, 0.18);
-  const lowerMaterial = matte(0x253244, 0.82, 0.12);
-  const glassMaterial = matte(0x7aa2b8, 0.34, 0.42);
-
-  const fuselage = new THREE.Mesh(
-    new THREE.CapsuleGeometry(1.65, 17, 5, 12),
-    bodyMaterial,
-  );
-  fuselage.rotation.z = Math.PI / 2;
-  group.add(fuselage);
-
-  const nose = new THREE.Mesh(
-    new THREE.ConeGeometry(1.65, 4.6, 18),
-    bodyMaterial,
-  );
-  nose.rotation.z = -Math.PI / 2;
-  nose.position.x = 11.4;
-  group.add(nose);
-
-  const wings = box(8.5, 27, 0.5, lowerMaterial);
-  wings.position.x = -0.7;
-  group.add(wings);
-
-  const tailWing = box(4.2, 10.5, 0.42, lowerMaterial);
-  tailWing.position.x = -9;
-  tailWing.position.z = 0.6;
-  group.add(tailWing);
-
-  const tail = box(3.7, 0.5, 5, bodyMaterial);
-  tail.position.set(-8.9, 0, 2.2);
-  tail.rotation.y = -0.24;
-  group.add(tail);
-
-  const cockpit = new THREE.Mesh(
-    new THREE.SphereGeometry(1.32, 16, 10),
-    glassMaterial,
-  );
-  cockpit.scale.set(1.55, 0.72, 0.55);
-  cockpit.position.set(8.5, 0, 1.05);
-  group.add(cockpit);
-
-  const engineGeometry = new THREE.CylinderGeometry(0.85, 0.96, 3.5, 14);
-  for (const y of [-6.8, 6.8]) {
-    const engine = new THREE.Mesh(engineGeometry, bodyMaterial);
-    engine.rotation.z = Math.PI / 2;
-    engine.position.set(0.7, y, -0.8);
-    group.add(engine);
-  }
-
-  addGroundShadow(group, 13, 5.2);
-  return prepareModel(group);
-}
-
-function createDrone() {
-  const group = new THREE.Group();
-  const bodyMaterial = matte(0x39463f, 0.86, 0.08);
-  const armMaterial = matte(0x222b28, 0.92, 0.06);
-  const rotorMaterial = new THREE.MeshStandardMaterial({
-    color: 0x111827,
-    roughness: 0.68,
-    transparent: true,
-    opacity: 0.72,
-    depthWrite: false,
+    const materials = Array.isArray(object.material)
+      ? object.material
+      : [object.material];
+    const adjusted = materials.map((material) => {
+      const clone = material.clone();
+      if (clone instanceof THREE.MeshStandardMaterial) {
+        clone.roughness = Math.max(0.36, clone.roughness * 0.9);
+        clone.metalness = Math.min(0.62, clone.metalness + 0.08);
+      }
+      return clone;
+    });
+    object.material = Array.isArray(object.material) ? adjusted : adjusted[0];
   });
 
-  const body = box(4.4, 3.2, 1.8, bodyMaterial);
-  body.rotation.z = Math.PI / 4;
-  group.add(body);
-
-  for (const angle of [Math.PI / 4, -Math.PI / 4]) {
-    const arm = box(10.5, 0.62, 0.52, armMaterial);
-    arm.rotation.z = angle;
-    group.add(arm);
-  }
-
-  for (const [x, y] of [
-    [3.7, 3.7],
-    [3.7, -3.7],
-    [-3.7, 3.7],
-    [-3.7, -3.7],
-  ]) {
-    const motor = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.68, 0.74, 0.68, 14),
-      bodyMaterial,
-    );
-    motor.rotation.x = Math.PI / 2;
-    motor.position.set(x, y, 0.36);
-    group.add(motor);
-
-    const rotor = new THREE.Mesh(
-      new THREE.CylinderGeometry(2.15, 2.15, 0.08, 28),
-      rotorMaterial,
-    );
-    rotor.rotation.x = Math.PI / 2;
-    rotor.position.set(x, y, 0.8);
-    group.add(rotor);
-  }
-
-  const sensor = new THREE.Mesh(
-    new THREE.SphereGeometry(0.82, 14, 10),
-    matte(0x8b7355, 0.58, 0.2),
-  );
-  sensor.position.set(1.1, 0, -1.15);
-  group.add(sensor);
-
-  addGroundShadow(group, 5.8, 3.4);
-  return prepareModel(group);
+  const holder = new THREE.Group();
+  holder.name = `${kind}-model`;
+  holder.add(oriented);
+  return holder;
 }
 
-function createSatellite() {
-  const group = new THREE.Group();
-  const bodyMaterial = matte(0x8a7151, 0.62, 0.28);
-  const panelMaterial = matte(0x284961, 0.48, 0.34);
-  const frameMaterial = matte(0xb7a47b, 0.52, 0.4);
-
-  const body = box(4.8, 4.8, 4.6, bodyMaterial);
-  body.rotation.x = 0.14;
-  group.add(body);
-
-  for (const y of [-8.1, 8.1]) {
-    const panel = box(3.8, 9.4, 0.28, panelMaterial);
-    panel.position.y = y;
-    group.add(panel);
-
-    for (const offset of [-1.25, 0, 1.25]) {
-      const grid = box(0.08, 9.2, 0.34, frameMaterial);
-      grid.position.set(offset, y, 0);
-      group.add(grid);
-    }
-  }
-
-  const mast = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.22, 0.22, 3.8, 10),
-    frameMaterial,
-  );
-  mast.rotation.z = Math.PI / 2;
-  mast.position.x = 4.2;
-  group.add(mast);
-
-  const dish = new THREE.Mesh(
-    new THREE.ConeGeometry(2.1, 1.25, 24, 1, true),
-    new THREE.MeshStandardMaterial({
-      color: 0xc7b98f,
-      roughness: 0.62,
-      metalness: 0.42,
-      side: THREE.DoubleSide,
-    }),
-  );
-  dish.rotation.z = -Math.PI / 2;
-  dish.position.x = 6;
-  group.add(dish);
-
-  addGroundShadow(group, 7.5, 4.2);
-  return prepareModel(group);
+function loadPrototype(loader: GLTFLoader, kind: TrafficKind) {
+  return new Promise<THREE.Group>((resolve, reject) => {
+    loader.load(
+      modelSources[kind],
+      (gltf) => resolve(preparePrototype(gltf.scene, kind)),
+      undefined,
+      reject,
+    );
+  });
 }
 
-function interpolateRoute(route: RoutePoint[], progress: number) {
-  const scaled = progress * route.length;
-  const index = Math.floor(scaled) % route.length;
-  const nextIndex = (index + 1) % route.length;
-  const localProgress = scaled - Math.floor(scaled);
-  const eased = localProgress * localProgress * (3 - 2 * localProgress);
+function interpolateRoute(
+  route: RoutePoint[],
+  progress: number,
+  passes: number,
+) {
+  const repeatedProgress = Math.min(0.999999, progress) * passes;
+  const passProgress = repeatedProgress - Math.floor(repeatedProgress);
+  const segmentLengths = route.slice(0, -1).map((point, index) => {
+    const next = route[index + 1];
+    const meanLatitude = ((point[1] + next[1]) * Math.PI) / 360;
+    return Math.hypot(
+      (next[0] - point[0]) * Math.cos(meanLatitude),
+      next[1] - point[1],
+    );
+  });
+  const totalLength = Math.max(
+    0.000001,
+    segmentLengths.reduce((total, length) => total + length, 0),
+  );
+  const targetDistance = passProgress * totalLength;
+  let travelled = 0;
+  let index = 0;
+  for (; index < segmentLengths.length - 1; index++) {
+    if (travelled + segmentLengths[index] >= targetDistance) break;
+    travelled += segmentLengths[index];
+  }
+  const localProgress = Math.min(
+    1,
+    Math.max(
+      0,
+      (targetDistance - travelled) / Math.max(0.000001, segmentLengths[index]),
+    ),
+  );
   const current = route[index];
-  const next = route[nextIndex];
+  const next = route[index + 1];
 
   return {
-    longitude: THREE.MathUtils.lerp(current[0], next[0], eased),
-    latitude: THREE.MathUtils.lerp(current[1], next[1], eased),
+    longitude: THREE.MathUtils.lerp(current[0], next[0], localProgress),
+    latitude: THREE.MathUtils.lerp(current[1], next[1], localProgress),
     altitude:
-      THREE.MathUtils.lerp(current[2], next[2], eased) +
-      Math.sin(localProgress * Math.PI) * current[2] * 0.1,
-    nextLongitude: next[0],
-    nextLatitude: next[1],
+      THREE.MathUtils.lerp(current[2], next[2], localProgress) +
+      Math.sin(localProgress * Math.PI) * current[2] * 0.045,
   };
+}
+
+function nextRoute(item: TrafficItem, now: number) {
+  const previous = item.routes[item.routeIndex];
+  item.routeIndex =
+    (item.routeIndex + item.slot + 1 + item.cycle) % item.routes.length;
+  item.startedAt = now + previous.gap + item.slot * 420;
+  item.cycle += 1;
 }
 
 function updateTrafficItem(
   item: TrafficItem,
   now: number,
   zoom: number,
-): TrafficPose {
-  const progress = (((now / item.duration + item.phase) % 1) + 1) % 1;
-  const point = interpolateRoute(item.route, progress);
+): TrafficPose | null {
+  const route = item.routes[item.routeIndex];
+  if (now < item.startedAt) return null;
+
+  const progress = (now - item.startedAt) / route.duration;
+  if (progress >= 1) {
+    nextRoute(item, now);
+    return null;
+  }
+
+  const point = interpolateRoute(route.points, progress, item.passes);
+  const ahead = interpolateRoute(
+    route.points,
+    Math.min(0.9995, progress + 0.002),
+    item.passes,
+  );
   const mercator = MercatorCoordinate.fromLngLat(
     [point.longitude, point.latitude],
     point.altitude,
   );
-  const ahead = MercatorCoordinate.fromLngLat(
-    [point.nextLongitude, point.nextLatitude],
-    point.altitude,
+  const aheadMercator = MercatorCoordinate.fromLngLat(
+    [ahead.longitude, ahead.latitude],
+    ahead.altitude,
   );
-
-  const heading = Math.atan2(-(ahead.y - mercator.y), ahead.x - mercator.x);
-  const visualCompensation = Math.pow(2, Math.max(2, 16.2 - zoom));
-  const kindScale =
-    item.kind === "plane" ? 1.08 : item.kind === "drone" ? 1.55 : 1.22;
+  const heading = Math.atan2(
+    -(aheadMercator.y - mercator.y),
+    aheadMercator.x - mercator.x,
+  );
+  const fade = Math.min(1, progress / 0.075, (1 - progress) / 0.09);
+  const worldPixels = 512 * 2 ** zoom;
   const scale =
-    mercator.meterInMercatorCoordinateUnits() * visualCompensation * kindScale;
+    (targetPixelSize[item.kind] / worldPixels) * Math.max(0.02, fade);
   const visible =
-    item.kind === "plane" ||
-    (item.kind === "satellite" && zoom < 8.5) ||
-    (item.kind === "drone" && zoom >= 8.5);
+    item.group.children.length > 0 &&
+    ((item.kind === "satellite" && zoom <= 5.6) ||
+      (item.kind === "plane" && zoom <= 6.2) ||
+      (item.kind === "drone" && zoom >= 2.7 && zoom <= 6.4));
 
   return { item, coordinate: mercator, heading, scale, visible };
+}
+
+function createTraffic(now: number) {
+  const traffic: TrafficItem[] = [];
+  const counts: Record<TrafficKind, number> = {
+    plane: 3,
+    drone: 2,
+    satellite: 2,
+  };
+  const phases: Record<TrafficKind, number[]> = {
+    plane: [0.12, 0.46, 0.78],
+    drone: [0.18, 0.63],
+    satellite: [0.26, 0.72],
+  };
+  const initialRoutes: Record<TrafficKind, number[]> = {
+    plane: [0, 3, 6],
+    drone: [0, 3],
+    satellite: [0, 2],
+  };
+
+  (Object.keys(counts) as TrafficKind[]).forEach((kind) => {
+    for (let slot = 0; slot < counts[kind]; slot++) {
+      const routes = routesByKind[kind];
+      const routeIndex = initialRoutes[kind][slot] % routes.length;
+      traffic.push({
+        kind,
+        slot,
+        group: new THREE.Group(),
+        routes,
+        routeIndex,
+        startedAt: now - routes[routeIndex].duration * phases[kind][slot],
+        passes: kind === "drone" ? 2 : 1,
+        cycle: 0,
+      });
+    }
+  });
+
+  return traffic;
 }
 
 export function createResearchTrafficLayer(): CustomLayerInterface {
@@ -274,6 +379,7 @@ export function createResearchTrafficLayer(): CustomLayerInterface {
   let scene: THREE.Scene;
   let renderer: THREE.WebGLRenderer;
   let traffic: TrafficItem[] = [];
+  let disposed = false;
 
   return {
     id: TRAFFIC_LAYER_ID,
@@ -283,49 +389,15 @@ export function createResearchTrafficLayer(): CustomLayerInterface {
       map = nextMap;
       camera = new THREE.Camera();
       scene = new THREE.Scene();
+      traffic = createTraffic(performance.now());
 
-      scene.add(new THREE.HemisphereLight(0xf4f7fb, 0x263241, 2.2));
-      const keyLight = new THREE.DirectionalLight(0xfff7e6, 2.8);
-      keyLight.position.set(0.4, -0.8, 1.4);
+      scene.add(new THREE.HemisphereLight(0xf8fbff, 0x334155, 3.2));
+      const keyLight = new THREE.DirectionalLight(0xfff7e8, 3.8);
+      keyLight.position.set(-0.45, -0.75, 1.6).normalize();
       scene.add(keyLight);
-
-      traffic = [
-        {
-          kind: "plane",
-          route: [
-            [74.2, 28.2, 9300],
-            [79.4, 28.8, 10600],
-            [82.5, 32.2, 9800],
-            [75.6, 32.8, 10400],
-          ],
-          duration: 46_000,
-          phase: 0.17,
-          group: createPlane(),
-        },
-        {
-          kind: "satellite",
-          route: [
-            [71.8, 26.2, 45_000],
-            [85.4, 34.1, 45_000],
-          ],
-          duration: 64_000,
-          phase: 0.61,
-          group: createSatellite(),
-        },
-        {
-          kind: "drone",
-          route: [
-            [77.858, 29.827, 115],
-            [77.946, 29.846, 128],
-            [77.921, 29.909, 105],
-            [77.872, 29.893, 122],
-          ],
-          duration: 29_000,
-          phase: 0.34,
-          group: createDrone(),
-        },
-      ];
-
+      const rimLight = new THREE.DirectionalLight(0x9ed8ff, 2.1);
+      rimLight.position.set(0.8, 0.35, 0.8).normalize();
+      scene.add(rimLight);
       traffic.forEach((item) => scene.add(item.group));
 
       renderer = new THREE.WebGLRenderer({
@@ -335,15 +407,44 @@ export function createResearchTrafficLayer(): CustomLayerInterface {
         alpha: true,
       });
       renderer.autoClear = false;
-      map.getCanvas().dataset.researchTraffic = "ready";
+      map.getCanvas().dataset.researchTraffic = "models-loading";
+
+      const loader = new GLTFLoader();
+      void Promise.all(
+        (Object.keys(modelSources) as TrafficKind[]).map(async (kind) => {
+          const prototype = await loadPrototype(loader, kind);
+          if (disposed) return;
+          traffic
+            .filter((item) => item.kind === kind)
+            .forEach((item) => item.group.add(prototype.clone(true)));
+        }),
+      )
+        .then(() => {
+          if (disposed) return;
+          map.getCanvas().dataset.researchTraffic = "ready";
+          map.triggerRepaint();
+        })
+        .catch((error) => {
+          console.error("Unable to load research traffic models", error);
+          if (!disposed) {
+            map.getCanvas().dataset.researchTraffic = "model-error";
+          }
+        });
     },
     render(_gl, options: CustomRenderMethodInput) {
       const zoom = map.getZoom();
       const now = performance.now();
-      const poses = traffic.map((item) => updateTrafficItem(item, now, zoom));
+      const poses = traffic
+        .map((item) => updateTrafficItem(item, now, zoom))
+        .filter((pose): pose is TrafficPose => Boolean(pose));
       const mapMatrix = new THREE.Matrix4().fromArray(
         options.defaultProjectionData.mainMatrix,
       );
+      const visibleCounts: Record<TrafficKind, number> = {
+        plane: 0,
+        drone: 0,
+        satellite: 0,
+      };
 
       traffic.forEach((item) => {
         item.group.visible = false;
@@ -351,6 +452,7 @@ export function createResearchTrafficLayer(): CustomLayerInterface {
 
       for (const pose of poses) {
         if (!pose.visible) continue;
+        visibleCounts[pose.item.kind] += 1;
 
         const rotation = new THREE.Matrix4().makeRotationZ(pose.heading);
         const modelMatrix = new THREE.Matrix4()
@@ -362,6 +464,12 @@ export function createResearchTrafficLayer(): CustomLayerInterface {
           .scale(new THREE.Vector3(pose.scale, -pose.scale, pose.scale))
           .multiply(rotation);
 
+        const model = pose.item.group.children[0];
+        if (model && pose.item.kind === "satellite") {
+          model.rotation.z = now * 0.00008 + pose.item.slot * 0.7;
+          model.rotation.y = Math.sin(now * 0.00012 + pose.item.slot) * 0.18;
+        }
+
         pose.item.group.visible = true;
         camera.projectionMatrix = mapMatrix.clone().multiply(modelMatrix);
         renderer.resetState();
@@ -369,23 +477,28 @@ export function createResearchTrafficLayer(): CustomLayerInterface {
         pose.item.group.visible = false;
       }
 
-      map.getCanvas().dataset.researchTrafficFrame = String(
-        Math.round(performance.now()),
-      );
+      map.getCanvas().dataset.researchTrafficFrame = String(Math.round(now));
+      map.getCanvas().dataset.researchTrafficVisible = `${visibleCounts.plane}/${visibleCounts.drone}/${visibleCounts.satellite}`;
       map.triggerRepaint();
     },
     onRemove() {
+      disposed = true;
+      const geometries = new Set<THREE.BufferGeometry>();
+      const materials = new Set<THREE.Material>();
       scene?.traverse((object) => {
         if (!(object instanceof THREE.Mesh)) return;
-        object.geometry.dispose();
-        const materials = Array.isArray(object.material)
+        geometries.add(object.geometry);
+        const nextMaterials = Array.isArray(object.material)
           ? object.material
           : [object.material];
-        materials.forEach((material) => material.dispose());
+        nextMaterials.forEach((material) => materials.add(material));
       });
+      geometries.forEach((geometry) => geometry.dispose());
+      materials.forEach((material) => material.dispose());
       renderer?.dispose();
       delete map?.getCanvas().dataset.researchTraffic;
       delete map?.getCanvas().dataset.researchTrafficFrame;
+      delete map?.getCanvas().dataset.researchTrafficVisible;
       traffic = [];
     },
   };

@@ -192,16 +192,7 @@ export default function ImageLightbox({
           </button>
         </div>
 
-        <div
-          className="bg-muted/20 relative min-h-0 flex-1 overflow-hidden"
-          style={{
-            backgroundImage:
-              "linear-gradient(hsl(var(--border)/.42) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)/.42) 1px, transparent 1px), radial-gradient(circle at 50% 45%, hsl(var(--background)) 0, transparent 64%)",
-            backgroundSize: "24px 24px, 24px 24px, 100% 100%",
-          }}
-        >
-          <span className="border-foreground/8 pointer-events-none absolute -top-16 -right-14 size-44 rotate-12 rounded-[42px] border" />
-          <span className="bg-foreground/[0.025] pointer-events-none absolute -bottom-16 -left-12 size-40 rotate-45 rounded-[36px]" />
+        <div className="relative min-h-0 flex-1 overflow-hidden">
           <motion.div
             className="absolute inset-0 cursor-grab touch-none select-none active:cursor-grabbing"
             style={{ x: dragX }}
@@ -280,10 +271,10 @@ export default function ImageLightbox({
                     type="button"
                     onClick={() => goTo(index)}
                     className={cn(
-                      "bg-muted relative h-14 w-16 shrink-0 overflow-hidden rounded-xl border transition",
+                      "relative h-14 w-16 shrink-0 overflow-hidden rounded-xl transition",
                       active
-                        ? "border-foreground/60 shadow-[0_0_0_2px_hsl(var(--foreground)/.10)]"
-                        : "border-border/60 opacity-65 hover:opacity-100",
+                        ? "opacity-100 shadow-[0_8px_20px_rgba(15,23,42,.14)]"
+                        : "opacity-55 hover:opacity-100",
                     )}
                     aria-label={`Go to image ${index + 1}`}
                   >
@@ -293,7 +284,7 @@ export default function ImageLightbox({
                       fill
                       sizes="64px"
                       quality={75}
-                      className="object-contain p-1"
+                      className="object-cover"
                       loading={
                         wrappedDistance(index, currentIndex, images.length) <= 4
                           ? "eager"
@@ -336,7 +327,7 @@ function LightboxImage({
   return (
     <div className="relative grid h-full w-full place-items-center">
       {!loaded && (
-        <div className="border-border/55 bg-muted/70 absolute h-[68%] w-[76%] max-w-2xl animate-pulse overflow-hidden rounded-[20px] border">
+        <div className="bg-muted/70 absolute h-[68%] w-[76%] max-w-2xl animate-pulse overflow-hidden rounded-[20px]">
           <div className="absolute inset-0 bg-[linear-gradient(160deg,transparent_0_52%,hsl(var(--border))_53_68%,hsl(var(--muted-foreground)/.12)_69%)]" />
           <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-white/25 to-transparent" />
         </div>
@@ -345,7 +336,7 @@ function LightboxImage({
         src={src}
         alt={alt}
         className={cn(
-          "max-h-full max-w-full rounded-[18px] object-contain shadow-[0_22px_60px_rgba(15,23,42,0.18)] transition-[opacity,filter,transform] duration-300 select-none dark:shadow-[0_24px_70px_rgba(0,0,0,0.48)]",
+          "h-auto max-h-full w-auto max-w-full rounded-[18px] object-contain shadow-[0_22px_60px_rgba(15,23,42,0.18)] transition-[opacity,filter,transform] duration-300 select-none dark:shadow-[0_24px_70px_rgba(0,0,0,0.48)]",
           active ? "will-change-transform" : "opacity-90",
           loaded
             ? "blur-0 scale-100 opacity-100"
@@ -365,7 +356,10 @@ function LightboxImage({
           setLoaded(true);
           onReady();
         }}
-        style={{ imageOrientation: "from-image" }}
+        style={{
+          imageOrientation: "from-image",
+          objectFit: "contain",
+        }}
       />
     </div>
   );

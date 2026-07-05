@@ -7,9 +7,9 @@ type KasiMarkProps = {
 };
 
 const sizeClasses = {
-  sm: "size-8 rounded-[11px]",
-  md: "size-10 rounded-[14px]",
-  lg: "size-11 rounded-[15px]",
+  sm: "size-8 rounded-xl rounded-bl-[2px]",
+  md: "size-10 rounded-2xl rounded-bl-[3px]",
+  lg: "size-11 rounded-[18px] rounded-bl-[4px]",
 };
 
 export default function KasiMark({
@@ -38,33 +38,37 @@ export default function KasiMark({
             : "opacity-0",
         )}
       />
-      <svg viewBox="0 0 40 40" fill="none" className="relative z-10 size-[72%]">
-        <ellipse
-          cx="20"
-          cy="20"
-          rx="13.8"
-          ry="7.5"
-          transform="rotate(-28 20 20)"
-          stroke="currentColor"
-          strokeWidth="1.45"
-          opacity={active ? 0.58 : 0.4}
-        />
-        <ellipse
-          cx="20"
-          cy="20"
-          rx="13.8"
-          ry="7.5"
-          transform="rotate(32 20 20)"
-          stroke="currentColor"
-          strokeWidth="1.15"
-          opacity={active ? 0.35 : 0.25}
-        />
+      <svg viewBox="0 0 40 40" fill="none" className="relative z-10 size-[70%] text-current">
+        {/* Main Sparkle */}
         <path
-          d="M20 9.5c1.2 5.7 4.8 9.3 10.5 10.5-5.7 1.2-9.3 4.8-10.5 10.5-1.2-5.7-4.8-9.3-10.5-10.5C15.2 18.8 18.8 15.2 20 9.5Z"
+          d="M0 -10.5c1.2 5.7 4.8 9.3 10.5 10.5-5.7 1.2-9.3 4.8-10.5 10.5-1.2-5.7-4.8-9.3-10.5-10.5C-4.8 1.2 -1.2 -1.2 0 -10.5Z"
+          transform="translate(17, 23) scale(0.95)"
           fill="currentColor"
+          className={active ? "animate-[pulse_2s_infinite_ease-in-out]" : ""}
         />
-        <circle cx="31.2" cy="15.2" r="2" fill="currentColor" />
-        <circle cx="9.4" cy="25.6" r="1.55" fill="currentColor" opacity=".72" />
+        {/* Secondary Sparkle */}
+        <path
+          d="M0 -10.5c1.2 5.7 4.8 9.3 10.5 10.5-5.7 1.2-9.3 4.8-10.5 10.5-1.2-5.7-4.8-9.3-10.5-10.5C-4.8 1.2 -1.2 -1.2 0 -10.5Z"
+          transform="translate(28, 13) scale(0.5)"
+          fill="currentColor"
+          opacity={active ? 0.85 : 0.5}
+          className={active ? "animate-[pulse_2s_infinite_ease-in-out_250ms]" : ""}
+        />
+        {/* Decorative tiny dots */}
+        <circle
+          cx="9"
+          cy="13"
+          r="1.2"
+          fill="currentColor"
+          opacity={active ? 0.6 : 0.3}
+        />
+        <circle
+          cx="26"
+          cy="29"
+          r="0.8"
+          fill="currentColor"
+          opacity={active ? 0.45 : 0.2}
+        />
       </svg>
       <span
         className={cn(

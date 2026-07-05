@@ -453,7 +453,7 @@ export default function ProgressiveActivitiesList({
         />
       )}
 
-      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1 lg:pr-12 xl:pr-8">
+      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1">
         <section className="relative z-10 flex min-w-0 flex-col gap-6">
           {filteredActivities.length === 0 ? (
             <div className="border-border/70 bg-background/60 text-muted-foreground rounded-3xl border border-dashed px-6 py-16 text-center text-sm">

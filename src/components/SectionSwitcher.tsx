@@ -1,0 +1,59 @@
+import { cn } from "@/lib/utils";
+import type { LucideIcon } from "lucide-react";
+
+export const sectionSwitcherListClass =
+  "border-border/55 bg-muted/45 grid h-auto w-full grid-cols-2 gap-2 rounded-[22px] border p-2";
+
+export const sectionSwitcherTriggerClass =
+  "group flex h-auto min-w-0 items-center justify-start gap-2 rounded-[16px] px-2 py-3.5 text-left text-sm transition-all sm:gap-3 sm:px-3 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_9px_26px_rgba(15,23,42,.10)]";
+
+const toneClasses = {
+  sky: "bg-sky-500/11 text-sky-700 dark:text-sky-300",
+  emerald: "bg-emerald-500/11 text-emerald-700 dark:text-emerald-300",
+  rose: "bg-rose-500/11 text-rose-700 dark:text-rose-300",
+  indigo: "bg-indigo-500/11 text-indigo-700 dark:text-indigo-300",
+};
+
+export function SectionSwitcherVisual({
+  Icon,
+  title,
+  description,
+  count,
+  tone,
+}: {
+  Icon: LucideIcon;
+  title: string;
+  description?: string;
+  count?: number;
+  tone: keyof typeof toneClasses;
+}) {
+  return (
+    <>
+      <span
+        className={cn(
+          "grid size-10 shrink-0 place-items-center rounded-[13px] sm:size-11 sm:rounded-[14px]",
+          toneClasses[tone],
+        )}
+      >
+        <Icon className="size-[18px] sm:size-5" strokeWidth={1.8} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="text-left text-sm leading-tight font-bold whitespace-normal sm:truncate sm:text-[15px]">
+            {title}
+          </span>
+          {typeof count === "number" && (
+            <span className="bg-muted text-muted-foreground hidden shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums sm:inline-flex">
+              {count}
+            </span>
+          )}
+        </span>
+        {description && (
+          <span className="text-muted-foreground mt-0.5 hidden truncate text-[11px] font-normal sm:block">
+            {description}
+          </span>
+        )}
+      </span>
+    </>
+  );
+}

@@ -11,8 +11,8 @@ import homeContent from "@/data/home.json";
 import publicationsData from "@/data/publications.json";
 import skillsData from "@/data/skills.json";
 
-import ImageWithSkeleton from "@/components/ImageWithSkeleton";
 import LazySection from "@/components/LazySection";
+import SkillLogoTile from "@/components/SkillLogoTile";
 
 const LocationMap = dynamic(() => import("@/components/LocationMap"), {
   loading: () => (
@@ -132,7 +132,7 @@ export default function Home() {
       >
         <section className="flex flex-col gap-6">
           <div>
-            <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.18em] uppercase">
+            <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.18em] uppercase">
               Background
             </p>
             <h2 className="title mt-2 text-2xl sm:text-3xl">the path so far</h2>
@@ -150,7 +150,7 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div>
-                <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.18em] uppercase">
+                <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.18em] uppercase">
                   Working set
                 </p>
                 <h2 className="title mt-2 text-2xl sm:text-3xl">
@@ -182,19 +182,15 @@ export default function Home() {
                 {featuredSkills.slice(0, 5).map((skill) => (
                   <div
                     key={skill.name}
-                    className="group flex flex-col items-center gap-1.5 transition-all duration-300 hover:scale-110 sm:gap-2"
+                    className="group/tool flex flex-col items-center gap-1.5 transition-all duration-300 hover:-translate-y-1 sm:gap-2"
                   >
-                    <div className="ring-border/50 group-hover:ring-foreground/20 relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white p-2 shadow-sm ring-1 transition-all duration-300 group-hover:shadow-lg sm:h-16 sm:w-16 sm:p-3">
-                      <ImageWithSkeleton
-                        src={skill.logo}
-                        alt={skill.name}
-                        width={64}
-                        height={64}
-                        containerClassName="w-full h-full"
-                        className="h-full w-full object-contain"
-                      />
-                    </div>
-                    <span className="text-foreground/85 max-w-[64px] text-center text-[10px] leading-tight font-semibold sm:max-w-none sm:text-sm">
+                    <SkillLogoTile
+                      logo={skill.logo}
+                      name={skill.name}
+                      className="size-11 sm:size-16"
+                      imageClassName="p-1.5 sm:p-2.5"
+                    />
+                    <span className="text-foreground/85 max-w-[72px] text-center text-[10px] leading-tight font-semibold sm:max-w-[110px] sm:text-sm">
                       {skill.name}
                     </span>
                   </div>
@@ -206,19 +202,15 @@ export default function Home() {
                 {featuredSkills.slice(5).map((skill) => (
                   <div
                     key={skill.name}
-                    className="group flex flex-col items-center gap-1.5 transition-all duration-300 hover:scale-110 sm:gap-2"
+                    className="group/tool flex flex-col items-center gap-1.5 transition-all duration-300 hover:-translate-y-1 sm:gap-2"
                   >
-                    <div className="ring-border/50 group-hover:ring-foreground/20 relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-white p-2 shadow-sm ring-1 transition-all duration-300 group-hover:shadow-lg sm:h-16 sm:w-16 sm:p-3">
-                      <ImageWithSkeleton
-                        src={skill.logo}
-                        alt={skill.name}
-                        width={64}
-                        height={64}
-                        containerClassName="w-full h-full"
-                        className="h-full w-full object-contain"
-                      />
-                    </div>
-                    <span className="text-foreground/85 max-w-[64px] text-center text-[10px] leading-tight font-semibold sm:max-w-none sm:text-sm">
+                    <SkillLogoTile
+                      logo={skill.logo}
+                      name={skill.name}
+                      className="size-11 sm:size-16"
+                      imageClassName="p-1.5 sm:p-2.5"
+                    />
+                    <span className="text-foreground/85 max-w-[72px] text-center text-[10px] leading-tight font-semibold sm:max-w-[110px] sm:text-sm">
                       {skill.name}
                     </span>
                   </div>
@@ -245,7 +237,7 @@ export default function Home() {
         <section className="flex flex-col gap-8">
           <div className="flex justify-between">
             <div>
-              <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.18em] uppercase">
+              <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.18em] uppercase">
                 Selected research
               </p>
               <h2 className="title mt-2 text-2xl sm:text-3xl">
@@ -315,7 +307,7 @@ export default function Home() {
         <section className="flex flex-col gap-8">
           <div className="flex justify-between">
             <div>
-              <p className="text-muted-foreground text-[10px] font-semibold tracking-[0.18em] uppercase">
+              <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.18em] uppercase">
                 In the field
               </p>
               <h2 className="title mt-2 text-2xl sm:text-3xl">

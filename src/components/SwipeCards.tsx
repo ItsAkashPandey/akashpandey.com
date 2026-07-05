@@ -8,6 +8,8 @@ import StackedImageDeck from "./StackedImageDeck";
 interface SwipeCardsProps {
   className?: string;
   images?: string[];
+  baselineWidth?: number;
+  baselineHeight?: number;
 }
 
 type Card = {
@@ -15,7 +17,12 @@ type Card = {
   url: string;
 };
 
-export default function SwipeCards({ className, images }: SwipeCardsProps) {
+export default function SwipeCards({
+  className,
+  images,
+  baselineWidth = 3,
+  baselineHeight = 4,
+}: SwipeCardsProps) {
   const deckImages = images?.length ? images : cardData.map((card) => card.url);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -24,15 +31,14 @@ export default function SwipeCards({ className, images }: SwipeCardsProps) {
       <StackedImageDeck
         images={deckImages}
         alt="Photo of Akash"
-        imageWidth={280}
-        imageHeight={320}
+        imageWidth={baselineWidth}
+        imageHeight={baselineHeight}
         sizes="(max-width: 640px) 175px, 280px"
         quality={84}
         idleQuality={84}
         priority
         stackSize={4}
         className={cn("h-[233px] w-[175px] rounded-xl", className)}
-        imageClassName="object-contain"
         onImageClick={setLightboxIndex}
       />
       {lightboxIndex !== null && (
