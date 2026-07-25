@@ -5,18 +5,18 @@ import KasiMark from "./KasiMark";
 import { Button } from "./ui/Button";
 
 export default function ChatToggle() {
-  const { isVisible, toggleChatbot } = useChatbot();
+  const { isOpen, toggleChat } = useChatbot();
 
   return (
     <Button
       size="icon"
       variant="ghost"
-      onClick={toggleChatbot}
+      onClick={toggleChat}
       className="border-border/55 bg-background/60 relative size-10 rounded-xl border shadow-sm"
-      title={isVisible ? "Hide Kasi" : "Show Kasi"}
+      title={isOpen ? "Close Kasi" : "Open Kasi"}
     >
-      <KasiMark active={isVisible} size="sm" />
-      <span className="sr-only">{isVisible ? "Hide Kasi" : "Show Kasi"}</span>
+      <KasiMark active={isOpen} size="sm" />
+      <span className="sr-only">{isOpen ? "Close Kasi" : "Open Kasi"}</span>
     </Button>
   );
 }

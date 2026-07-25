@@ -66,7 +66,7 @@ export default function ImageWithSkeleton({
       </AnimatePresence>
       <div
         className={cn(
-          "flex h-full w-full items-center justify-center transition-opacity duration-100 ease-out",
+          "relative flex h-full w-full items-center justify-center transition-opacity duration-100 ease-out",
           isLoaded ? "opacity-100" : "opacity-0",
         )}
       >

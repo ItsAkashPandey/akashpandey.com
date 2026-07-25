@@ -27,8 +27,40 @@ interface StackedImageDeckProps {
 
 type Direction = 1 | -1;
 
+type DeckEntry = {
+  depth: number;
+  hidden?: boolean;
+  index: number;
+};
+
+type DeckBounds = {
+  height: number;
+  width: number;
+};
+
+const imageRatioCache = new Map<string, number>();
+
 function wrapIndex(index: number, total: number) {
   return ((index % total) + total) % total;
+}
+
+function fitInsideDeck(ratio: number, bounds: DeckBounds) {
+  if (!bounds.width || !bounds.height) {
+    return { height: "100%", width: "100%" };
+  }
+
+  const deckRatio = bounds.width / bounds.height;
+  if (ratio >= deckRatio) {
+    return {
+      height: Math.max(1, bounds.width / ratio),
+      width: bounds.width,
+    };
+  }
+
+  return {
+    height: bounds.height,
+    width: Math.max(1, bounds.height * ratio),
+  };
 }
 
 export default function StackedImageDeck({
@@ -37,29 +69,108 @@ export default function StackedImageDeck({
   className,
   cardClassName,
   imageClassName,
+  imageWidth,
+  imageHeight,
   sizes,
   priority = false,
-  quality = 84,
+  quality = 82,
+  idleQuality = 72,
   showCounter = false,
   labels,
-  stackSize = 3,
+  stackSize = 4,
   onImageClick,
 }: StackedImageDeckProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [direction, setDirection] = useState<Direction>(1);
-  const [moving, setMoving] = useState(false);
-  const draggedRef = useRef(false);
-  const dragX = useMotionValue(0);
-  const dragRotate = useTransform(dragX, [-220, 0, 220], [-14, 0, 14]);
-  const dragOpacity = useTransform(
-    dragX,
-    [-320, -90, 0, 90, 320],
-    [0.18, 0.9, 1, 0.9, 0.18],
+  const [bounds, setBounds] = useState<DeckBounds>({ height: 0, width: 0 });
+  const [ratios, setRatios] = useState<Record<string, number>>(() =>
+    Object.fromEntries(
+      images.flatMap((source) => {
+        const ratio = imageRatioCache.get(source);
+        return ratio ? [[source, ratio]] : [];
+      }),
+    ),
   );
-  const dragScale = useTransform(
-    dragX,
-    [-220, -80, 0, 80, 220],
-    [0.97, 0.995, 1, 0.995, 0.97],
+  const deckRef = useRef<HTMLDivElement>(null);
+  const movingRef = useRef(false);
+  const draggedRef = useRef(false);
+  const loadedImagesRef = useRef(new Set<string>());
+  const dispatchedReadyKeyRef = useRef("");
+  const moveFallbackRef = useRef<number | null>(null);
+  const moveAnimationRef = useRef<{ stop: () => void } | null>(null);
+  const dragX = useMotionValue(0);
+  const dragRotate = useTransform(dragX, [-150, 150], [-18, 18]);
+  const dragOpacity = useTransform(dragX, [-100, 0, 100], [0, 1, 0]);
+  const resolvedQuality = Math.max(quality, idleQuality);
+  const imageSetKey = images.join("\u001f");
+  const uniqueImageCount = new Set(images).size;
+
+  useEffect(() => {
+    loadedImagesRef.current.clear();
+    dispatchedReadyKeyRef.current = "";
+
+    if (priority && window.location.pathname === "/") {
+      delete document.documentElement.dataset.heroDeckReady;
+    }
+  }, [imageSetKey, priority]);
+
+  useEffect(
+    () => () => {
+      moveAnimationRef.current?.stop();
+      if (moveFallbackRef.current !== null) {
+        window.clearTimeout(moveFallbackRef.current);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const deck = deckRef.current;
+    if (!deck) return;
+
+    const measure = () => {
+      const rect = deck.getBoundingClientRect();
+      setBounds((current) => {
+        const next = {
+          height: Math.round(rect.height),
+          width: Math.round(rect.width),
+        };
+        return current.height === next.height && current.width === next.width
+          ? current
+          : next;
+      });
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(deck);
+    return () => observer.disconnect();
+  }, []);
+
+  const rememberRatio = useCallback((source: string, ratio: number) => {
+    if (!Number.isFinite(ratio) || ratio <= 0) return;
+    imageRatioCache.set(source, ratio);
+    setRatios((current) =>
+      current[source] === ratio ? current : { ...current, [source]: ratio },
+    );
+  }, []);
+
+  const markImageReady = useCallback(
+    (source: string) => {
+      loadedImagesRef.current.add(source);
+      if (
+        !priority ||
+        loadedImagesRef.current.size < uniqueImageCount ||
+        dispatchedReadyKeyRef.current === imageSetKey
+      ) {
+        return;
+      }
+
+      dispatchedReadyKeyRef.current = imageSetKey;
+      document.documentElement.dataset.heroDeckReady = "true";
+      window.dispatchEvent(new Event("hero-deck-ready"));
+    },
+    [imageSetKey, priority, uniqueImageCount],
   );
 
   const visibleDepth = Math.min(
@@ -67,47 +178,74 @@ export default function StackedImageDeck({
     Math.max(0, images.length - 1),
     3,
   );
-  const backCards = useMemo(
-    () =>
-      Array.from({ length: visibleDepth }, (_, offset) => {
-        const depth = visibleDepth - offset;
-        return {
-          depth,
-          index: wrapIndex(selectedIndex + direction * depth, images.length),
-        };
+
+  const cards = useMemo(() => {
+    if (!images.length) return [];
+
+    const visible = Array.from(
+      { length: visibleDepth + 1 },
+      (_, depth): DeckEntry => ({
+        depth,
+        index: wrapIndex(selectedIndex + direction * depth, images.length),
       }),
-    [direction, images.length, selectedIndex, visibleDepth],
-  );
+    );
+    const warmIndex = wrapIndex(selectedIndex - direction, images.length);
+    const rendered = [...visible].reverse();
 
-  const move = useCallback(
-    async (nextDirection: Direction) => {
-      if (images.length <= 1 || moving) return;
-      setDirection(nextDirection);
-      setMoving(true);
-      const viewportWidth =
-        typeof window === "undefined" ? 900 : window.innerWidth;
-      const exitDistance = Math.max(460, viewportWidth * 0.72);
-
-      await new Promise<void>((resolve) => {
-        animate(dragX, nextDirection === 1 ? -exitDistance : exitDistance, {
-          type: "spring",
-          stiffness: 330,
-          damping: 33,
-          mass: 0.72,
-          velocity: nextDirection === 1 ? -520 : 520,
-          onComplete: resolve,
-        });
+    if (!visible.some((entry) => entry.index === warmIndex)) {
+      rendered.unshift({
+        depth: visibleDepth + 1,
+        hidden: true,
+        index: warmIndex,
       });
+    }
 
+    return rendered;
+  }, [direction, images.length, selectedIndex, visibleDepth]);
+
+  const commitMove = useCallback(
+    (nextDirection: Direction) => {
+      dragX.set(0);
+      setDirection(nextDirection);
       setSelectedIndex((current) =>
         wrapIndex(current + nextDirection, images.length),
       );
-      window.requestAnimationFrame(() => {
-        dragX.set(0);
-        setMoving(false);
-      });
     },
-    [dragX, images.length, moving],
+    [dragX, images.length],
+  );
+
+  const move = useCallback(
+    (nextDirection: Direction) => {
+      if (images.length <= 1 || movingRef.current) return;
+
+      movingRef.current = true;
+      setDirection(nextDirection);
+      let finished = false;
+      const finishMove = () => {
+        if (finished) return;
+        finished = true;
+        moveAnimationRef.current?.stop();
+        moveAnimationRef.current = null;
+        if (moveFallbackRef.current !== null) {
+          window.clearTimeout(moveFallbackRef.current);
+          moveFallbackRef.current = null;
+        }
+        commitMove(nextDirection);
+        movingRef.current = false;
+      };
+
+      moveAnimationRef.current = animate(
+        dragX,
+        nextDirection === 1 ? -150 : 150,
+        {
+          duration: 0.18,
+          ease: [0.22, 0.8, 0.24, 1],
+          onComplete: finishMove,
+        },
+      );
+      moveFallbackRef.current = window.setTimeout(finishMove, 260);
+    },
+    [commitMove, dragX, images.length],
   );
 
   if (!images.length) {
@@ -120,12 +258,14 @@ export default function StackedImageDeck({
     );
   }
 
-  const selectedSource = images[selectedIndex];
-
   return (
     <div
+      ref={deckRef}
       data-stacked-deck
-      className={cn("group/gallery relative isolate", className)}
+      className={cn(
+        "group/gallery relative isolate grid place-items-center",
+        className,
+      )}
       role="region"
       aria-label={`${alt} gallery`}
       onKeyDown={(event) => {
@@ -144,128 +284,154 @@ export default function StackedImageDeck({
         }
       }}
     >
-      {backCards.map(({ depth, index }) => {
+      {cards.map(({ depth, hidden, index }) => {
         const source = images[index];
-        const side = depth % 2 === 0 ? -1 : 1;
-        const horizontal = side * (7 + depth * 4);
-        const rotation = side * (2.4 + depth * 0.7);
+        const isFront = depth === 0;
+        const backRotation = index % 2 ? 6 : -6;
+        const stackScale = isFront ? 1 : Math.max(0.85, 0.94 - depth * 0.04);
+        const ratio = ratios[source] ?? imageWidth / Math.max(1, imageHeight);
+        const cardSize = fitInsideDeck(ratio, bounds);
 
         return (
-          <motion.div
-            key={`back-${depth}-${index}-${source}`}
-            aria-hidden
-            className="absolute inset-0 overflow-hidden rounded-[inherit] drop-shadow-[0_16px_20px_rgba(15,23,42,.15)] dark:drop-shadow-[0_18px_24px_rgba(0,0,0,.42)]"
-            initial={false}
-            animate={{
-              x: horizontal,
-              y: depth * 8,
-              rotate: rotation,
-              scale: 1 - depth * 0.025,
-              opacity: 1 - depth * 0.1,
-            }}
-            transition={{
-              type: "spring",
-              stiffness: 420,
-              damping: 38,
-              mass: 0.72,
-            }}
+          <div
+            key={`${index}-${source}`}
+            className="pointer-events-none absolute inset-0 grid place-items-center"
             style={{
-              transformOrigin: side > 0 ? "88% 14%" : "12% 14%",
-              zIndex: visibleDepth - depth + 1,
+              zIndex: isFront ? 20 : hidden ? 0 : visibleDepth - depth + 5,
             }}
           >
-            <DeckPhoto
-              source={source}
-              alt=""
-              sizes={sizes}
-              quality={quality}
-              loading={depth <= 2 ? "eager" : "lazy"}
-              variant={index % 3}
-            />
-          </motion.div>
+            <motion.div
+              data-deck-card={isFront ? "front" : "back"}
+              tabIndex={isFront ? 0 : -1}
+              aria-hidden={!isFront}
+              className={cn(
+                "relative origin-bottom overflow-hidden rounded-md bg-transparent outline-none select-none",
+                isFront
+                  ? "pointer-events-auto cursor-grab touch-pan-y shadow-[0_12px_24px_-8px_rgba(12,35,36,.42)] focus-visible:ring-2 focus-visible:ring-teal-500 active:cursor-grabbing dark:shadow-[0_14px_28px_-8px_rgba(0,0,0,.68)]"
+                  : "pointer-events-none",
+                isFront && cardClassName,
+              )}
+              style={
+                isFront
+                  ? {
+                      ...cardSize,
+                      x: dragX,
+                      opacity: dragOpacity,
+                      rotate: dragRotate,
+                      willChange: "transform, opacity",
+                    }
+                  : {
+                      ...cardSize,
+                      opacity: hidden ? 0 : 1,
+                      rotate: hidden ? 0 : backRotation,
+                    }
+              }
+              initial={false}
+              animate={{ scale: hidden ? 0.9 : stackScale }}
+              transition={{
+                type: "spring",
+                stiffness: 400,
+                damping: 40,
+              }}
+              drag={isFront && images.length > 1 ? "x" : false}
+              dragConstraints={{ left: -150, right: 150 }}
+              dragMomentum={false}
+              onDragStart={() => {
+                draggedRef.current = true;
+              }}
+              onDrag={(_, info) => {
+                if (Math.abs(info.offset.x) < 8) return;
+                const previewDirection = info.offset.x < 0 ? 1 : -1;
+                if (previewDirection !== direction) {
+                  setDirection(previewDirection);
+                }
+              }}
+              onDragEnd={(_, info) => {
+                const shouldMove =
+                  Math.abs(info.offset.x) > 100 ||
+                  Math.abs(info.velocity.x) > 650;
+
+                if (shouldMove) {
+                  const gestureX =
+                    Math.abs(info.offset.x) > 24
+                      ? info.offset.x
+                      : info.velocity.x;
+                  commitMove(gestureX < 0 ? 1 : -1);
+                } else {
+                  animate(dragX, 0, {
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 40,
+                  });
+                }
+
+                window.setTimeout(() => {
+                  draggedRef.current = false;
+                }, 0);
+              }}
+              onClick={() => {
+                if (isFront && !draggedRef.current) {
+                  onImageClick?.(selectedIndex);
+                }
+              }}
+            >
+              <Image
+                src={source}
+                alt={isFront ? alt : ""}
+                fill
+                draggable={false}
+                sizes={sizes}
+                quality={resolvedQuality}
+                priority={priority}
+                loading="eager"
+                fetchPriority={priority ? "high" : "auto"}
+                decoding="async"
+                className={cn(
+                  "h-full w-full rounded-[inherit] object-contain select-none",
+                  imageClassName,
+                )}
+                onLoad={(event) => {
+                  const image = event.currentTarget;
+                  rememberRatio(
+                    source,
+                    image.naturalWidth / Math.max(1, image.naturalHeight),
+                  );
+                  void image
+                    .decode()
+                    .catch(() => undefined)
+                    .finally(() => markImageReady(source));
+                }}
+              />
+
+              {isFront &&
+                (labels?.[selectedIndex] ||
+                  showCounter ||
+                  images.length > 1) && (
+                  <>
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/45 to-transparent" />
+                    <div className="pointer-events-none absolute right-2.5 bottom-2.5 left-2.5 flex items-end justify-between gap-2">
+                      {labels?.[selectedIndex] ? (
+                        <span className="min-w-0 truncate rounded-md bg-black/52 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
+                          {labels[selectedIndex]}
+                        </span>
+                      ) : (
+                        <span />
+                      )}
+                      {(showCounter || images.length > 1) && (
+                        <span
+                          data-deck-counter
+                          className="shrink-0 rounded-md bg-black/52 px-2 py-1 text-[10px] font-semibold text-white tabular-nums backdrop-blur-sm"
+                        >
+                          {selectedIndex + 1}/{images.length}
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
+            </motion.div>
+          </div>
         );
       })}
-
-      <motion.div
-        data-deck-card="front"
-        tabIndex={0}
-        className={cn(
-          "absolute inset-0 z-10 cursor-grab touch-pan-y overflow-hidden rounded-[inherit] drop-shadow-[0_20px_22px_rgba(15,23,42,.17)] outline-none select-none focus-visible:ring-2 focus-visible:ring-sky-400 active:cursor-grabbing dark:drop-shadow-[0_24px_28px_rgba(0,0,0,.46)]",
-          cardClassName,
-        )}
-        style={{
-          x: dragX,
-          rotate: dragRotate,
-          opacity: dragOpacity,
-          scale: dragScale,
-        }}
-        drag={images.length > 1 && !moving ? "x" : false}
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.58}
-        dragMomentum={false}
-        dragTransition={{ bounceStiffness: 520, bounceDamping: 38 }}
-        whileTap={images.length > 1 ? { cursor: "grabbing" } : undefined}
-        onDragStart={() => {
-          draggedRef.current = true;
-        }}
-        onDrag={(_, info) => {
-          if (Math.abs(info.offset.x) < 6) return;
-          const previewDirection = info.offset.x < 0 ? 1 : -1;
-          if (previewDirection !== direction) setDirection(previewDirection);
-        }}
-        onDragEnd={(_, info) => {
-          const shouldMove =
-            Math.abs(info.offset.x) > 74 || Math.abs(info.velocity.x) > 480;
-          if (shouldMove) {
-            void move(info.offset.x < 0 ? 1 : -1);
-          } else {
-            animate(dragX, 0, {
-              type: "spring",
-              stiffness: 520,
-              damping: 38,
-              mass: 0.68,
-            });
-          }
-          window.setTimeout(() => {
-            draggedRef.current = false;
-          }, 0);
-        }}
-        onTap={() => {
-          if (!draggedRef.current) onImageClick?.(selectedIndex);
-        }}
-      >
-        <DeckPhoto
-          source={selectedSource}
-          alt={alt}
-          sizes={sizes}
-          quality={quality}
-          priority={priority && selectedIndex === 0}
-          loading={priority || selectedIndex === 0 ? "eager" : "lazy"}
-          fetchPriority={priority && selectedIndex === 0 ? "high" : "auto"}
-          variant={selectedIndex % 3}
-          imageClassName={imageClassName}
-        />
-
-        {(labels?.[selectedIndex] || showCounter || images.length > 1) && (
-          <>
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/42 to-transparent" />
-            <div className="pointer-events-none absolute right-2.5 bottom-2.5 left-2.5 flex items-end justify-between gap-2">
-              {labels?.[selectedIndex] ? (
-                <span className="min-w-0 truncate rounded-full bg-black/42 px-2.5 py-1 text-[10px] font-semibold text-white/92 backdrop-blur-md">
-                  {labels[selectedIndex]}
-                </span>
-              ) : (
-                <span />
-              )}
-              {(showCounter || images.length > 1) && (
-                <span className="shrink-0 rounded-full bg-black/42 px-2 py-1 text-[10px] font-semibold text-white tabular-nums backdrop-blur-md">
-                  {selectedIndex + 1}/{images.length}
-                </span>
-              )}
-            </div>
-          </>
-        )}
-      </motion.div>
 
       {images.length > 1 && (
         <>
@@ -275,7 +441,7 @@ export default function StackedImageDeck({
               event.stopPropagation();
               move(-1);
             }}
-            className="absolute top-1/2 left-2 z-20 hidden size-8 -translate-y-1/2 place-items-center rounded-full bg-zinc-950/44 text-white opacity-0 shadow-lg backdrop-blur-md transition-all duration-200 group-hover/gallery:opacity-100 hover:scale-105 hover:bg-zinc-950/70 active:scale-95 sm:grid"
+            className="absolute top-1/2 left-2 z-30 hidden size-8 -translate-y-1/2 place-items-center rounded-full bg-zinc-950/58 text-white opacity-0 shadow-md backdrop-blur-sm transition duration-150 group-hover/gallery:opacity-100 hover:bg-zinc-950/80 active:scale-95 sm:grid"
             aria-label="Previous image"
           >
             <ChevronLeft className="size-4" />
@@ -286,117 +452,13 @@ export default function StackedImageDeck({
               event.stopPropagation();
               move(1);
             }}
-            className="absolute top-1/2 right-2 z-20 hidden size-8 -translate-y-1/2 place-items-center rounded-full bg-zinc-950/44 text-white opacity-0 shadow-lg backdrop-blur-md transition-all duration-200 group-hover/gallery:opacity-100 hover:scale-105 hover:bg-zinc-950/70 active:scale-95 sm:grid"
+            className="absolute top-1/2 right-2 z-30 hidden size-8 -translate-y-1/2 place-items-center rounded-full bg-zinc-950/58 text-white opacity-0 shadow-md backdrop-blur-sm transition duration-150 group-hover/gallery:opacity-100 hover:bg-zinc-950/80 active:scale-95 sm:grid"
             aria-label="Next image"
           >
             <ChevronRight className="size-4" />
           </button>
         </>
       )}
-    </div>
-  );
-}
-
-function PhotoSurface({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="relative h-full w-full overflow-hidden">{children}</div>
-  );
-}
-
-function DeckPhoto({
-  source,
-  alt,
-  sizes,
-  quality,
-  loading,
-  priority = false,
-  fetchPriority = "auto",
-  variant,
-  imageClassName,
-}: {
-  source: string;
-  alt: string;
-  sizes: string;
-  quality: number;
-  loading: "eager" | "lazy";
-  priority?: boolean;
-  fetchPriority?: "high" | "low" | "auto";
-  variant: number;
-  imageClassName?: string;
-}) {
-  const imageRef = useRef<HTMLImageElement>(null);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    setLoaded(false);
-    const image = imageRef.current;
-    if (!image) return;
-
-    let cancelled = false;
-    const markReady = () => {
-      if (!cancelled) setLoaded(true);
-    };
-
-    if (image.complete && image.naturalWidth > 0) {
-      markReady();
-    } else {
-      image.addEventListener("load", markReady, { once: true });
-      image.addEventListener("error", markReady, { once: true });
-      void image.decode().then(markReady, markReady);
-    }
-
-    return () => {
-      cancelled = true;
-      image.removeEventListener("load", markReady);
-      image.removeEventListener("error", markReady);
-    };
-  }, [source]);
-
-  return (
-    <PhotoSurface>
-      {!loaded && <PhotoSkeleton variant={variant} />}
-      <Image
-        ref={imageRef}
-        src={source}
-        alt={alt}
-        fill
-        draggable={false}
-        sizes={sizes}
-        quality={quality}
-        priority={priority}
-        loading={loading}
-        fetchPriority={fetchPriority}
-        className={cn(
-          "pointer-events-none object-contain transition-[opacity,filter] duration-300 select-none",
-          loaded ? "blur-0 opacity-100" : "opacity-0 blur-md",
-          imageClassName,
-        )}
-        onLoad={() => setLoaded(true)}
-        onError={() => setLoaded(true)}
-        style={{ imageOrientation: "from-image" }}
-      />
-    </PhotoSurface>
-  );
-}
-
-function PhotoSkeleton({ variant }: { variant: number }) {
-  return (
-    <div
-      aria-hidden
-      className="bg-muted pointer-events-none absolute inset-0 z-[1] overflow-hidden"
-    >
-      <div
-        className={cn(
-          "absolute inset-0 animate-pulse",
-          variant === 0 &&
-            "bg-[linear-gradient(165deg,hsl(var(--muted))_0_52%,hsl(var(--border))_53_67%,hsl(var(--muted-foreground)/.14)_68%)]",
-          variant === 1 &&
-            "bg-[linear-gradient(185deg,hsl(var(--muted))_0_44%,hsl(var(--border))_45_70%,hsl(var(--muted-foreground)/.12)_71%)]",
-          variant === 2 &&
-            "bg-[radial-gradient(circle_at_30%_38%,hsl(var(--border))_0_13%,transparent_14%),linear-gradient(155deg,hsl(var(--muted))_0_58%,hsl(var(--border))_59%)]",
-        )}
-      />
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.6s_infinite] bg-gradient-to-r from-transparent via-white/22 to-transparent" />
     </div>
   );
 }

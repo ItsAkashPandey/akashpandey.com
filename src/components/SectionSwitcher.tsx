@@ -2,10 +2,10 @@ import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
 export const sectionSwitcherListClass =
-  "border-border/55 bg-muted/45 grid h-auto w-full grid-cols-2 gap-2 rounded-[22px] border p-2";
+  "border-border/55 bg-muted/45 grid h-auto w-full grid-cols-2 gap-2 rounded-lg border p-2";
 
 export const sectionSwitcherTriggerClass =
-  "group flex h-auto min-w-0 items-center justify-start gap-2 rounded-[16px] px-2 py-3.5 text-left text-sm transition-all sm:gap-3 sm:px-3 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-[0_9px_26px_rgba(15,23,42,.10)]";
+  "group flex h-auto min-w-0 items-center justify-start gap-2 rounded-md px-2 py-3.5 text-left text-sm transition-colors sm:gap-3 sm:px-3 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-[3px_4px_0_hsl(var(--foreground)/.08)]";
 
 const toneClasses = {
   sky: "bg-sky-500/11 text-sky-700 dark:text-sky-300",
@@ -31,7 +31,7 @@ export function SectionSwitcherVisual({
     <>
       <span
         className={cn(
-          "grid size-10 shrink-0 place-items-center rounded-[13px] sm:size-11 sm:rounded-[14px]",
+          "grid size-10 shrink-0 place-items-center rounded-md sm:size-11",
           toneClasses[tone],
         )}
       >

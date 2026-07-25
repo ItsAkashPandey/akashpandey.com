@@ -246,8 +246,8 @@ export default function PublicationsWithSearch({ publications }: Props) {
     sortBy !== "newest";
 
   return (
-    <div className="grid min-w-0 gap-6 lg:grid-cols-[248px_minmax(0,1fr)] lg:items-start xl:gap-8">
-      <aside className="border-border/60 bg-background/88 supports-[backdrop-filter]:bg-background/72 rounded-[24px] border p-4 shadow-[0_16px_45px_rgba(15,23,42,0.06)] backdrop-blur-2xl lg:sticky lg:top-24">
+    <div className="grid min-w-0 gap-5 lg:grid-cols-[232px_minmax(0,1fr)] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-8">
+      <aside className="filter-rail rounded-xl p-4 lg:sticky lg:top-24">
         <div className="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -264,7 +264,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
             size="icon"
             onClick={resetFilters}
             disabled={!isFiltered}
-            className="text-muted-foreground hover:text-foreground size-9 rounded-xl"
+            className="text-muted-foreground hover:text-foreground size-9 rounded-lg"
             title="Reset filters"
           >
             <RotateCcw className="size-3.5" />
@@ -276,7 +276,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
           <div className="flex min-w-0 flex-col gap-1.5">
             <Label
               htmlFor="publication-search"
-              className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
+              className="text-muted-foreground px-1 text-[9px] font-semibold uppercase"
             >
               Search
             </Label>
@@ -290,13 +290,13 @@ export default function PublicationsWithSearch({ publications }: Props) {
                 placeholder="Title, author, venue"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                className="border-border/60 bg-background/70 h-10 rounded-xl pl-10 text-sm shadow-none"
+                className="border-border/60 bg-background/70 h-10 rounded-lg pl-10 text-sm shadow-none"
               />
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <p className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase">
+            <p className="text-muted-foreground px-1 text-[9px] font-semibold uppercase">
               Format
             </p>
             <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
@@ -313,7 +313,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
                       )
                     }
                     className={cn(
-                      "group flex min-w-0 items-center gap-2.5 rounded-xl border p-2 text-left transition-all",
+                      "group flex min-w-0 items-center gap-2.5 rounded-lg border p-2 text-left transition-colors",
                       selectedType === type
                         ? "border-foreground/25 bg-foreground/[0.055] shadow-sm"
                         : "hover:border-border/70 hover:bg-muted/55 border-transparent",
@@ -321,7 +321,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
                   >
                     <span
                       className={cn(
-                        "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                        "flex size-8 shrink-0 items-center justify-center rounded-md",
                         config.soft,
                       )}
                     >
@@ -345,13 +345,13 @@ export default function PublicationsWithSearch({ publications }: Props) {
             <div className="flex min-w-0 flex-col gap-1.5">
               <Label
                 htmlFor="year-filter"
-                className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
+                className="text-muted-foreground px-1 text-[9px] font-semibold uppercase"
               >
                 Year
               </Label>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
                 <SelectTrigger
-                  className="border-border/60 bg-background/70 h-10 w-full rounded-xl shadow-none"
+                  className="border-border/60 bg-background/70 h-10 w-full rounded-lg shadow-none"
                   id="year-filter"
                 >
                   <CalendarDays className="text-muted-foreground mr-2 size-3.5 shrink-0" />
@@ -371,7 +371,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
             <div className="flex min-w-0 flex-col gap-1.5">
               <Label
                 htmlFor="sort-filter"
-                className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
+                className="text-muted-foreground px-1 text-[9px] font-semibold uppercase"
               >
                 Order
               </Label>
@@ -380,7 +380,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
                 onValueChange={(value) => setSortBy(value as SortOption)}
               >
                 <SelectTrigger
-                  className="border-border/60 bg-background/70 h-10 w-full rounded-xl shadow-none"
+                  className="border-border/60 bg-background/70 h-10 w-full rounded-lg shadow-none"
                   id="sort-filter"
                 >
                   <ArrowUpDown className="text-muted-foreground mr-2 size-3.5 shrink-0" />
@@ -399,7 +399,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
 
       <div className="min-w-0 space-y-4">
         {filtered.length === 0 ? (
-          <div className="border-border/70 bg-background/60 text-muted-foreground rounded-2xl border border-dashed px-6 py-16 text-center text-sm">
+          <div className="bg-muted/55 text-muted-foreground rounded-xl px-6 py-16 text-center text-sm">
             No publications found matching your criteria.
           </div>
         ) : (
@@ -427,9 +427,6 @@ function PublicationCard({
   query: string;
 }) {
   const typeConfig = typeStyles[publication.type];
-  const statusConfig = statusStyles[publication.status];
-  const TypeIcon = typeConfig.Icon;
-  const StatusIcon = statusConfig.Icon;
   const venue =
     publication.journal ||
     publication.conference ||
@@ -442,70 +439,62 @@ function PublicationCard({
   const actionHref = publication.preprint || publication.doi;
   const actionLabel = publication.preprint ? "Open preprint" : "Open paper";
   const hasMedia = Boolean(publication.media?.length);
+  const recordTone = [
+    "record-surface--sage",
+    "record-surface--blue",
+    "record-surface--coral",
+  ][index % 3];
 
   return (
     <article
-      className="group border-border/60 bg-background/80 hover:border-border relative overflow-hidden rounded-2xl border shadow-sm backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
-      style={{ animation: `slideIn 0.45s ease-out ${index * 0.06}s both` }}
+      className={cn(
+        "record-surface group relative overflow-hidden rounded-xl p-5 transition-shadow duration-200 hover:shadow-[10px_16px_42px_rgba(12,35,36,0.11)] sm:p-6",
+        recordTone,
+      )}
     >
-      <div className={cn("absolute inset-y-0 left-0 w-1.5", typeConfig.rail)} />
+      <div
+        className={cn(
+          "absolute top-0 left-7 h-[3px] w-12 rounded-b-full",
+          typeConfig.rail,
+        )}
+      />
+
+      <header className="border-border/65 border-b pb-4">
+        <h2 className="group-hover:text-primary max-w-[34ch] text-xl leading-snug font-semibold text-balance transition-colors sm:text-2xl lg:max-w-none">
+          <HighlightText text={publication.title} query={query} />
+        </h2>
+      </header>
 
       <div
         className={cn(
-          "grid gap-0",
-          hasMedia && "md:grid-cols-[minmax(0,1fr)_320px]",
+          "grid gap-6 pt-5",
+          hasMedia && "md:grid-cols-[minmax(0,1fr)_300px] md:items-start",
         )}
       >
-        <div className="flex min-w-0 flex-col gap-5 p-5 pl-6 sm:p-6 sm:pl-8">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={cn(
-                "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold",
-                typeConfig.chip,
-              )}
-            >
-              <TypeIcon className="size-3.5" />
-              <HighlightText text={typeConfig.label} query={query} />
-            </span>
+        <div className="flex min-w-0 flex-col gap-5">
+          <PublicationMetadata publication={publication} query={query} />
 
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 text-xs font-medium",
-                statusConfig.className,
-              )}
-            >
-              <span className={cn("size-1.5 rounded-full", statusConfig.dot)} />
-              <StatusIcon className="size-3.5" />
-              <HighlightText text={publication.status} query={query} />
-            </span>
-
-            <span className="text-muted-foreground inline-flex items-center gap-1.5 text-xs font-medium">
-              <CalendarDays className="size-3.5" />
-              <HighlightText text={publication.year} query={query} />
-            </span>
-          </div>
-
-          <div className="space-y-3">
-            <h2 className="group-hover:text-primary text-xl leading-tight font-semibold tracking-tight text-balance transition-colors sm:text-2xl">
-              <HighlightText text={publication.title} query={query} />
-            </h2>
-            <p className="text-muted-foreground text-sm leading-relaxed sm:text-[15px]">
+          <div>
+            <p className="text-muted-foreground text-[9px] font-semibold uppercase">
+              Authors
+            </p>
+            <p className="mt-2 text-sm leading-relaxed sm:text-[15px]">
               <HighlightText text={publication.authors} query={query} />
             </p>
           </div>
 
           {venue && (
-            <div className="border-border/50 bg-muted/25 flex items-center gap-3 rounded-xl border p-3">
+            <div className="border-border/65 flex items-center gap-3 border-y py-4">
               {logo ? (
                 <img
                   src={logo}
                   alt={venue}
-                  className="size-12 shrink-0 rounded-lg bg-white object-contain p-1 shadow-sm"
+                  className="bg-card size-12 shrink-0 rounded-md object-contain p-1"
                 />
               ) : (
                 <span
                   className={cn(
-                    "flex size-12 shrink-0 items-center justify-center rounded-lg",
+                    "flex size-12 shrink-0 items-center justify-center rounded-md",
                     typeConfig.soft,
                   )}
                 >
@@ -516,12 +505,12 @@ function PublicationCard({
                 <p className="text-sm leading-snug font-semibold">
                   <HighlightText text={venue} query={query} />
                 </p>
-                <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px]">
                   {publication.impactFactor && (
-                    <span>Impact factor {publication.impactFactor}</span>
+                    <span>IF {publication.impactFactor}</span>
                   )}
                   {publication.journalQuartile && (
-                    <span className="font-medium text-emerald-700 dark:text-emerald-300">
+                    <span className="font-semibold text-emerald-700 dark:text-emerald-300">
                       {publication.journalQuartile}
                     </span>
                   )}
@@ -534,19 +523,19 @@ function PublicationCard({
             </div>
           )}
 
-          <div className="flex flex-wrap gap-2 lg:flex-col">
+          <div>
             {actionHref ? (
               <Link
                 href={actionHref}
                 target="_blank"
                 rel="noreferrer"
-                className="bg-foreground text-background inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold shadow-[3px_4px_0_hsl(var(--foreground)/.13)] transition-[background-color,box-shadow] hover:shadow-[2px_3px_0_hsl(var(--foreground)/.18)]"
               >
                 <span>{actionLabel}</span>
                 <ExternalLink className="size-4" />
               </Link>
             ) : (
-              <span className="text-muted-foreground inline-flex h-10 items-center rounded-xl border border-dashed px-4 text-sm">
+              <span className="text-muted-foreground inline-flex h-10 items-center text-xs">
                 Link pending
               </span>
             )}
@@ -554,10 +543,52 @@ function PublicationCard({
         </div>
 
         {hasMedia && publication.media && (
-          <PublicationMediaPreview media={publication.media} />
+          <div className="min-w-0">
+            <PublicationMediaPreview media={publication.media} />
+          </div>
         )}
       </div>
     </article>
+  );
+}
+
+function PublicationMetadata({
+  publication,
+  query,
+}: {
+  publication: Publication;
+  query: string;
+}) {
+  const typeConfig = typeStyles[publication.type];
+  const statusConfig = statusStyles[publication.status];
+  const TypeIcon = typeConfig.Icon;
+  const StatusIcon = statusConfig.Icon;
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-[10px]">
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-semibold",
+          typeConfig.chip,
+        )}
+      >
+        <TypeIcon className="size-3" />
+        <HighlightText text={typeConfig.label} query={query} />
+      </span>
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 font-medium",
+          statusConfig.className,
+        )}
+      >
+        <StatusIcon className="size-3" />
+        <HighlightText text={publication.status} query={query} />
+      </span>
+      <span className="text-muted-foreground inline-flex items-center gap-1.5 font-medium">
+        <CalendarDays className="size-3" />
+        <HighlightText text={publication.year} query={query} />
+      </span>
+    </div>
   );
 }
 
@@ -567,7 +598,7 @@ function PublicationMediaPreview({ media }: { media: PublicationMedia[] }) {
 
   return (
     <>
-      <aside className="border-border/50 bg-muted/15 flex min-h-[290px] items-center justify-center overflow-visible border-t p-5 md:border-t-0 md:border-l">
+      <div className="flex min-h-[250px] items-center justify-center overflow-visible">
         <StackedImageDeck
           images={media.map((item) => item.image)}
           labels={media.map((item) => item.label)}
@@ -578,10 +609,10 @@ function PublicationMediaPreview({ media }: { media: PublicationMedia[] }) {
           quality={88}
           idleQuality={88}
           stackSize={Math.min(3, media.length)}
-          className="h-[250px] w-full max-w-[280px] rounded-xl"
+          className="h-[250px] w-full max-w-[300px]"
           onImageClick={setLightboxIndex}
         />
-      </aside>
+      </div>
       {lightboxIndex !== null && (
         <ImageLightbox
           images={fullImages}

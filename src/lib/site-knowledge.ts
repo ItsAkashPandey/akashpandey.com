@@ -96,7 +96,7 @@ function readProfileText() {
   return cachedProfileText;
 }
 
-function cleanText(input: unknown, limit = 900) {
+function cleanText(input: unknown, limit = 650) {
   return String(input ?? "")
     .replace(/\s+/g, " ")
     .trim()
@@ -304,7 +304,7 @@ export function getSiteKnowledgeDocs(): KnowledgeDoc[] {
       kind: "profile",
       title: "Akash Profile",
       href: "/",
-      text: readProfileText(),
+      text: cleanText(readProfileText(), 1800),
       keywords: [
         "akash",
         "profile",
@@ -508,7 +508,7 @@ function intentActions(query: string): ChatAction[] {
 
 export function retrieveSiteKnowledge(
   query: string,
-  limit = 8,
+  limit = 5,
 ): RetrievalResult {
   const tokens = tokenize(query);
   const intentKind = detectIntentKind(query);

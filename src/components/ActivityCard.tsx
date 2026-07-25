@@ -184,20 +184,20 @@ export function ActivityCard({
   );
 
   return (
-    <article className="group border-border/60 bg-card/62 hover:border-border relative max-w-full overflow-hidden rounded-[28px] border p-4 shadow-[0_14px_40px_rgba(15,23,42,0.06)] transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_55px_rgba(15,23,42,0.10)] sm:p-6 dark:bg-white/[0.035] dark:shadow-[0_16px_48px_rgba(0,0,0,0.22)]">
-      <div className="bg-foreground absolute top-0 left-8 h-[3px] w-12 rounded-b-full opacity-80" />
+    <article className="record-surface group relative max-w-full overflow-hidden rounded-xl p-4 transition-shadow duration-200 hover:shadow-[10px_16px_42px_rgba(12,35,36,0.11)] sm:p-6">
+      <div className="bg-foreground/45 absolute top-0 left-8 h-[3px] w-12 rounded-b-full" />
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-[300px_1fr] sm:items-center">
         {/* Left Column — Date, Location & Photo */}
         <div className="flex flex-col items-center gap-3 sm:items-start">
           {/* Date & Location */}
           <div className="flex w-full flex-col gap-1.5">
-            <div className="text-foreground inline-flex items-center gap-1.5 text-xs font-semibold">
+            <div className="text-foreground inline-flex items-center gap-1.5 text-[11px] font-medium">
               <Calendar className="size-3.5" />
               <time dateTime={date}>{formattedDate}</time>
             </div>
             {location && (
-              <div className="text-muted-foreground/80 inline-flex items-center gap-1.5 text-xs">
+              <div className="text-muted-foreground inline-flex items-center gap-1.5 text-[11px]">
                 <MapPin className="size-3.5" />
                 <span>
                   <HighlightText text={location} query={searchQuery} />
@@ -219,7 +219,7 @@ export function ActivityCard({
         {/* Right Column — Title, Description, Links */}
         <div className="flex min-w-0 flex-col gap-3">
           {/* Title */}
-          <h2 className="group-hover:text-primary text-xl leading-snug font-bold tracking-tight transition-colors duration-200">
+          <h2 className="group-hover:text-primary text-xl leading-snug font-bold transition-colors duration-200 sm:text-2xl">
             {href ? (
               <Link
                 href={href}
@@ -238,7 +238,7 @@ export function ActivityCard({
           <div className="bg-border h-px w-full" />
 
           {/* Description & Collaborators */}
-          <div className="prose text-muted-foreground dark:prose-invert max-w-full text-left font-sans text-sm leading-relaxed sm:text-justify">
+          <div className="prose text-muted-foreground dark:prose-invert max-w-full text-left font-sans text-sm leading-relaxed">
             {(() => {
               // Split by "With: " (allowing for newlines before it)
               const parts = description.split(/\n+\s*With:\s*/);
@@ -257,7 +257,7 @@ export function ActivityCard({
                   )}
                   {collaborators && (
                     <div className="border-primary/10 mt-4 flex flex-col gap-2 border-t pt-3 sm:flex-row sm:items-center dark:border-white/5">
-                      <div className="text-primary/70 dark:text-primary/60 bg-primary/5 dark:bg-primary/10 flex w-fit items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase">
+                      <div className="text-primary bg-primary/8 dark:bg-primary/12 flex w-fit items-center gap-1.5 rounded-md px-2 py-0.5 text-[9px] font-semibold uppercase">
                         <Users className="size-3" />
                         <span>With</span>
                       </div>
@@ -279,7 +279,7 @@ export function ActivityCard({
             <div className="flex flex-row flex-wrap items-center gap-2 pt-1">
               {links.map((link, idx) => (
                 <Link href={link?.href} key={idx} target="_blank">
-                  <Badge className="flex gap-2 px-2.5 py-1 text-[10px] backdrop-blur-sm transition-all duration-200 hover:scale-105 hover:shadow-sm">
+                  <Badge className="flex gap-2 px-2.5 py-1 text-[10px] transition-colors duration-150">
                     <Icon name={link.icon} className="size-3" />
                     {link.name}
                   </Badge>

@@ -4,6 +4,7 @@ import Providers from "@/components/Providers";
 import { cn } from "@/lib/utils";
 import type { Metadata, Viewport } from "next";
 import { Calistoga, Inter } from "next/font/google";
+import "yet-another-react-lightbox/styles.css";
 import "./globals.css";
 
 const inter = Inter({

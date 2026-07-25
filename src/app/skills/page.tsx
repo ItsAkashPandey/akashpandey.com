@@ -137,7 +137,7 @@ export default function SkillsPage() {
         <h1 className="title">my skills.</h1>
       </header>
 
-      <section className="border-border/55 bg-card/42 overflow-hidden rounded-[28px] border p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">
+      <section className="paper-band paper-band--paper">
         <div
           className={cn(sectionSwitcherListClass, "mb-6")}
           role="tablist"
@@ -193,11 +193,8 @@ export default function SkillsPage() {
               />
             </div>
           ) : (
-            <div className="border-border/50 bg-muted/25 relative hidden aspect-square w-[210px] overflow-hidden rounded-[26px] border lg:grid lg:place-items-center">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(59,130,246,.14),transparent_32%),radial-gradient(circle_at_20%_80%,rgba(16,185,129,.12),transparent_35%)]" />
-              <div className="border-border/60 bg-background/80 relative grid size-24 place-items-center rounded-[28px] border shadow-[0_20px_55px_rgba(15,23,42,.12)] backdrop-blur-xl">
-                <Code2 className="size-9" strokeWidth={1.5} />
-              </div>
+            <div className="bg-muted/45 relative hidden aspect-square w-[210px] overflow-hidden rounded-lg lg:grid lg:place-items-center">
+              <Code2 className="text-primary size-12" strokeWidth={1.3} />
             </div>
           )}
         </div>
@@ -215,13 +212,13 @@ export default function SkillsPage() {
           return (
             <section
               key={subcategory.name}
-              className="border-border/55 bg-card/35 min-w-0 rounded-[24px] border p-4 shadow-[0_14px_40px_rgba(15,23,42,0.045)] sm:p-5"
+              className="border-border/70 min-w-0 border-t pt-5"
             >
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex items-center gap-3">
                   <span
                     className={cn(
-                      "grid size-9 place-items-center rounded-xl",
+                      "grid size-9 place-items-center rounded-md",
                       config.surface,
                       config.accent,
                     )}
@@ -247,7 +244,7 @@ export default function SkillsPage() {
                     <article
                       key={tool.name}
                       id={slugify(tool.name)}
-                      className="border-border/55 bg-background/72 group/tool overflow-hidden rounded-[19px] border shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(15,23,42,.09)]"
+                      className="record-surface group/tool overflow-hidden rounded-lg transition-shadow hover:shadow-[7px_10px_26px_rgba(12,35,36,.1)]"
                     >
                       <button
                         type="button"
@@ -278,7 +275,7 @@ export default function SkillsPage() {
                                   )}
                               </span>
                               {interactive && (
-                                <span className="bg-muted text-muted-foreground group-hover/tool:text-foreground inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[9px] font-semibold transition-colors">
+                                <span className="bg-muted text-muted-foreground group-hover/tool:text-foreground inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[9px] font-semibold transition-colors">
                                   <GalleryHorizontalEnd className="size-3" />
                                   photos
                                 </span>

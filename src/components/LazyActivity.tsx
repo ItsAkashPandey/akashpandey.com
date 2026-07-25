@@ -92,37 +92,37 @@ export default function LazyActivity({
 function ActivityCardSkeleton() {
   return (
     <div
-      className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/40 p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35),0_8px_32px_rgba(0,0,0,0.04)] backdrop-blur-2xl sm:p-7 dark:border-white/10 dark:bg-white/[0.08]"
+      className="record-surface relative overflow-hidden rounded-xl p-4 sm:p-7"
       aria-hidden
     >
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-[300px_1fr] sm:items-center">
         <div className="flex flex-col items-center gap-3 sm:items-start">
           <div className="flex w-full flex-col gap-2">
-            <Skeleton className="h-3 w-28 rounded-full" />
-            <Skeleton className="h-3 w-40 rounded-full" />
+            <Skeleton className="h-3 w-28 rounded-md" />
+            <Skeleton className="h-3 w-40 rounded-md" />
           </div>
 
           <div className="relative grid h-[200px] w-full max-w-[280px] place-items-center sm:h-[220px] sm:max-w-[300px]">
-            <Skeleton className="bg-muted/50 absolute h-[200px] w-[86%] rotate-[-6deg] rounded-xl shadow-lg sm:h-[220px]" />
-            <Skeleton className="bg-muted/60 absolute h-[200px] w-[90%] rotate-[5deg] rounded-xl shadow-lg sm:h-[220px]" />
-            <div className="absolute h-[200px] w-full max-w-[280px] overflow-hidden rounded-xl border border-white/60 bg-white p-2 shadow-xl sm:h-[220px] sm:max-w-[300px]">
-              <Skeleton className="bg-muted/70 h-full w-full rounded-lg" />
+            <Skeleton className="bg-muted/55 absolute h-[176px] w-[86%] rotate-[-6deg] rounded-lg sm:h-[196px]" />
+            <Skeleton className="bg-muted/65 absolute h-[176px] w-[90%] rotate-[5deg] rounded-lg sm:h-[196px]" />
+            <div className="absolute h-[176px] w-full max-w-[280px] overflow-hidden rounded-lg sm:h-[196px] sm:max-w-[300px]">
+              <Skeleton className="bg-muted/75 h-full w-full rounded-lg" />
             </div>
           </div>
         </div>
 
         <div className="flex min-w-0 flex-col gap-3">
-          <Skeleton className="h-6 w-4/5 rounded-full" />
-          <Skeleton className="h-0.5 w-10 rounded-full" />
+          <Skeleton className="h-6 w-4/5 rounded-md" />
+          <Skeleton className="h-0.5 w-10 rounded-md" />
           <div className="flex flex-col gap-2">
-            <Skeleton className="h-3.5 w-full rounded-full" />
-            <Skeleton className="h-3.5 w-[92%] rounded-full" />
-            <Skeleton className="h-3.5 w-[86%] rounded-full" />
-            <Skeleton className="h-3.5 w-[64%] rounded-full" />
+            <Skeleton className="h-3.5 w-full rounded-md" />
+            <Skeleton className="h-3.5 w-[92%] rounded-md" />
+            <Skeleton className="h-3.5 w-[86%] rounded-md" />
+            <Skeleton className="h-3.5 w-[64%] rounded-md" />
           </div>
           <div className="flex gap-2 pt-1">
-            <Skeleton className="h-6 w-20 rounded-full" />
-            <Skeleton className="h-6 w-16 rounded-full" />
+            <Skeleton className="h-6 w-20 rounded-md" />
+            <Skeleton className="h-6 w-16 rounded-md" />
           </div>
         </div>
       </div>

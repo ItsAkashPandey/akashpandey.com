@@ -28,13 +28,13 @@ export default function Header() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="border-border/10 bg-background/75 sticky top-0 z-50 border-b backdrop-blur-md">
+    <header className="border-border/70 bg-background/92 sticky top-0 z-50 border-b backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-5 py-3.5 sm:px-8 lg:px-10">
         <nav className="flex items-center justify-between">
           {/* Desktop Navigation */}
           <ul className="hidden gap-8 md:flex">
             {navLinks.map((nav, id) => (
-              <li key={id} className="link font-medium">
+              <li key={id} className="link text-sm font-medium">
                 <Link href={nav.href} title={nav.title}>
                   {nav.name}
                 </Link>

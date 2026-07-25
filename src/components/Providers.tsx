@@ -1,10 +1,13 @@
 "use client";
 
 import { ChatProvider } from "@/contexts/ChatContext";
+import dynamic from "next/dynamic";
 import { ThemeProvider, useTheme } from "next-themes";
 import React, { useEffect } from "react";
 import { Toaster } from "sonner";
-import Chat from "./Chat";
+import IntroLoader from "./IntroLoader";
+
+const Chat = dynamic(() => import("./Chat"), { ssr: false });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +17,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       defaultTheme="light"
       disableTransitionOnChange
     >
+      <IntroLoader />
       <ThemeColorUpdater />
       <ChatProvider>
         {children}
