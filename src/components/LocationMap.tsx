@@ -4,7 +4,7 @@ import {
   createResearchTrafficLayer,
   researchTrafficLayerId,
 } from "@/lib/map-traffic-3d";
-import { Info, LocateFixed, Navigation } from "lucide-react";
+import { LocateFixed, Navigation } from "lucide-react";
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl";
 import Image from "next/image";
 import { useTheme } from "next-themes";
@@ -120,6 +120,8 @@ export default function LocationMap() {
         style: resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE,
         center: [78.5, 22.8],
         zoom: 3.25,
+        minZoom: 2.5,
+        maxZoom: 6.5,
         pitch: 0,
         bearing: 0,
         dragPan: true,
@@ -341,17 +343,6 @@ export default function LocationMap() {
       <div className="bg-background/78 text-muted-foreground/80 absolute right-2 bottom-2 rounded-md border border-white/5 px-2 py-1 font-mono text-[10px] tabular-nums shadow-sm backdrop-blur-md">
         {AKASH_LOCATION[1].toFixed(6)}°N, {AKASH_LOCATION[0].toFixed(6)}°E
       </div>
-
-      <a
-        href="/models/attribution.txt"
-        target="_blank"
-        rel="noreferrer"
-        aria-label="Map and model credits"
-        title="Map and model credits"
-        className="bg-background/72 text-muted-foreground hover:text-foreground absolute bottom-2 left-2 grid size-6 place-items-center rounded-full backdrop-blur-md transition-colors"
-      >
-        <Info className="size-3.5" />
-      </a>
     </div>
   );
 }

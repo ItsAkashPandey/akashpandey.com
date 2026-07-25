@@ -1,10 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { AnimatePresence, motion } from "framer-motion";
+import { animate, motion, useMotionValue, useTransform } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface StackedImageDeckProps {
   images: string[];
@@ -31,31 +31,6 @@ function wrapIndex(index: number, total: number) {
   return ((index % total) + total) % total;
 }
 
-const cardVariants = {
-  enter: (direction: Direction) => ({
-    x: direction === 1 ? "16%" : "-16%",
-    rotate: direction === 1 ? 3.5 : -3.5,
-    opacity: 0.55,
-    scale: 0.985,
-  }),
-  center: {
-    x: 0,
-    rotate: 0,
-    opacity: 1,
-    scale: 1,
-  },
-  exit: (direction: Direction) => ({
-    x: direction === 1 ? "-118%" : "118%",
-    rotate: direction === 1 ? -7 : 7,
-    opacity: 0,
-    scale: 0.965,
-    transition: {
-      duration: 0.28,
-      ease: [0.32, 0.72, 0, 1] as [number, number, number, number],
-    },
-  }),
-};
-
 export default function StackedImageDeck({
   images,
   alt = "Image",
@@ -71,12 +46,21 @@ export default function StackedImageDeck({
   onImageClick,
 }: StackedImageDeckProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [loadedSources, setLoadedSources] = useState<Set<string>>(
-    () => new Set(),
-  );
   const [direction, setDirection] = useState<Direction>(1);
   const [moving, setMoving] = useState(false);
   const draggedRef = useRef(false);
+  const dragX = useMotionValue(0);
+  const dragRotate = useTransform(dragX, [-220, 0, 220], [-14, 0, 14]);
+  const dragOpacity = useTransform(
+    dragX,
+    [-320, -90, 0, 90, 320],
+    [0.18, 0.9, 1, 0.9, 0.18],
+  );
+  const dragScale = useTransform(
+    dragX,
+    [-220, -80, 0, 80, 220],
+    [0.97, 0.995, 1, 0.995, 0.97],
+  );
 
   const visibleDepth = Math.min(
     Math.max(0, stackSize - 1),
@@ -95,25 +79,35 @@ export default function StackedImageDeck({
     [direction, images.length, selectedIndex, visibleDepth],
   );
 
-  const markLoaded = useCallback((src: string) => {
-    setLoadedSources((current) => {
-      if (current.has(src)) return current;
-      const next = new Set(current);
-      next.add(src);
-      return next;
-    });
-  }, []);
-
   const move = useCallback(
-    (nextDirection: Direction) => {
+    async (nextDirection: Direction) => {
       if (images.length <= 1 || moving) return;
       setDirection(nextDirection);
       setMoving(true);
+      const viewportWidth =
+        typeof window === "undefined" ? 900 : window.innerWidth;
+      const exitDistance = Math.max(460, viewportWidth * 0.72);
+
+      await new Promise<void>((resolve) => {
+        animate(dragX, nextDirection === 1 ? -exitDistance : exitDistance, {
+          type: "spring",
+          stiffness: 330,
+          damping: 33,
+          mass: 0.72,
+          velocity: nextDirection === 1 ? -520 : 520,
+          onComplete: resolve,
+        });
+      });
+
       setSelectedIndex((current) =>
         wrapIndex(current + nextDirection, images.length),
       );
+      window.requestAnimationFrame(() => {
+        dragX.set(0);
+        setMoving(false);
+      });
     },
-    [images.length, moving],
+    [dragX, images.length, moving],
   );
 
   if (!images.length) {
@@ -157,149 +151,121 @@ export default function StackedImageDeck({
         const rotation = side * (2.4 + depth * 0.7);
 
         return (
-          <div
+          <motion.div
             key={`back-${depth}-${index}-${source}`}
             aria-hidden
-            className="absolute inset-0 overflow-hidden rounded-[inherit] shadow-[0_14px_34px_rgba(15,23,42,.16)] transition-[transform,opacity] duration-500 ease-out dark:shadow-[0_18px_40px_rgba(0,0,0,.48)]"
+            className="absolute inset-0 overflow-hidden rounded-[inherit] drop-shadow-[0_16px_20px_rgba(15,23,42,.15)] dark:drop-shadow-[0_18px_24px_rgba(0,0,0,.42)]"
+            initial={false}
+            animate={{
+              x: horizontal,
+              y: depth * 8,
+              rotate: rotation,
+              scale: 1 - depth * 0.025,
+              opacity: 1 - depth * 0.1,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 420,
+              damping: 38,
+              mass: 0.72,
+            }}
             style={{
-              transform: `translate3d(${horizontal}px, ${depth * 9}px, 0) rotate(${rotation}deg) scale(${1 - depth * 0.025})`,
-              transformOrigin: side > 0 ? "88% 12%" : "12% 12%",
+              transformOrigin: side > 0 ? "88% 14%" : "12% 14%",
               zIndex: visibleDepth - depth + 1,
-              opacity: 1 - depth * 0.12,
             }}
           >
-            <PhotoSurface>
-              {!loadedSources.has(source) && (
-                <PhotoSkeleton variant={index % 3} />
-              )}
-              <Image
-                src={source}
-                alt=""
-                fill
-                draggable={false}
-                sizes={sizes}
-                quality={quality}
-                loading={depth <= 2 ? "eager" : "lazy"}
-                className={cn(
-                  "pointer-events-none object-cover transition-[opacity,filter] duration-300 select-none",
-                  loadedSources.has(source)
-                    ? "blur-0 opacity-100"
-                    : "opacity-0 blur-md",
-                )}
-                onLoad={() => markLoaded(source)}
-                onError={() => markLoaded(source)}
-              />
-            </PhotoSurface>
-          </div>
+            <DeckPhoto
+              source={source}
+              alt=""
+              sizes={sizes}
+              quality={quality}
+              loading={depth <= 2 ? "eager" : "lazy"}
+              variant={index % 3}
+            />
+          </motion.div>
         );
       })}
 
-      <AnimatePresence
-        initial={false}
-        custom={direction}
-        onExitComplete={() => setMoving(false)}
-      >
-        <motion.div
-          key={`front-${selectedIndex}-${selectedSource}`}
-          custom={direction}
-          variants={cardVariants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{
-            x: { type: "spring", stiffness: 390, damping: 34, mass: 0.74 },
-            rotate: {
+      <motion.div
+        data-deck-card="front"
+        tabIndex={0}
+        className={cn(
+          "absolute inset-0 z-10 cursor-grab touch-pan-y overflow-hidden rounded-[inherit] drop-shadow-[0_20px_22px_rgba(15,23,42,.17)] outline-none select-none focus-visible:ring-2 focus-visible:ring-sky-400 active:cursor-grabbing dark:drop-shadow-[0_24px_28px_rgba(0,0,0,.46)]",
+          cardClassName,
+        )}
+        style={{
+          x: dragX,
+          rotate: dragRotate,
+          opacity: dragOpacity,
+          scale: dragScale,
+        }}
+        drag={images.length > 1 && !moving ? "x" : false}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.58}
+        dragMomentum={false}
+        dragTransition={{ bounceStiffness: 520, bounceDamping: 38 }}
+        whileTap={images.length > 1 ? { cursor: "grabbing" } : undefined}
+        onDragStart={() => {
+          draggedRef.current = true;
+        }}
+        onDrag={(_, info) => {
+          if (Math.abs(info.offset.x) < 6) return;
+          const previewDirection = info.offset.x < 0 ? 1 : -1;
+          if (previewDirection !== direction) setDirection(previewDirection);
+        }}
+        onDragEnd={(_, info) => {
+          const shouldMove =
+            Math.abs(info.offset.x) > 74 || Math.abs(info.velocity.x) > 480;
+          if (shouldMove) {
+            void move(info.offset.x < 0 ? 1 : -1);
+          } else {
+            animate(dragX, 0, {
               type: "spring",
-              stiffness: 390,
-              damping: 34,
-              mass: 0.74,
-            },
-            scale: { duration: 0.2, ease: "easeOut" },
-            opacity: { duration: 0.18, ease: "easeOut" },
-          }}
-          data-deck-card="front"
-          tabIndex={0}
-          className={cn(
-            "absolute inset-0 z-10 cursor-grab touch-pan-y overflow-hidden rounded-[inherit] shadow-[0_18px_38px_rgba(15,23,42,.16)] outline-none select-none focus-visible:ring-2 focus-visible:ring-sky-400 active:cursor-grabbing dark:shadow-[0_24px_48px_rgba(0,0,0,.48)]",
-            cardClassName,
-          )}
-          drag={images.length > 1 && !moving ? "x" : false}
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.34}
-          dragMomentum={false}
-          dragTransition={{ bounceStiffness: 460, bounceDamping: 34 }}
-          onDragStart={() => {
-            draggedRef.current = true;
-          }}
-          onDrag={(_, info) => {
-            if (Math.abs(info.offset.x) < 8) return;
-            const previewDirection = info.offset.x < 0 ? 1 : -1;
-            if (previewDirection !== direction) {
-              setDirection(previewDirection);
-            }
-          }}
-          onDragEnd={(_, info) => {
-            const shouldMove =
-              Math.abs(info.offset.x) > 58 || Math.abs(info.velocity.x) > 430;
-            if (shouldMove) {
-              move(info.offset.x < 0 ? 1 : -1);
-            }
-            window.setTimeout(() => {
-              draggedRef.current = false;
-            }, 0);
-          }}
-          onTap={() => {
-            if (!draggedRef.current) onImageClick?.(selectedIndex);
-          }}
-        >
-          <PhotoSurface>
-            {!loadedSources.has(selectedSource) && (
-              <PhotoSkeleton variant={selectedIndex % 3} />
-            )}
-            <Image
-              src={selectedSource}
-              alt={alt}
-              fill
-              draggable={false}
-              sizes={sizes}
-              quality={quality}
-              priority={priority && selectedIndex === 0}
-              loading={priority || selectedIndex === 0 ? "eager" : "lazy"}
-              fetchPriority={priority && selectedIndex === 0 ? "high" : "auto"}
-              className={cn(
-                "pointer-events-none object-cover transition-[opacity,filter] duration-300 select-none",
-                loadedSources.has(selectedSource)
-                  ? "blur-0 opacity-100"
-                  : "opacity-0 blur-md",
-                imageClassName,
-              )}
-              onLoad={() => markLoaded(selectedSource)}
-              onError={() => markLoaded(selectedSource)}
-              style={{ imageOrientation: "from-image" }}
-            />
-          </PhotoSurface>
+              stiffness: 520,
+              damping: 38,
+              mass: 0.68,
+            });
+          }
+          window.setTimeout(() => {
+            draggedRef.current = false;
+          }, 0);
+        }}
+        onTap={() => {
+          if (!draggedRef.current) onImageClick?.(selectedIndex);
+        }}
+      >
+        <DeckPhoto
+          source={selectedSource}
+          alt={alt}
+          sizes={sizes}
+          quality={quality}
+          priority={priority && selectedIndex === 0}
+          loading={priority || selectedIndex === 0 ? "eager" : "lazy"}
+          fetchPriority={priority && selectedIndex === 0 ? "high" : "auto"}
+          variant={selectedIndex % 3}
+          imageClassName={imageClassName}
+        />
 
-          {(labels?.[selectedIndex] || showCounter || images.length > 1) && (
-            <>
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/42 to-transparent" />
-              <div className="pointer-events-none absolute right-2.5 bottom-2.5 left-2.5 flex items-end justify-between gap-2">
-                {labels?.[selectedIndex] ? (
-                  <span className="min-w-0 truncate rounded-full bg-black/42 px-2.5 py-1 text-[10px] font-semibold text-white/92 backdrop-blur-md">
-                    {labels[selectedIndex]}
-                  </span>
-                ) : (
-                  <span />
-                )}
-                {(showCounter || images.length > 1) && (
-                  <span className="shrink-0 rounded-full bg-black/42 px-2 py-1 text-[10px] font-semibold text-white tabular-nums backdrop-blur-md">
-                    {selectedIndex + 1}/{images.length}
-                  </span>
-                )}
-              </div>
-            </>
-          )}
-        </motion.div>
-      </AnimatePresence>
+        {(labels?.[selectedIndex] || showCounter || images.length > 1) && (
+          <>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/42 to-transparent" />
+            <div className="pointer-events-none absolute right-2.5 bottom-2.5 left-2.5 flex items-end justify-between gap-2">
+              {labels?.[selectedIndex] ? (
+                <span className="min-w-0 truncate rounded-full bg-black/42 px-2.5 py-1 text-[10px] font-semibold text-white/92 backdrop-blur-md">
+                  {labels[selectedIndex]}
+                </span>
+              ) : (
+                <span />
+              )}
+              {(showCounter || images.length > 1) && (
+                <span className="shrink-0 rounded-full bg-black/42 px-2 py-1 text-[10px] font-semibold text-white tabular-nums backdrop-blur-md">
+                  {selectedIndex + 1}/{images.length}
+                </span>
+              )}
+            </div>
+          </>
+        )}
+      </motion.div>
 
       {images.length > 1 && (
         <>
@@ -337,11 +303,87 @@ function PhotoSurface({ children }: { children: React.ReactNode }) {
   );
 }
 
+function DeckPhoto({
+  source,
+  alt,
+  sizes,
+  quality,
+  loading,
+  priority = false,
+  fetchPriority = "auto",
+  variant,
+  imageClassName,
+}: {
+  source: string;
+  alt: string;
+  sizes: string;
+  quality: number;
+  loading: "eager" | "lazy";
+  priority?: boolean;
+  fetchPriority?: "high" | "low" | "auto";
+  variant: number;
+  imageClassName?: string;
+}) {
+  const imageRef = useRef<HTMLImageElement>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+    const image = imageRef.current;
+    if (!image) return;
+
+    let cancelled = false;
+    const markReady = () => {
+      if (!cancelled) setLoaded(true);
+    };
+
+    if (image.complete && image.naturalWidth > 0) {
+      markReady();
+    } else {
+      image.addEventListener("load", markReady, { once: true });
+      image.addEventListener("error", markReady, { once: true });
+      void image.decode().then(markReady, markReady);
+    }
+
+    return () => {
+      cancelled = true;
+      image.removeEventListener("load", markReady);
+      image.removeEventListener("error", markReady);
+    };
+  }, [source]);
+
+  return (
+    <PhotoSurface>
+      {!loaded && <PhotoSkeleton variant={variant} />}
+      <Image
+        ref={imageRef}
+        src={source}
+        alt={alt}
+        fill
+        draggable={false}
+        sizes={sizes}
+        quality={quality}
+        priority={priority}
+        loading={loading}
+        fetchPriority={fetchPriority}
+        className={cn(
+          "pointer-events-none object-contain transition-[opacity,filter] duration-300 select-none",
+          loaded ? "blur-0 opacity-100" : "opacity-0 blur-md",
+          imageClassName,
+        )}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+        style={{ imageOrientation: "from-image" }}
+      />
+    </PhotoSurface>
+  );
+}
+
 function PhotoSkeleton({ variant }: { variant: number }) {
   return (
     <div
       aria-hidden
-      className="bg-muted absolute inset-0 z-[1] overflow-hidden"
+      className="bg-muted pointer-events-none absolute inset-0 z-[1] overflow-hidden"
     >
       <div
         className={cn(

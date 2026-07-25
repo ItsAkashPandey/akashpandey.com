@@ -29,7 +29,7 @@
             {
               "name": "IdeaForge Q6",
               "logo": "/skills/ideaforge.webp",
-              "model": "IdeaForge Q6",
+              "model": "Mapping UAV",
               "experience": "I have used the Q6 extensively for agricultural mapping and plantation-health monitoring across farms and other field sites. I also hold the relevant pilot certificate. My survey payloads were the MicaSense RedEdge-MX multispectral camera and Sony ILCE-5100 RGB camera.",
               "tasks": [
                 "agricultural mapping",
@@ -51,7 +51,7 @@
             {
               "name": "Trinity F90+",
               "logo": "/skills/trinity.webp",
-              "model": "Quantum-Systems Trinity F90+",
+              "model": "Quantum-Systems",
               "experience": "I use this fixed-wing VTOL platform when a site needs efficient coverage over a larger area.",
               "tasks": [
                 "multispectral mapping",
@@ -64,7 +64,7 @@
             {
               "name": "DJI Matrice 100",
               "logo": "/skills/dji.webp",
-              "model": "DJI Matrice 100",
+              "model": "Multirotor platform",
               "experience": "A familiar multirotor platform for hands-on flight work, sensor integration, and close-range mapping.",
               "tasks": [
                 "UAV operations",
@@ -134,7 +134,7 @@
               "gradient": "from-[#FF9900] to-[#E65100]"
             },
             {
-              "name": "Spectroradiometer SVC",
+              "name": "Spectroradiometer",
               "logo": "/skills/spectroradiometer.webp",
               "model": "SVC XHR-1024i",
               "aliases": [
@@ -155,7 +155,7 @@
             {
               "name": "FARO TLS",
               "logo": "/skills/tls.webp",
-              "model": "FARO Terrestrial Laser Scanner",
+              "model": "Terrestrial laser scanner",
               "experience": "I use terrestrial laser scanning for dense three-dimensional capture and field demonstrations.",
               "tasks": [
                 "3D point-cloud capture",
@@ -173,7 +173,7 @@
             {
               "name": "Trimble DA2",
               "logo": "/skills/trimble.webp",
-              "model": "Trimble Catalyst DA2",
+              "model": "Catalyst receiver",
               "experience": "A compact GNSS receiver I use for accurate field positioning and geo-tagging observations.",
               "tasks": [
                 "GNSS positioning",
@@ -184,9 +184,9 @@
               "gradient": "from-[#FBC02D] to-[#F57F17]"
             },
             {
-              "name": "Emlid Reach RS2/RS3",
+              "name": "Emlid Reach",
               "logo": "/skills/emlid.webp",
-              "model": "Emlid Reach RS2 / RS3",
+              "model": "RS2 / RS3",
               "experience": "I work with Reach receivers for RTK/PPK survey workflows and precise control points.",
               "tasks": [
                 "RTK surveying",
@@ -199,7 +199,7 @@
             {
               "name": "Sokkia GRX2",
               "logo": "/skills/sokkia.webp",
-              "model": "Sokkia GRX2",
+              "model": "GNSS receiver",
               "experience": "A survey-grade GNSS system I have handled during field surveys and instrument training.",
               "tasks": [
                 "GNSS surveying",

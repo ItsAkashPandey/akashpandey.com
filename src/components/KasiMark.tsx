@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { useId } from "react";
 
 type KasiMarkProps = {
   active?: boolean;
@@ -7,9 +8,9 @@ type KasiMarkProps = {
 };
 
 const sizeClasses = {
-  sm: "size-8 rounded-xl rounded-bl-[2px]",
-  md: "size-10 rounded-2xl rounded-bl-[3px]",
-  lg: "size-11 rounded-[18px] rounded-bl-[4px]",
+  sm: "size-8",
+  md: "size-10",
+  lg: "size-11",
 };
 
 export default function KasiMark({
@@ -17,67 +18,91 @@ export default function KasiMark({
   className,
   size = "md",
 }: KasiMarkProps) {
+  const gradientId = useId().replace(/:/g, "");
+
   return (
     <span
       aria-hidden
       data-active={active ? "true" : "false"}
       className={cn(
-        "relative isolate grid shrink-0 place-items-center overflow-hidden border transition-all duration-300",
+        "relative grid shrink-0 place-items-center transition-transform duration-300",
         sizeClasses[size],
-        active
-          ? "border-sky-950/12 bg-[linear-gradient(145deg,#0b1220_0%,#173b6d_56%,#176b70_125%)] text-white shadow-[0_11px_30px_rgba(24,72,125,.24)] dark:border-white/15 dark:shadow-[0_12px_34px_rgba(0,0,0,.38)]"
-          : "border-border/75 bg-background text-muted-foreground shadow-[inset_0_0_0_1px_hsl(var(--border)/.32)]",
+        active && "drop-shadow-[0_8px_12px_rgba(30,64,175,.22)]",
         className,
       )}
     >
-      <span
-        className={cn(
-          "absolute inset-0 transition-opacity duration-300",
-          active
-            ? "bg-[radial-gradient(circle_at_72%_16%,rgba(255,255,255,.28),transparent_28%),radial-gradient(circle_at_20%_85%,rgba(45,212,191,.19),transparent_36%)] opacity-100"
-            : "opacity-0",
-        )}
-      />
-      <svg viewBox="0 0 40 40" fill="none" className="relative z-10 size-[70%] text-current">
-        {/* Main Sparkle */}
+      <svg
+        viewBox="0 0 48 48"
+        fill="none"
+        className="size-[94%] overflow-visible"
+      >
+        <defs>
+          <linearGradient
+            id={gradientId}
+            x1="9"
+            y1="7"
+            x2="39"
+            y2="42"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stopColor="#1E3A8A" />
+            <stop offset=".53" stopColor="#2563EB" />
+            <stop offset="1" stopColor="#0F766E" />
+          </linearGradient>
+        </defs>
+
         <path
-          d="M0 -10.5c1.2 5.7 4.8 9.3 10.5 10.5-5.7 1.2-9.3 4.8-10.5 10.5-1.2-5.7-4.8-9.3-10.5-10.5C-4.8 1.2 -1.2 -1.2 0 -10.5Z"
-          transform="translate(17, 23) scale(0.95)"
-          fill="currentColor"
-          className={active ? "animate-[pulse_2s_infinite_ease-in-out]" : ""}
+          d="M12.4 6.5h23.2c4.3 0 7.9 3.6 7.9 7.9v15.2c0 4.3-3.6 7.9-7.9 7.9H24.1l-8.8 5.1c-1.5.9-3.4-.2-3.3-2l.2-3.4a8 8 0 0 1-7.7-7.9V14.4c0-4.3 3.6-7.9 7.9-7.9Z"
+          fill={active ? `url(#${gradientId})` : undefined}
+          className={cn(
+            "transition-colors duration-300",
+            !active &&
+              "fill-slate-100 stroke-slate-400 dark:fill-zinc-800 dark:stroke-zinc-500",
+          )}
+          strokeWidth={active ? 0 : 1.25}
         />
-        {/* Secondary Sparkle */}
+
+        <g
+          stroke={active ? "rgba(255,255,255,.88)" : "currentColor"}
+          className={cn(
+            "transition-colors duration-300",
+            active ? "text-white" : "text-slate-600 dark:text-zinc-300",
+          )}
+          strokeWidth="1.65"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M15 27.2c2.1 0 2.7-2.2 4.7-2.2s2.5 2.2 4.7 2.2c2.1 0 2.7-2.2 4.7-2.2" />
+          <path d="M17.2 18.7h8.4" opacity=".72" />
+          <circle
+            cx="14.7"
+            cy="18.7"
+            r="1.55"
+            fill="currentColor"
+            stroke="none"
+          />
+          <circle
+            cx="31.4"
+            cy="25"
+            r="1.55"
+            fill="currentColor"
+            stroke="none"
+          />
+          <circle
+            cx="22.1"
+            cy="27.2"
+            r="1.55"
+            fill="currentColor"
+            stroke="none"
+          />
+        </g>
+
         <path
-          d="M0 -10.5c1.2 5.7 4.8 9.3 10.5 10.5-5.7 1.2-9.3 4.8-10.5 10.5-1.2-5.7-4.8-9.3-10.5-10.5C-4.8 1.2 -1.2 -1.2 0 -10.5Z"
-          transform="translate(28, 13) scale(0.5)"
-          fill="currentColor"
-          opacity={active ? 0.85 : 0.5}
-          className={active ? "animate-[pulse_2s_infinite_ease-in-out_250ms]" : ""}
-        />
-        {/* Decorative tiny dots */}
-        <circle
-          cx="9"
-          cy="13"
-          r="1.2"
-          fill="currentColor"
-          opacity={active ? 0.6 : 0.3}
-        />
-        <circle
-          cx="26"
-          cy="29"
-          r="0.8"
-          fill="currentColor"
-          opacity={active ? 0.45 : 0.2}
+          d="M34.3 12.1c.45 2.2 1.8 3.55 4 4-2.2.45-3.55 1.8-4 4-.45-2.2-1.8-3.55-4-4 2.2-.45 3.55-1.8 4-4Z"
+          fill={active ? "#BAE6FD" : "currentColor"}
+          className={!active ? "text-slate-500 dark:text-zinc-400" : undefined}
         />
       </svg>
-      <span
-        className={cn(
-          "absolute right-1.5 bottom-1.5 z-20 size-1.5 rounded-full ring-2 transition-colors",
-          active
-            ? "bg-emerald-300 shadow-[0_0_0_3px_rgba(110,231,183,.1)] ring-emerald-300/15"
-            : "bg-zinc-400 ring-zinc-400/10",
-        )}
-      />
     </span>
   );
 }

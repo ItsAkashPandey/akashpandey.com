@@ -17,6 +17,9 @@ export default function Footer() {
               privacy?
             </Link>
           </p>
+          <p className="text-muted-foreground/70 mt-1 text-[10px]">
+            Updated 5 July 2026
+          </p>
         </section>
       </div>
     </footer>
