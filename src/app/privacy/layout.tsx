@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "Privacy policy for the Akash Kumar Pandey portfolio website and contact form.",
+    "How this portfolio handles KASI chat, contact messages, OpenFreeMap tiles, CelesTrak orbital data, location permission, and theme preferences.",
   alternates: { canonical: "/privacy" },
 };
 

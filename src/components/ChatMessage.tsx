@@ -77,15 +77,11 @@ export default function ChatMessage({
       )}
     >
       {isBot && (
-        <KasiMark
-          active
-          size="sm"
-          className="mt-0.5 mr-2 size-7 shrink-0"
-        />
+        <KasiMark active size="sm" className="mt-0.5 mr-2 size-7 shrink-0" />
       )}
       <div
         className={cn(
-          "max-w-[86%] min-w-0 rounded-2xl border px-3.5 py-2.5 text-sm break-words shadow-sm sm:max-w-[330px]",
+          "max-w-[86%] min-w-0 rounded-lg border px-3.5 py-2.5 text-sm break-words shadow-sm sm:max-w-[330px]",
           isBot
             ? "border-white/30 bg-white/55 backdrop-blur-md dark:border-white/10 dark:bg-white/10"
             : "bg-primary text-primary-foreground border-primary shadow-md",
@@ -126,7 +122,7 @@ export default function ChatMessage({
               />
             ),
             table: ({ node, ...props }) => (
-              <div className="mt-3 max-w-full overflow-x-auto overscroll-x-contain rounded-xl border [scrollbar-width:thin] first:mt-0">
+              <div className="mt-3 max-w-full [scrollbar-width:thin] overflow-x-auto overscroll-x-contain rounded-lg border first:mt-0">
                 <table
                   className="w-max min-w-full border-collapse text-left text-xs"
                   {...props}
@@ -154,7 +150,7 @@ export default function ChatMessage({
           <div className="mt-3 grid gap-2">
             {cards.slice(0, 3).map((card) => {
               const body = (
-                <span className="bg-background/65 hover:bg-background block rounded-xl border p-3 transition">
+                <span className="bg-background/65 hover:bg-background block rounded-lg border p-3 transition">
                   <span className="text-foreground flex items-center gap-1.5 text-xs font-semibold">
                     <Sparkles className="text-primary size-3" />
                     {card.title}

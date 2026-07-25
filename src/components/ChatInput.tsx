@@ -35,7 +35,7 @@ export default function ChatInput({
       onSubmit={handleSubmit}
       className="border-t border-white/20 bg-white/20 px-3 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-black/20"
     >
-      <div className="bg-background/70 focus-within:ring-primary/20 flex items-end gap-2 rounded-2xl border border-white/30 p-2 shadow-sm ring-0 transition focus-within:ring-4 dark:border-white/10 dark:bg-white/5">
+      <div className="bg-background/70 focus-within:ring-primary/20 flex items-end gap-2 rounded-lg border border-white/30 p-2 shadow-sm ring-0 transition focus-within:ring-4 dark:border-white/10 dark:bg-white/5">
         <Button
           title="Clear chat"
           variant="ghost"
@@ -43,7 +43,7 @@ export default function ChatInput({
             setMessages([]);
             onClearChat?.();
           }}
-          className="size-10 shrink-0 rounded-xl text-rose-500 hover:bg-rose-500/10"
+          className="size-10 shrink-0 rounded-md text-rose-500 hover:bg-rose-500/10"
           disabled={messages.length === 0}
           type="button"
         >
@@ -66,7 +66,7 @@ export default function ChatInput({
         <Button
           title="Send message"
           variant="default"
-          className="size-10 shrink-0 rounded-xl"
+          className="size-10 shrink-0 rounded-md"
           disabled={input.trim().length === 0 || isLoading}
           type="submit"
         >

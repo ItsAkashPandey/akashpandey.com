@@ -13,6 +13,7 @@ import skillsData from "@/data/skills.json";
 
 import LazySection from "@/components/LazySection";
 import SkillLogoTile from "@/components/SkillLogoTile";
+import SectionHeading from "@/components/SectionHeading";
 
 const LocationMap = dynamic(() => import("@/components/LocationMap"), {
   loading: () => (
@@ -83,8 +84,10 @@ export default function Home() {
 
   return (
     <article className="mx-auto -mt-2 flex w-full max-w-6xl flex-col gap-10 pb-16 sm:gap-12">
-      <section className="record-surface relative flex flex-col gap-1 overflow-hidden rounded-xl p-3 sm:p-5">
-        <LocationMap />
+      <section className="record-surface relative flex flex-col gap-1 overflow-hidden rounded-lg p-3 sm:p-5">
+        <div className="hero-map-frame">
+          <LocationMap />
+        </div>
 
         <div className="mt-6 flex flex-col gap-6 px-2 pb-2 sm:mt-[22px] sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-10 sm:px-4 sm:pb-4">
           <SwipeCards className="mx-auto shrink-0 sm:mx-0" />
@@ -111,7 +114,7 @@ export default function Home() {
             />
 
             <section className="mt-6 flex flex-wrap items-center justify-center gap-2 px-0 sm:justify-start sm:gap-4">
-              <Link href="/resume.pdf" target="_blank">
+              <Link href="/resume.pdf" target="_blank" rel="noreferrer">
                 <Button
                   variant="outline"
                   className="h-[32px] px-2 py-1 text-[11px] sm:h-full sm:px-4 sm:py-3 sm:text-sm"
@@ -127,44 +130,38 @@ export default function Home() {
       </section>
 
       <LazySection heightHint={260} className="paper-band paper-band--sage">
-        <section className="flex flex-col gap-6">
-          <div>
-            <p className="text-muted-foreground text-[11px] font-semibold uppercase">
-              Background
-            </p>
-            <h2 className="title mt-2 text-2xl sm:text-3xl">the path so far</h2>
-          </div>
+        <section className="flex flex-col gap-7">
+          <SectionHeading title="the path so far" />
           <Experience />
         </section>
       </LazySection>
 
-      {/* Skills Section - Unique floating logo cloud design */}
       <LazySection heightHint={350} className="paper-band paper-band--paper">
-        <section className="flex flex-col gap-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h2 className="title text-2xl sm:text-3xl">skills & tools</h2>
+        <section className="flex flex-col gap-7">
+          <SectionHeading
+            title="skills & tools"
+            detail={
               <Badge variant="secondary" className="text-xs">
                 {totalSkills}+
               </Badge>
-            </div>
-            <LinkWithIcon
-              href="/skills"
-              position="right"
-              icon={<ArrowRightIcon className="size-5" />}
-              text="view more"
-            />
-          </div>
+            }
+            action={
+              <LinkWithIcon
+                href="/skills"
+                position="right"
+                icon={<ArrowRightIcon className="size-5" />}
+                text="view more"
+              />
+            }
+          />
 
-          <div className="relative overflow-hidden py-2">
-            {/* Skills grid - Two rows */}
+          <div className="relative overflow-hidden py-1">
             <div className="relative z-10 flex flex-col gap-6">
-              {/* Top row - Software tools */}
               <div className="flex flex-wrap justify-center gap-1.5 sm:gap-6">
                 {featuredSkills.slice(0, 5).map((skill) => (
                   <div
                     key={skill.name}
-                    className="group/tool flex flex-col items-center gap-1.5 transition-all duration-300 hover:-translate-y-1 sm:gap-2"
+                    className="group/tool flex flex-col items-center gap-1.5 transition-transform duration-200 hover:-translate-y-0.5 sm:gap-2"
                   >
                     <SkillLogoTile
                       logo={skill.logo}
@@ -179,12 +176,11 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Bottom row - Instruments */}
               <div className="flex flex-wrap justify-center gap-1.5 sm:gap-6">
                 {featuredSkills.slice(5).map((skill) => (
                   <div
                     key={skill.name}
-                    className="group/tool flex flex-col items-center gap-1.5 transition-all duration-300 hover:-translate-y-1 sm:gap-2"
+                    className="group/tool flex flex-col items-center gap-1.5 transition-transform duration-200 hover:-translate-y-0.5 sm:gap-2"
                   >
                     <SkillLogoTile
                       logo={skill.logo}
@@ -200,9 +196,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Bottom gradient hint for "more" */}
-            <div className="text-muted-foreground mt-6 flex items-center justify-center gap-2 text-sm">
-              <Wrench className="size-4" />
+            <div className="text-muted-foreground mt-6 flex items-center justify-center gap-2 text-center text-sm">
+              <Wrench className="size-4 shrink-0" />
               <span>
                 and many more tools across UAVs, Surveying, GIS & Civil
                 Engineering
@@ -213,20 +208,18 @@ export default function Home() {
       </LazySection>
 
       <LazySection heightHint={300} className="paper-band paper-band--blue">
-        <section className="flex flex-col gap-8">
-          <div className="flex justify-between">
-            <div>
-              <h2 className="title text-2xl sm:text-3xl">
-                recent publications
-              </h2>
-            </div>
-            <LinkWithIcon
-              href="/publications"
-              position="right"
-              icon={<ArrowRightIcon className="size-5" />}
-              text="view more"
-            />
-          </div>
+        <section className="flex flex-col gap-7">
+          <SectionHeading
+            title="recent publications"
+            action={
+              <LinkWithIcon
+                href="/publications"
+                position="right"
+                icon={<ArrowRightIcon className="size-5" />}
+                text="view more"
+              />
+            }
+          />
           <div className="flex flex-col gap-4">
             {recentPublications.map((pub) => (
               <div
@@ -253,7 +246,7 @@ export default function Home() {
                       {pub.year}
                     </Badge>
                     {pub.journalQuartile && (
-                      <Badge className="bg-green-500/10 text-xs text-green-700 dark:text-green-400">
+                      <Badge className="bg-green-500/10 text-xs text-green-700 dark:text-green-300">
                         {pub.journalQuartile}
                       </Badge>
                     )}
@@ -277,18 +270,18 @@ export default function Home() {
       </LazySection>
 
       <LazySection heightHint={400} className="paper-band paper-band--coral">
-        <section className="flex flex-col gap-8">
-          <div className="flex justify-between">
-            <div>
-              <h2 className="title text-2xl sm:text-3xl">recent activities</h2>
-            </div>
-            <LinkWithIcon
-              href="/activities"
-              position="right"
-              icon={<ArrowRightIcon className="size-5" />}
-              text="view more"
-            />
-          </div>
+        <section className="flex flex-col gap-7">
+          <SectionHeading
+            title="recent activities"
+            action={
+              <LinkWithIcon
+                href="/activities"
+                position="right"
+                icon={<ArrowRightIcon className="size-5" />}
+                text="view more"
+              />
+            }
+          />
           <Activities limit={LIMIT} />
         </section>
       </LazySection>

@@ -50,23 +50,11 @@ export default function Socials() {
             rel="noopener noreferrer"
             title={item.name}
             className={cn(
-              "group/social border-border/55 bg-background/60 hover:border-border relative flex size-9 items-center justify-center overflow-hidden rounded-xl border shadow-[0_4px_12px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:scale-105 hover:shadow-[0_8px_20px_color-mix(in_srgb,var(--brand)_20%,transparent)]",
-              brandStyles[item.name] ?? "text-foreground [--brand:#64748b]"
+              "group/social border-border/60 bg-card/65 hover:bg-card relative flex size-9 items-center justify-center rounded-md border shadow-sm transition-[background-color,border-color,transform] duration-200 hover:-translate-y-px",
+              brandStyles[item.name] ?? "text-foreground [--brand:#64748b]",
             )}
           >
-            {/* Background light gradient */}
-            <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_15%,rgba(255,255,255,0.15),transparent_45%)] dark:bg-[radial-gradient(circle_at_70%_15%,rgba(255,255,255,0.05),transparent_45%)]" />
-
-            {/* Icon */}
-            {Icon && (
-              <Icon
-                className="size-[17px] transition-transform duration-300 group-hover/social:scale-110"
-                aria-hidden
-              />
-            )}
-
-            {/* Crystal shine animation / White light sweep */}
-            <span className="pointer-events-none absolute inset-0 -skew-x-20 -translate-x-[150%] bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-700 ease-out group-hover/social:translate-x-[150%] dark:via-white/12" />
+            {Icon && <Icon className="size-[17px]" aria-hidden />}
           </a>
         );
       })}

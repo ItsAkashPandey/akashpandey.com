@@ -12,7 +12,7 @@ await fs.mkdir(outputDirectory, { recursive: true });
 const fallbackPalettes = [
   ["#2563eb", "#22b8cf"],
   ["#e76f51", "#f4a261"],
-  ["#7c3aed", "#c084fc"],
+  ["#475569", "#94a3b8"],
   ["#0f766e", "#34d399"],
   ["#b45309", "#fbbf24"],
   ["#be185d", "#fb7185"],
@@ -37,7 +37,7 @@ for (const category of skills.skills) {
       const supplied = tool.gradient?.match(/#[a-fA-F0-9]{6}/g) ?? [];
       const palette =
         supplied.length >= 2 &&
-        Math.max(luminance(supplied[0]), luminance(supplied[1])) > 0.2
+        Math.max(luminance(supplied[0]), luminance(supplied[1])) > 0.15
           ? [supplied[0], supplied[1]]
           : fallbackPalettes[index % fallbackPalettes.length];
       const width = metadata.width ?? 256;

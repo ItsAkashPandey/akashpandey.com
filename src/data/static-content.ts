@@ -103,48 +103,79 @@ Behavior rules:
 - I live in Vigyan Kunj Bhawan, known as VK. (in IIT Roorkee)
 - I usually am a late night person.`;
 
-export const PRIVACY_CONTENT = `_Last updated: 5 July 2026_
+export const PRIVACY_CONTENT = `_Last updated: 26 July 2026_
 
 ## The short version
 
-This portfolio has no advertising, behavioural analytics, or marketing trackers. A few features do process limited information so they can work: KASI chat, the contact form, the location map, and your saved theme preference.
+This is a personal portfolio. It has no advertising, marketing tracker, or
+behavioural analytics. KASI chat, the contact form, the map, and the theme
+switcher need a small amount of data to work.
 
-## Information this site uses
+## KASI chat
 
-### KASI chat
+When you send a message to KASI, the site creates a random visitor ID and keeps
+it in an HTTP-only cookie named hal_vid. The cookie lasts for up to one year. It
+helps keep messages from the same visitor together. It is not used for
+advertising.
 
-When you use KASI, the conversation and a randomly generated visitor identifier may be stored so I can understand what people ask, find gaps, and improve the website. A functional cookie keeps that visitor identifier consistent between chat requests. Chat messages are also sent to the AI service that produces the response.
+KASI can store:
 
-Please do not send sensitive personal information through the chatbot.
+- your message and KASI's reply;
+- an inferred display name, if the message contains one;
+- the random visitor ID and conversation ID;
+- the page where the message was sent; and
+- technical notes such as the model used, response time, and which site content
+  was used for the answer.
 
-### Contact form
+Depending on the server setup, those logs may be kept in PostgreSQL, sent to a
+private Google Sheets webhook, written to a server file, or not stored at all.
 
-If you use the contact form, your name, email address, and message are sent through my email delivery provider so I can receive and reply to your message. I do not use contact details for advertising or mailing lists.
+Some short replies are produced on the website server. When a question needs an
+AI model, the message and up to six recent chat messages are sent to OpenRouter.
+OpenRouter sends them to the selected model provider. Do not put passwords,
+financial details, medical details, or other sensitive information in KASI.
 
-### Map and location
+## Contact form
 
-The home-page map loads map tiles from MapTiler and OpenStreetMap sources. Like most web requests, those providers may receive standard technical information such as your IP address, browser details, and request time.
+If you use the contact form, your name, email address, and message are sent to
+Resend so the message can reach my email inbox. I use that information only to
+read and reply to the message. I do not add it to a mailing list.
 
-If you allow location access, your browser provides your approximate coordinates so the map can show your distance from me. The website does not save those coordinates to its database. You can deny or revoke location permission in your browser at any time.
+## Map, tiles, and satellite positions
 
-### Preferences and technical logs
+MapLibre renders the map in your browser. The light and dark basemap styles and
+tiles come from OpenFreeMap and use OpenStreetMap data. OpenFreeMap receives the
+normal request details needed to send those files, such as your IP address,
+browser information, and request time.
 
-The site saves your light or dark theme preference in your browser. Hosting and service providers may also process routine security and reliability logs needed to deliver the site.
+The site server fetches public orbital records from CelesTrak and caches them
+for about six hours. Your browser receives only the small set of satellites
+selected for the map. Visitors do not provide satellite data, and no visitor,
+chat, or location data is sent to CelesTrak.
 
-## How the information is used
+The map can ask your browser for optional location permission. If you allow it,
+your coordinates stay in the open browser tab and are used to show your marker
+and distance from me. They are not sent to my server, added to chat logs, or
+saved in a database. You can deny or remove location permission in your browser.
 
-Information is used only to:
+## Theme and normal server logs
 
-- provide the requested feature;
-- operate, secure, and improve the website; and
-- reply to messages you send.
+The light or dark theme choice is saved in your browser. Vercel and the other
+providers named above may keep normal security and delivery logs when they serve
+a request.
 
-I do not sell or rent personal information.
+## Retention and deletion
 
-## Retention and requests
+I have not set one automatic deletion period for chat logs or contact emails.
+They are kept while they are useful for running the site or replying to a
+message. I do not sell or rent this information.
 
-Chat logs and contact messages are kept only for as long as they remain useful for the purposes above. If you want me to remove something you submitted, email [akash_k@ce.iitr.ac.in](mailto:akash_k@ce.iitr.ac.in) with enough detail for me to identify it.
+To ask me to find or delete something you submitted, email
+[akash_k@ce.iitr.ac.in](mailto:akash_k@ce.iitr.ac.in) with enough detail to
+identify it.
 
 ## Questions
 
-For any privacy question, email [akash_k@ce.iitr.ac.in](mailto:akash_k@ce.iitr.ac.in) or use the [contact form](/contact).`;
+For a privacy question, email
+[akash_k@ce.iitr.ac.in](mailto:akash_k@ce.iitr.ac.in) or use the
+[contact form](/contact).`;

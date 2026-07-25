@@ -1,6 +1,8 @@
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Providers from "@/components/Providers";
+import ResearchEdges from "@/components/ResearchEdges";
+import siteData from "@/data/site.json";
 import { cn } from "@/lib/utils";
 import type { Metadata, Viewport } from "next";
 import { Calistoga, Inter } from "next/font/google";
@@ -19,7 +21,7 @@ const calistoga = Calistoga({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.akashpandey.com"),
+  metadataBase: new URL(siteData.url),
   title: {
     default: "Akash Kumar Pandey | Geospatial Research Portfolio",
     template: "%s | Akash Kumar Pandey",
@@ -27,7 +29,7 @@ export const metadata: Metadata = {
   description:
     "Akash Kumar Pandey's portfolio for geospatial analysis, remote sensing, UAV mapping, PhenoCam research, vegetation phenology, and precision agriculture.",
   applicationName: "Akash Kumar Pandey Portfolio",
-  authors: [{ name: "Akash Kumar Pandey", url: "https://www.akashpandey.com" }],
+  authors: [{ name: "Akash Kumar Pandey", url: siteData.url }],
   creator: "Akash Kumar Pandey",
   publisher: "Akash Kumar Pandey",
   keywords: [
@@ -46,7 +48,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://www.akashpandey.com",
+    url: siteData.url,
     siteName: "Akash Kumar Pandey",
     title: "Akash Kumar Pandey | Geospatial Research Portfolio",
     description:
@@ -86,6 +88,9 @@ export const metadata: Metadata = {
     apple: "/favicon-192.png",
   },
   manifest: "/manifest.json",
+  other: {
+    "last-modified": siteData.lastUpdated,
+  },
 };
 
 export const viewport: Viewport = {
@@ -109,8 +114,9 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>
+          <ResearchEdges />
           <Header />
-          <div className="mx-auto flex w-full max-w-7xl flex-col px-5 sm:px-8 lg:px-10">
+          <div className="site-shell relative z-10 flex flex-col">
             <main className="grow">{children}</main>
           </div>
           <Footer />

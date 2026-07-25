@@ -1,17 +1,8 @@
-3D model credits
+Map and orbit credits
 
-Map tiles and data
-MapTiler: https://www.maptiler.com/copyright/
+OpenFreeMap: https://openfreemap.org/
+OpenMapTiles: https://openmaptiles.org/
 OpenStreetMap contributors: https://www.openstreetmap.org/copyright
-
-Passenger aircraft — “Airplane 3268” by Remy Tauziac
-https://poly.pizza/m/bjlICuVX1Sg
-
-Survey drone — “Drone” by Silly Fear
-https://poly.pizza/m/3Ae_y67lzvd
-
-Research satellite — “Satellite” by Poly by Google
-https://poly.pizza/m/fmYHY1leH_P
-
-All three models are used under Creative Commons Attribution 3.0:
-https://creativecommons.org/licenses/by/3.0/
+CelesTrak orbital elements: https://celestrak.org/
+MapLibre GL JS: https://maplibre.org/
+Satellite.js: https://github.com/shashwatak/satellite-js

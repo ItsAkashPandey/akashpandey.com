@@ -3,7 +3,7 @@
 import { sendEmail } from "@/lib/actions";
 import { ContactFormSchema } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PaperPlaneIcon, ReloadIcon } from "@radix-ui/react-icons";
+import { LoaderCircle, Send } from "lucide-react";
 import Link from "next/link";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -61,7 +61,10 @@ export default function ContactForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)}>
+    <form
+      onSubmit={handleSubmit(handleFormSubmit)}
+      className="contact-surface record-surface"
+    >
       <input
         type="text"
         name="website"
@@ -71,13 +74,17 @@ export default function ContactForm() {
         aria-hidden
       />
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <div className="h-16">
+      <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+        <div className="min-h-20">
+          <label htmlFor="name" className="mb-2 block text-sm font-semibold">
+            Name
+          </label>
           <Input
             id="name"
             type="text"
-            placeholder="Name"
+            placeholder="Your name"
             autoComplete="given-name"
+            className="bg-background/55 h-11"
             {...register("name")}
           />
           {errors.name?.message && (
@@ -85,12 +92,16 @@ export default function ContactForm() {
           )}
         </div>
 
-        <div className="h-16">
+        <div className="min-h-20">
+          <label htmlFor="email" className="mb-2 block text-sm font-semibold">
+            Email
+          </label>
           <Input
             id="email"
             type="email"
-            placeholder="Email"
+            placeholder="you@example.com"
             autoComplete="email"
+            className="bg-background/55 h-11"
             {...register("email")}
           />
           {errors.email?.message && (
@@ -98,12 +109,16 @@ export default function ContactForm() {
           )}
         </div>
 
-        <div className="h-32 sm:col-span-2">
+        <div className="min-h-44 sm:col-span-2">
+          <label htmlFor="message" className="mb-2 block text-sm font-semibold">
+            Message
+          </label>
           <Textarea
+            id="message"
             rows={4}
             placeholder="Drop your message here."
             autoComplete="off"
-            className="resize-none"
+            className="bg-background/55 min-h-36 resize-none"
             {...register("message")}
           />
           {errors.message?.message && (
@@ -112,27 +127,27 @@ export default function ContactForm() {
         </div>
       </div>
 
-      <div className="mt-2">
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full disabled:opacity-50"
-        >
-          <span className="flex items-center">
-            <span>{isSubmitting ? "Sending..." : "Send Message"}</span>
-            {isSubmitting ? (
-              <ReloadIcon className="ml-2 h-4 w-4 animate-spin" />
-            ) : (
-              <PaperPlaneIcon className="ml-2" />
-            )}
-          </span>
-        </Button>
-        <p className="text-muted-foreground mt-4 text-xs">
+      <div className="border-border/60 mt-5 flex flex-col gap-4 border-t pt-5 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-muted-foreground text-xs">
           By submitting this form, I agree to the{" "}
           <Link href="/privacy" className="link font-semibold">
             privacy&nbsp;policy.
           </Link>
         </p>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="h-11 w-full px-6 disabled:opacity-50 sm:w-auto sm:min-w-44"
+        >
+          <span className="flex items-center gap-2">
+            <span>{isSubmitting ? "Sending..." : "Send Message"}</span>
+            {isSubmitting ? (
+              <LoaderCircle className="size-4 animate-spin" />
+            ) : (
+              <Send className="size-4" />
+            )}
+          </span>
+        </Button>
       </div>
     </form>
   );

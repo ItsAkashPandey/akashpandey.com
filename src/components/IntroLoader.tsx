@@ -9,7 +9,11 @@ const greetings = [
   "Bonjour",
   "Ciao",
   "Hallo",
+  "Olá",
+  "Hej",
   "Jambo",
+  "Merhaba",
+  "Halo",
   "مرحبا",
   "שלום",
   "你好",
@@ -17,8 +21,13 @@ const greetings = [
   "안녕하세요",
   "নমস্কার",
   "வணக்கம்",
+  "ਸਤ ਸ੍ਰੀ ਅਕਾਲ",
   "नमस्ते",
 ];
+
+const GREETING_STEP_MS = 58;
+const FINAL_GREETING_DELAY_MS = (greetings.length - 1) * GREETING_STEP_MS;
+const MINIMUM_LOADER_MS = FINAL_GREETING_DELAY_MS + 460;
 
 export default function IntroLoader() {
   const [leaving, setLeaving] = useState(false);
@@ -48,8 +57,8 @@ export default function IntroLoader() {
     const minimumTimer = window.setTimeout(() => {
       minimumElapsed = true;
       leaveWhenReady();
-    }, 1_230);
-    const safetyTimer = window.setTimeout(() => setLeaving(true), 2_350);
+    }, MINIMUM_LOADER_MS);
+    const safetyTimer = window.setTimeout(() => setLeaving(true), 2_500);
 
     return () => {
       window.removeEventListener("hero-map-ready", handleMapReady);
@@ -62,27 +71,31 @@ export default function IntroLoader() {
   return (
     <>
       <style>{`
-        .intro-loader { animation: introSafety 2.6s cubic-bezier(.22,.8,.24,1) forwards; }
+        .intro-loader { animation: introSafety 2.75s cubic-bezier(.22,.8,.24,1) forwards; }
         .intro-loader[data-leaving="true"] { animation: introOverlayExit 220ms cubic-bezier(.22,.8,.24,1) forwards; }
-        .intro-loader__image { animation: introImageSettle 1.35s cubic-bezier(.22,.8,.24,1) both; }
+        .intro-loader__image { animation: introImageSettle 1.5s cubic-bezier(.22,.8,.24,1) both; }
         .intro-loader__word, .intro-loader__final {
           position: absolute;
           opacity: 0;
           white-space: nowrap;
+          line-height: 1.35;
+          padding: .18em .12em .28em;
+          text-shadow: 0 2px 22px rgba(0,0,0,.42);
+          font-family: var(--font-sans), "Nirmala UI", "Noto Sans Devanagari", sans-serif;
         }
-        .intro-loader__word { animation: introWord 94ms cubic-bezier(.22,.8,.24,1) both; }
-        .intro-loader__final { animation: introFinal 170ms cubic-bezier(.22,.8,.24,1) both; }
+        .intro-loader__word { animation: introWord 82ms cubic-bezier(.22,.8,.24,1) both; }
+        .intro-loader__final { animation: introFinal 220ms cubic-bezier(.22,.8,.24,1) both; }
         .intro-loader__progress {
-          animation: introProgress 1.28s linear forwards;
+          animation: introProgress ${MINIMUM_LOADER_MS}ms linear forwards;
         }
         @keyframes introWord {
-          0% { opacity: 0; clip-path: inset(100% 0 0); transform: translateY(12px); }
-          18%, 72% { opacity: 1; clip-path: inset(0 0 0); transform: translateY(0); }
-          100% { opacity: 0; clip-path: inset(0 0 100%); transform: translateY(-10px); }
+          0% { opacity: 0; transform: translateY(9px); }
+          18%, 70% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(-7px); }
         }
         @keyframes introFinal {
-          from { opacity: 0; clip-path: inset(100% 0 0); transform: translateY(12px); }
-          to { opacity: 1; clip-path: inset(0 0 0); transform: translateY(0); }
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         @keyframes introImageSettle {
           from { transform: scale(1.025); }
@@ -102,6 +115,8 @@ export default function IntroLoader() {
         }
         @media (prefers-reduced-motion: reduce) {
           .intro-loader__image { animation: none; }
+          .intro-loader__word { display: none; }
+          .intro-loader__final { animation: none; opacity: 1; }
         }
       `}</style>
       <div
@@ -112,34 +127,38 @@ export default function IntroLoader() {
         aria-label="Loading Akash's portfolio"
       >
         <Image
-          src="/img/intro-field.webp"
+          src="/img/akash-4.webp"
           alt=""
           fill
           priority
-          unoptimized
           sizes="100vw"
-          className="intro-loader__image object-cover"
+          quality={75}
+          className="intro-loader__image object-cover object-[54%_72%]"
         />
-        <span className="absolute inset-0 bg-black/50" />
-        <span className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.08),rgba(0,0,0,0.34)_50%,rgba(0,0,0,0.08))]" />
+        <span className="absolute inset-0 bg-black/42" />
+        <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,12,14,0.16),rgba(8,12,14,0.46))]" />
 
-        <div className="relative flex h-24 w-full items-center justify-center border-y border-white/25">
+        <div
+          className="relative flex h-40 w-full items-center justify-center overflow-visible px-5 sm:h-48"
+          aria-hidden="true"
+        >
           {greetings.map((greeting, index) => (
             <span
               key={greeting}
-              className={`text-4xl font-semibold sm:text-6xl ${
+              lang={index === greetings.length - 1 ? "hi" : undefined}
+              className={`text-4xl font-medium sm:text-6xl lg:text-7xl ${
                 index === greetings.length - 1
-                  ? "intro-loader__final"
+                  ? "intro-loader__final font-semibold"
                   : "intro-loader__word"
               }`}
-              style={{ animationDelay: `${index * 74}ms` }}
+              style={{ animationDelay: `${index * GREETING_STEP_MS}ms` }}
             >
               {greeting}
             </span>
           ))}
         </div>
 
-        <span className="absolute right-5 bottom-6 left-5 h-px bg-white/30 sm:right-8 sm:left-8">
+        <span className="absolute right-5 bottom-6 left-5 h-px overflow-hidden bg-white/25 sm:right-8 sm:left-8">
           <span className="intro-loader__progress block h-full origin-left bg-white" />
         </span>
       </div>

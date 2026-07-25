@@ -1,6 +1,6 @@
 "use client";
 
-import { MoonIcon, SunIcon } from "@radix-ui/react-icons";
+import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/Button";
@@ -28,14 +28,14 @@ export default function ThemeToggle() {
     <Button
       size="icon"
       variant="ghost"
-      className="border-border/55 bg-background/60 size-10 rounded-xl border shadow-sm"
+      className="header-icon-button"
       onClick={toggleTheme}
       title={isDark ? "Use light theme" : "Use dark theme"}
     >
       {isDark ? (
-        <SunIcon className="size-4 text-orange-300" />
+        <Sun className="size-4 text-amber-300" />
       ) : (
-        <MoonIcon className="size-4 text-indigo-500" />
+        <Moon className="size-4 text-sky-700" />
       )}
       <span className="sr-only">Theme Toggle</span>
     </Button>

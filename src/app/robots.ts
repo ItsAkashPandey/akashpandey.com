@@ -1,3 +1,4 @@
+import siteData from "@/data/site.json";
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
@@ -9,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin/", "/api/"],
       },
     ],
-    sitemap: "https://www.akashpandey.com/sitemap.xml",
-    host: "https://www.akashpandey.com",
+    sitemap: `${siteData.url}/sitemap.xml`,
+    host: siteData.url,
   };
 }

@@ -116,6 +116,8 @@ function resolveMessageAndHistory(body: ChatRequestBody): {
 
 function inferVisitorNameFast(text: string): string | null {
   const trimmed = text.trim();
+  if (ABUSIVE_LANGUAGE_PATTERN.test(trimmed)) return null;
+
   const direct = trimmed.match(
     /(?:my name is|i am|i'm|call me|this is)\s+([a-z][a-z .'-]{1,50})/i,
   );
@@ -142,6 +144,9 @@ function inferVisitorNameFast(text: string): string | null {
 
   return name.slice(0, 80);
 }
+
+const ABUSIVE_LANGUAGE_PATTERN =
+  /\b(chutiya|madarchod|behenchod|bhenchod|bhosdike|bsdk|gandu|gaandu|randi|fuck\s*(you|off)?|asshole|bastard|pendejo|gilipollas|connard)\b/i;
 
 function inferIntent(text: string) {
   const lower = text.toLowerCase();
@@ -357,10 +362,7 @@ function directFastReply(message: string) {
 
 function directToneBoundary(message: string) {
   const lower = message.toLocaleLowerCase();
-  const containsAbuse =
-    /\b(chutiya|madarchod|behenchod|bhenchod|bhosdike|bsdk|gandu|gaandu|randi|fuck\s*(you|off)?|asshole|bastard|pendejo|gilipollas|connard)\b/i.test(
-      lower,
-    );
+  const containsAbuse = ABUSIVE_LANGUAGE_PATTERN.test(lower);
 
   if (!containsAbuse) return null;
 

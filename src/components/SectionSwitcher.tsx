@@ -11,7 +11,7 @@ const toneClasses = {
   sky: "bg-sky-500/11 text-sky-700 dark:text-sky-300",
   emerald: "bg-emerald-500/11 text-emerald-700 dark:text-emerald-300",
   rose: "bg-rose-500/11 text-rose-700 dark:text-rose-300",
-  indigo: "bg-indigo-500/11 text-indigo-700 dark:text-indigo-300",
+  ocean: "bg-cyan-500/11 text-cyan-800 dark:text-cyan-300",
 };
 
 export function SectionSwitcherVisual({

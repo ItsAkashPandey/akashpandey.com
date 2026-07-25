@@ -55,7 +55,7 @@ export default function LazySection({
     return (
       <div ref={ref} className={className} style={{ minHeight: heightHint }}>
         <Skeleton
-          className="w-full rounded-2xl"
+          className="w-full rounded-lg"
           style={{ height: heightHint }}
         />
       </div>
