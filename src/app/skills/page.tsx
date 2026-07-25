@@ -135,9 +135,6 @@ export default function SkillsPage() {
     <article className="relative mt-10 flex flex-col gap-8 pb-16">
       <header className="flex max-w-3xl flex-col gap-3">
         <h1 className="title">my skills.</h1>
-        <p className="text-muted-foreground text-base leading-relaxed sm:text-lg">
-          The equipment and tools I have actually used—not a keyword list.
-        </p>
       </header>
 
       <section className="border-border/55 bg-card/42 overflow-hidden rounded-[28px] border p-4 shadow-[0_18px_50px_rgba(15,23,42,0.06)] sm:p-6">

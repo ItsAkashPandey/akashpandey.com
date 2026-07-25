@@ -47,7 +47,7 @@ const planeRoutes: RoutePlan[] = [
   {
     points: [
       [77.1, 28.56, 9_800],
-      [68.9, 28.4, 10_600],
+      [68.9, 22.4, 10_600],
       [55.36, 25.25, 9_900],
     ],
     duration: 58_000,
@@ -178,10 +178,36 @@ const routesByKind: Record<TrafficKind, RoutePlan[]> = {
 };
 
 const targetPixelSize: Record<TrafficKind, number> = {
-  plane: 30,
-  drone: 14,
-  satellite: 21,
+  // The custom layer renders into MapLibre's high-DPI framebuffer, so these
+  // values are deliberately larger than the resulting CSS-pixel footprint.
+  plane: 108,
+  drone: 54,
+  satellite: 76,
 };
+
+function createModelShadow(kind: TrafficKind) {
+  const shape: Record<TrafficKind, [number, number]> = {
+    plane: [0.56, 0.2],
+    drone: [0.4, 0.29],
+    satellite: [0.48, 0.23],
+  };
+  const [width, height] = shape[kind];
+  const geometry = new THREE.CircleGeometry(0.5, 32);
+  geometry.scale(width * 2, height * 2, 1);
+  const material = new THREE.MeshBasicMaterial({
+    color: kind === "plane" ? 0x0f172a : kind === "drone" ? 0x294d3d : 0x24475b,
+    transparent: true,
+    opacity: kind === "drone" ? 0.46 : 0.4,
+    depthTest: false,
+    depthWrite: false,
+  });
+  const shadow = new THREE.Mesh(geometry, material);
+  shadow.name = `${kind}-soft-shadow`;
+  shadow.position.set(0.07, 0.1, -0.18);
+  shadow.renderOrder = -10;
+  shadow.frustumCulled = false;
+  return shadow;
+}
 
 function preparePrototype(source: THREE.Object3D, kind: TrafficKind) {
   const root = source.clone(true);
@@ -212,9 +238,17 @@ function preparePrototype(source: THREE.Object3D, kind: TrafficKind) {
     const adjusted = materials.map((material) => {
       const clone = material.clone();
       if (clone instanceof THREE.MeshStandardMaterial) {
-        clone.roughness = Math.max(0.36, clone.roughness * 0.9);
-        clone.metalness = Math.min(0.62, clone.metalness + 0.08);
+        const tint = new THREE.Color(
+          kind === "plane" ? 0x64748b : kind === "drone" ? 0x3f6f5f : 0x315d78,
+        );
+        clone.color.lerp(tint, kind === "plane" ? 0.28 : 0.22);
+        clone.roughness = Math.max(0.52, clone.roughness);
+        clone.metalness = Math.min(0.48, clone.metalness + 0.06);
+        clone.emissive.set(kind === "satellite" ? 0x071525 : 0x090d14);
+        clone.emissiveIntensity = 0.06;
       }
+      clone.depthTest = false;
+      clone.depthWrite = false;
       return clone;
     });
     object.material = Array.isArray(object.material) ? adjusted : adjusted[0];
@@ -222,6 +256,7 @@ function preparePrototype(source: THREE.Object3D, kind: TrafficKind) {
 
   const holder = new THREE.Group();
   holder.name = `${kind}-model`;
+  holder.add(createModelShadow(kind));
   holder.add(oriented);
   return holder;
 }
@@ -326,11 +361,7 @@ function updateTrafficItem(
   const worldPixels = 512 * 2 ** zoom;
   const scale =
     (targetPixelSize[item.kind] / worldPixels) * Math.max(0.02, fade);
-  const visible =
-    item.group.children.length > 0 &&
-    ((item.kind === "satellite" && zoom <= 5.6) ||
-      (item.kind === "plane" && zoom <= 6.2) ||
-      (item.kind === "drone" && zoom >= 2.7 && zoom <= 6.4));
+  const visible = item.group.children.length > 0;
 
   return { item, coordinate: mercator, heading, scale, visible };
 }
@@ -343,14 +374,14 @@ function createTraffic(now: number) {
     satellite: 2,
   };
   const phases: Record<TrafficKind, number[]> = {
-    plane: [0.12, 0.46, 0.78],
+    plane: [0.46, 0.55, 0.42],
     drone: [0.18, 0.63],
-    satellite: [0.26, 0.72],
+    satellite: [0.62, 0.82],
   };
   const initialRoutes: Record<TrafficKind, number[]> = {
-    plane: [0, 3, 6],
+    plane: [0, 4, 1],
     drone: [0, 3],
-    satellite: [0, 2],
+    satellite: [1, 2],
   };
 
   (Object.keys(counts) as TrafficKind[]).forEach((kind) => {
@@ -391,11 +422,11 @@ export function createResearchTrafficLayer(): CustomLayerInterface {
       scene = new THREE.Scene();
       traffic = createTraffic(performance.now());
 
-      scene.add(new THREE.HemisphereLight(0xf8fbff, 0x334155, 3.2));
-      const keyLight = new THREE.DirectionalLight(0xfff7e8, 3.8);
+      scene.add(new THREE.HemisphereLight(0xe6edf5, 0x263548, 2.25));
+      const keyLight = new THREE.DirectionalLight(0xfff7e8, 2.6);
       keyLight.position.set(-0.45, -0.75, 1.6).normalize();
       scene.add(keyLight);
-      const rimLight = new THREE.DirectionalLight(0x9ed8ff, 2.1);
+      const rimLight = new THREE.DirectionalLight(0x8fc9ed, 1.35);
       rimLight.position.set(0.8, 0.35, 0.8).normalize();
       scene.add(rimLight);
       traffic.forEach((item) => scene.add(item.group));

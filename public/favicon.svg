@@ -1,49 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <!-- Background Space Gradient -->
-    <linearGradient id="spaceGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#050b18" />
-      <stop offset="45%" stop-color="#1e40af" />
-      <stop offset="80%" stop-color="#0284c7" />
-      <stop offset="100%" stop-color="#0d9488" />
+    <linearGradient id="panel" x1="5" y1="17" x2="56" y2="50" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1D4ED8"/>
+      <stop offset=".52" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#0F766E"/>
     </linearGradient>
-
-    <!-- Globe Gradient -->
-    <linearGradient id="globeGrad" x1="32" y1="18" x2="32" y2="46" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#38bdf8" />
-      <stop offset="100%" stop-color="#1d4ed8" />
+    <linearGradient id="body" x1="23" y1="18" x2="42" y2="46" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#334155"/>
+      <stop offset="1" stop-color="#0F172A"/>
     </linearGradient>
-
-    <!-- Satellite Glow -->
-    <radialGradient id="satGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#ffffff" />
-      <stop offset="40%" stop-color="#22d3ee" stop-opacity="1" />
-      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0" />
-    </radialGradient>
+    <linearGradient id="dish" x1="27" y1="9" x2="38" y2="25" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FDE68A"/>
+      <stop offset="1" stop-color="#D97706"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="2" stdDeviation="1.4" flood-color="#0F172A" flood-opacity=".28"/>
+    </filter>
   </defs>
 
-  <!-- Outer Rounded Container -->
-  <rect x="3" y="3" width="58" height="58" rx="17" fill="url(#spaceGrad)" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1.5" />
+  <g filter="url(#shadow)" transform="rotate(-8 32 32)">
+    <path d="M4.5 18.5 21 20.7v22.6L4.5 45.5c-1 .1-1.9-.7-1.9-1.7V20.2c0-1 .9-1.8 1.9-1.7Z" fill="url(#panel)"/>
+    <path d="m59.5 18.5-16.5 2.2v22.6l16.5 2.2c1 .1 1.9-.7 1.9-1.7V20.2c0-1-.9-1.8-1.9-1.7Z" fill="url(#panel)"/>
 
-  <!-- Subtle Background Stars -->
-  <circle cx="16" cy="16" r="0.8" fill="#ffffff" opacity="0.6" />
-  <circle cx="48" cy="48" r="0.6" fill="#ffffff" opacity="0.4" />
-  <circle cx="14" cy="44" r="0.7" fill="#ffffff" opacity="0.5" />
+    <g stroke="#BFDBFE" stroke-opacity=".58" stroke-width="1">
+      <path d="M8.8 19.1v25.8M15.2 20v24M3 31.9h18M3 38.3h18"/>
+      <path d="M55.2 19.1v25.8M48.8 20v24M43 31.9h18M43 38.3h18"/>
+    </g>
 
-  <!-- Back Orbit (behind the globe) -->
-  <path d="M51.9 20.5 C 45 14, 25 16, 13.2 40.5" stroke="#06b6d4" stroke-width="2.5" stroke-dasharray="3 2" fill="none" opacity="0.6" />
+    <rect x="20" y="18" width="24" height="29" rx="6.5" fill="url(#body)"/>
+    <rect x="23.5" y="21.5" width="17" height="22" rx="4" fill="#475569"/>
+    <circle cx="32" cy="35.5" r="5.2" fill="#0F172A"/>
+    <circle cx="32" cy="35.5" r="3.1" fill="#38BDF8"/>
+    <circle cx="30.8" cy="34.2" r="1" fill="#E0F2FE"/>
 
-  <!-- The Globe -->
-  <circle cx="32" cy="32" r="14" fill="url(#globeGrad)" stroke="#ffffff" stroke-width="2" />
-
-  <!-- Globe Grid Lines (Geospatial theme) -->
-  <ellipse cx="32" cy="32" rx="14" ry="5.5" fill="none" stroke="rgba(255, 255, 255, 0.65)" stroke-width="1.5" />
-  <ellipse cx="32" cy="32" rx="5.5" ry="14" fill="none" stroke="rgba(255, 255, 255, 0.65)" stroke-width="1.5" />
-
-  <!-- Front Orbit (in front of the globe) -->
-  <path d="M13.2 40.5 C 19 47, 39 45, 51.9 20.5" stroke="#22d3ee" stroke-width="3" stroke-linecap="round" fill="none" />
-
-  <!-- Satellite Indicator -->
-  <circle cx="51.9" cy="20.5" r="5.5" fill="url(#satGlow)" />
-  <circle cx="51.9" cy="20.5" r="2.2" fill="#ffffff" />
+    <path d="M31.9 20.4V14" stroke="#CBD5E1" stroke-width="2" stroke-linecap="round"/>
+    <path d="M24.7 7.5c5.8.2 10.7 3.9 12.7 9.3l-7.2 2.5a9.1 9.1 0 0 1-5.5-11.8Z" fill="url(#dish)"/>
+    <circle cx="32" cy="16.9" r="2.1" fill="#F8FAFC"/>
+    <path d="m26 48.2-2.2 6.3M38 48.2l2.2 6.3" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
+  </g>
 </svg>
