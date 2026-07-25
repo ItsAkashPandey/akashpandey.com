@@ -1,16 +1,15 @@
 import routesData from "@/data/routes.json";
+import siteData from "@/data/site.json";
 import type { MetadataRoute } from "next";
 
-const baseUrl = "https://www.akashpandey.com";
-
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
+  const lastModified = new Date(`${siteData.lastUpdated}T00:00:00.000Z`);
 
   return routesData.routes
     .filter((route) => route.path !== "/resume.pdf")
     .map((route) => ({
-      url: `${baseUrl}${route.path}`,
-      lastModified: now,
+      url: `${siteData.url}${route.path}`,
+      lastModified,
       changeFrequency: route.path === "/" ? "weekly" : "monthly",
       priority: route.path === "/" ? 1 : 0.7,
     }));

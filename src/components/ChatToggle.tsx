@@ -12,7 +12,7 @@ export default function ChatToggle() {
       size="icon"
       variant="ghost"
       onClick={toggleChat}
-      className="border-border/55 bg-background/60 relative size-10 rounded-xl border shadow-sm"
+      className="header-icon-button relative"
       title={isOpen ? "Close Kasi" : "Open Kasi"}
     >
       <KasiMark active={isOpen} size="sm" />

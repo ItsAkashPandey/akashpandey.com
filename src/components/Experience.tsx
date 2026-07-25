@@ -16,7 +16,7 @@ export default function Experience() {
 
   return (
     <Tabs defaultValue="education">
-      <TabsList className={`${sectionSwitcherListClass} mb-4`}>
+      <TabsList className={`${sectionSwitcherListClass} mb-5`}>
         <TabsTrigger value="education" className={sectionSwitcherTriggerClass}>
           <SectionSwitcherVisual
             Icon={GraduationCap}

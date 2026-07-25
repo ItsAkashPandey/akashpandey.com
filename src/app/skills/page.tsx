@@ -51,8 +51,8 @@ const subcategoryConfig: Record<
   },
   Programming: {
     Icon: Code2,
-    accent: "text-violet-700 dark:text-violet-300",
-    surface: "bg-violet-500/10",
+    accent: "text-blue-700 dark:text-blue-300",
+    surface: "bg-blue-500/10",
   },
   "Geospatial Analysis": {
     Icon: Globe2,
@@ -132,8 +132,8 @@ export default function SkillsPage() {
     "images" in activeCategory ? activeCategory.images : [];
 
   return (
-    <article className="relative mt-10 flex flex-col gap-8 pb-16">
-      <header className="flex max-w-3xl flex-col gap-3">
+    <article className="page-shell relative">
+      <header className="page-heading">
         <h1 className="title">my skills.</h1>
       </header>
 
@@ -166,7 +166,7 @@ export default function SkillsPage() {
                   title={categoryLabel(category.mainCategory)}
                   description={`${category.subcategories.length} groups`}
                   count={count}
-                  tone={category.id === 1 ? "rose" : "indigo"}
+                  tone={category.id === 1 ? "rose" : "ocean"}
                 />
               </button>
             );
@@ -178,7 +178,7 @@ export default function SkillsPage() {
             <h2 className="title text-3xl leading-tight sm:text-4xl">
               {categoryLabel(activeCategory.mainCategory).toLowerCase()}
             </h2>
-            <p className="text-muted-foreground mt-4 max-w-3xl text-sm leading-7 sm:text-base">
+            <p className="text-muted-foreground mt-4 max-w-[70ch] text-sm leading-7 sm:text-base">
               {activeCategory.description}
             </p>
           </div>
@@ -227,7 +227,7 @@ export default function SkillsPage() {
                   </span>
                   <div>
                     <h2 className="text-sm font-bold">{subcategory.name}</h2>
-                    <p className="text-muted-foreground text-[10px]">
+                    <p className="text-muted-foreground text-[11px]">
                       {subcategory.tools.length} tools
                     </p>
                   </div>
@@ -244,7 +244,7 @@ export default function SkillsPage() {
                     <article
                       key={tool.name}
                       id={slugify(tool.name)}
-                      className="record-surface group/tool overflow-hidden rounded-lg transition-shadow hover:shadow-[7px_10px_26px_rgba(12,35,36,.1)]"
+                      className="record-surface group/tool overflow-hidden rounded-lg transition-shadow hover:shadow-lg"
                     >
                       <button
                         type="button"
@@ -269,20 +269,20 @@ export default function SkillsPage() {
                                 </span>
                                 {"model" in tool &&
                                   tool.model !== tool.name && (
-                                    <span className="text-muted-foreground mt-0.5 block text-[10px] font-medium">
+                                    <span className="text-muted-foreground mt-0.5 block text-[11px] font-medium">
                                       {tool.model}
                                     </span>
                                   )}
                               </span>
                               {interactive && (
-                                <span className="bg-muted text-muted-foreground group-hover/tool:text-foreground inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[9px] font-semibold transition-colors">
+                                <span className="bg-muted text-muted-foreground group-hover/tool:text-foreground inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold transition-colors">
                                   <GalleryHorizontalEnd className="size-3" />
                                   photos
                                 </span>
                               )}
                             </span>
                             {"experience" in tool && (
-                              <span className="text-muted-foreground mt-2 block text-xs leading-5">
+                              <span className="text-muted-foreground mt-2 block text-[13px] leading-5">
                                 {tool.experience}
                               </span>
                             )}

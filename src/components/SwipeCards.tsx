@@ -23,6 +23,7 @@ export default function SwipeCards({
   baselineWidth = 3,
   baselineHeight = 4,
 }: SwipeCardsProps) {
+  const usesHomepageImages = !images?.length;
   const deckImages = images?.length ? images : cardData.map((card) => card.url);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -36,9 +37,9 @@ export default function SwipeCards({
         sizes="(max-width: 640px) 175px, 280px"
         quality={84}
         idleQuality={84}
-        priority
+        priority={usesHomepageImages}
         stackSize={4}
-        className={cn("h-[233px] w-[175px] rounded-xl", className)}
+        className={cn("h-[233px] w-[175px] rounded-lg", className)}
         onImageClick={setLightboxIndex}
       />
       {lightboxIndex !== null && (

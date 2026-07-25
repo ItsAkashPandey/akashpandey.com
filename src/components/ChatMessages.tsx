@@ -72,7 +72,7 @@ export default function ChatMessages({
       {/* error */}
       {error && (
         <div className="flex flex-col items-center gap-2 py-3">
-          <div className="max-w-[280px] rounded-xl border border-rose-200/30 bg-rose-500/10 px-4 py-3 text-center dark:border-rose-500/10 dark:bg-rose-500/5">
+          <div className="max-w-[280px] rounded-lg border border-rose-200/30 bg-rose-500/10 px-4 py-3 text-center dark:border-rose-500/10 dark:bg-rose-500/5">
             <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
               {error.message ||
                 "Oops, something went sideways 🙃 — please try again!"}

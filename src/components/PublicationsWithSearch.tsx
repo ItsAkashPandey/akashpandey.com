@@ -247,7 +247,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
 
   return (
     <div className="grid min-w-0 gap-5 lg:grid-cols-[232px_minmax(0,1fr)] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-8">
-      <aside className="filter-rail rounded-xl p-4 lg:sticky lg:top-24">
+      <aside className="filter-rail rounded-lg p-4 lg:sticky lg:top-24">
         <div className="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -399,7 +399,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
 
       <div className="min-w-0 space-y-4">
         {filtered.length === 0 ? (
-          <div className="bg-muted/55 text-muted-foreground rounded-xl px-6 py-16 text-center text-sm">
+          <div className="bg-muted/55 text-muted-foreground rounded-lg px-6 py-16 text-center text-sm">
             No publications found matching your criteria.
           </div>
         ) : (
@@ -448,7 +448,7 @@ function PublicationCard({
   return (
     <article
       className={cn(
-        "record-surface group relative overflow-hidden rounded-xl p-5 transition-shadow duration-200 hover:shadow-[10px_16px_42px_rgba(12,35,36,0.11)] sm:p-6",
+        "record-surface group relative overflow-hidden rounded-lg p-5 transition-shadow duration-200 hover:shadow-[10px_16px_42px_rgba(12,35,36,0.11)] sm:p-6",
         recordTone,
       )}
     >

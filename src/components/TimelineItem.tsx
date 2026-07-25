@@ -13,8 +13,8 @@ export default function TimelineItem({ experience }: Props) {
   const logoArray = logos || (logo ? [logo] : []);
 
   return (
-    <li className="relative ml-5 py-5 sm:ml-8 sm:py-6">
-      <div className="absolute top-4 -left-[3.5rem] flex flex-col sm:top-5 sm:-left-[4.5rem]">
+    <li className="relative ml-5 py-4 sm:ml-7 sm:py-5">
+      <div className="absolute top-3 -left-[3.5rem] flex flex-col sm:top-4 sm:-left-[4.25rem]">
         {logoArray.map((logoSrc, idx) => {
           return (
             <Link
@@ -22,7 +22,7 @@ export default function TimelineItem({ experience }: Props) {
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="flex size-14 items-center justify-center rounded-full border bg-white shadow-sm transition-transform duration-300 hover:scale-105 sm:size-16"
+              className="border-border/70 flex size-14 items-center justify-center rounded-full border bg-white shadow-sm transition-transform duration-200 hover:scale-[1.03] sm:size-16 dark:bg-slate-100"
             >
               <Avatar className="size-14 rounded-full border sm:size-16">
                 <AvatarImage
@@ -47,11 +47,11 @@ export default function TimelineItem({ experience }: Props) {
         <div className="flex flex-col gap-2">
           {positions.map((position) => (
             <div key={`${position.title}-${position.start}`}>
-              <div className="grid gap-1 sm:grid-cols-[minmax(0,1fr)_max-content] sm:items-baseline sm:gap-x-4">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <p className="text-muted-foreground min-w-0 text-sm leading-tight font-semibold">
                   {position.title}
                 </p>
-                <time className="text-muted-foreground/80 bg-muted/45 justify-self-start rounded-full px-2 py-0.5 text-xs tabular-nums sm:justify-self-end">
+                <time className="text-muted-foreground/90 bg-muted/55 rounded-md px-2 py-0.5 text-xs tabular-nums">
                   <span>{position.start}</span>
                   <span>{" - "}</span>
                   <span>{position.end ?? "Present"}</span>

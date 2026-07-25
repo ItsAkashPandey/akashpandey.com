@@ -3,15 +3,18 @@
 import Link from "next/link";
 import ChatToggle from "./ChatToggle";
 import ThemeToggle from "./ThemeToggle";
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import routesData from "@/data/routes.json";
@@ -26,30 +29,40 @@ const navLinks = routesData.routes
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
-    <header className="border-border/70 bg-background/92 sticky top-0 z-50 border-b backdrop-blur-md">
-      <div className="mx-auto max-w-7xl px-5 py-3.5 sm:px-8 lg:px-10">
+    <header className="border-border/70 bg-background/94 sticky top-0 z-50 border-b backdrop-blur-md">
+      <div className="site-shell py-3.5">
         <nav className="flex items-center justify-between">
-          {/* Desktop Navigation */}
           <ul className="hidden gap-8 md:flex">
             {navLinks.map((nav, id) => (
-              <li key={id} className="link text-sm font-medium">
-                <Link href={nav.href} title={nav.title}>
+              <li key={id}>
+                <Link
+                  href={nav.href}
+                  title={nav.title}
+                  aria-current={pathname === nav.href ? "page" : undefined}
+                  className={cn(
+                    "text-muted-foreground hover:text-foreground relative block py-1 text-sm font-medium transition-colors",
+                    pathname === nav.href &&
+                      "text-foreground after:absolute after:right-0 after:-bottom-1 after:left-0 after:h-px after:bg-[hsl(var(--map-accent))]",
+                  )}
+                >
                   {nav.name}
                 </Link>
               </li>
             ))}
           </ul>
 
-          {/* Mobile Navigation Trigger */}
           <div className="md:hidden">
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="hover:bg-accent/50 transition-all active:scale-95"
+                  aria-label="Open navigation menu"
+                  title="Open navigation menu"
+                  className="header-icon-button active:scale-[0.98]"
                 >
                   <Menu className="text-foreground/80 size-6" />
                 </Button>
@@ -57,6 +70,9 @@ export default function Header() {
               <DialogContent className="bg-background/95 flex h-screen flex-col border-none pt-20 shadow-2xl backdrop-blur-xl sm:max-w-xs">
                 <DialogHeader className="hidden">
                   <DialogTitle>Navigation</DialogTitle>
+                  <DialogDescription>
+                    Choose a page on Akash&apos;s portfolio.
+                  </DialogDescription>
                 </DialogHeader>
                 <nav className="flex flex-col gap-6 px-4">
                   {navLinks.map((nav, id) => (
@@ -64,20 +80,13 @@ export default function Header() {
                       key={id}
                       href={nav.href}
                       onClick={() => setOpen(false)}
-                      className="text-foreground/90 hover:text-primary font-serif text-3xl tracking-tight transition-all hover:translate-x-2"
+                      aria-current={pathname === nav.href ? "page" : undefined}
+                      className="text-foreground/90 hover:text-primary font-serif text-3xl tracking-normal transition-transform hover:translate-x-1"
                     >
                       {nav.name}.
                     </Link>
                   ))}
                 </nav>
-                <div className="border-border/10 mt-auto flex items-center justify-between border-t px-4 pt-8 pb-12">
-                  <p className="text-muted-foreground text-xs font-semibold tracking-widest uppercase">
-                    Connect
-                  </p>
-                  <div className="flex gap-4">
-                    {/* Standard toggles inside mobile menu for convenience */}
-                  </div>
-                </div>
               </DialogContent>
             </Dialog>
           </div>

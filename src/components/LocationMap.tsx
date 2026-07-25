@@ -1,39 +1,129 @@
 "use client";
 
+import MapControls from "@/components/map/MapControls";
+import SatellitePopup from "@/components/map/SatellitePopup";
+import { createFallbackSatelliteFeed } from "@/data/satellite-fallback";
 import {
-  createResearchTrafficLayer,
-  researchTrafficLayerId,
-} from "@/lib/map-traffic-3d";
-import { LocateFixed, Navigation } from "lucide-react";
+  createLocationMarkerElement,
+  createSatelliteMarkerElement,
+} from "@/lib/map/map-markers";
+import { applyMapTheme, MAP_STYLES } from "@/lib/map/map-style";
+import {
+  createTrackedSatellites,
+  satelliteGroundTrack,
+  satelliteSnapshot,
+  type TrackedSatellite,
+} from "@/lib/map/satellite-orbits";
+import type {
+  SatelliteFeed,
+  SatelliteSnapshot,
+} from "@/lib/map/satellite-types";
+import { LoaderCircle, Satellite } from "lucide-react";
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl";
-import Image from "next/image";
 import { useTheme } from "next-themes";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-const AKASH_LOCATION: [number, number] = [77.900244, 29.862397];
-const DARK_STYLE =
-  "https://api.maptiler.com/maps/streets-v2-dark/style.json?key=IrVvN2pzTqfoeBk0mJ6F";
-const LIGHT_STYLE =
-  "https://api.maptiler.com/maps/outdoor-v2/style.json?key=IrVvN2pzTqfoeBk0mJ6F";
+const AKASH_LOCATION: [longitude: number, latitude: number] = [
+  77.900244, 29.862397,
+];
+const SATELLITE_SOURCE_ID = "tracked-satellite-orbit";
+const SATELLITE_GLOW_LAYER_ID = "tracked-satellite-orbit-glow";
+const SATELLITE_PAST_LAYER_ID = "tracked-satellite-orbit-past";
+const SATELLITE_FUTURE_LAYER_ID = "tracked-satellite-orbit-future";
 
-function createMarkerElement(kind: "akash" | "visitor") {
-  const element = document.createElement("div");
-  element.className =
-    kind === "akash"
-      ? "group/marker relative z-50 flex size-7 items-center justify-center"
-      : "group/visitor relative z-40 flex size-7 items-center justify-center";
-  element.innerHTML =
-    kind === "akash"
-      ? `<span class="size-3 rounded-full border-2 border-white bg-indigo-600 shadow-xl transition-transform group-hover/marker:scale-125 dark:border-zinc-800"></span>
-         <span class="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 translate-y-1 whitespace-nowrap rounded-md bg-zinc-900/95 px-2 py-1 text-[10px] font-bold text-white opacity-0 shadow-xl transition group-hover/marker:translate-y-0 group-hover/marker:opacity-100 dark:bg-white/95 dark:text-zinc-900">Akash</span>`
-      : `<span class="absolute inset-0 animate-ping rounded-full bg-sky-500/20"></span>
-         <span class="size-3 rounded-full border-2 border-white bg-sky-500 shadow-xl dark:border-zinc-800"></span>
-         <span class="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 translate-y-1 whitespace-nowrap rounded-md bg-zinc-900/95 px-2 py-1 text-[10px] font-bold text-white opacity-0 shadow-xl transition group-hover/visitor:translate-y-0 group-hover/visitor:opacity-100 dark:bg-white/95 dark:text-zinc-900">You</span>`;
-  return element;
+type SatelliteMarkerHandle = {
+  marker: Marker;
+  tracked: TrackedSatellite;
+  setBearing: (bearing: number) => void;
+  setSelected: (selected: boolean) => void;
+};
+
+function emptyTrack(): GeoJSON.FeatureCollection<GeoJSON.LineString> {
+  return { type: "FeatureCollection", features: [] };
+}
+
+function syncSatelliteTrack(
+  map: MapLibreMap,
+  tracked: TrackedSatellite | undefined,
+  dark: boolean,
+) {
+  if (!map.isStyleLoaded()) return;
+  const track = tracked
+    ? satelliteGroundTrack(tracked, new Date())
+    : emptyTrack();
+  const source = map.getSource(SATELLITE_SOURCE_ID) as
+    GeoJSONSource | undefined;
+
+  if (source) {
+    source.setData(track);
+  } else {
+    map.addSource(SATELLITE_SOURCE_ID, {
+      type: "geojson",
+      data: track,
+      lineMetrics: true,
+      maxzoom: 8,
+    });
+  }
+
+  const color = dark ? "#72d2c8" : "#147b78";
+  if (!map.getLayer(SATELLITE_GLOW_LAYER_ID)) {
+    map.addLayer({
+      id: SATELLITE_GLOW_LAYER_ID,
+      type: "line",
+      source: SATELLITE_SOURCE_ID,
+      layout: {
+        "line-cap": "round",
+        "line-join": "round",
+      },
+      paint: {
+        "line-color": color,
+        "line-width": 6,
+        "line-opacity": 0.12,
+        "line-blur": 2,
+      },
+    });
+  }
+
+  if (!map.getLayer(SATELLITE_PAST_LAYER_ID)) {
+    map.addLayer({
+      id: SATELLITE_PAST_LAYER_ID,
+      type: "line",
+      source: SATELLITE_SOURCE_ID,
+      filter: ["==", ["get", "phase"], "past"],
+      layout: {
+        "line-cap": "round",
+        "line-join": "round",
+      },
+      paint: {
+        "line-color": color,
+        "line-width": 1.4,
+        "line-opacity": 0.46,
+        "line-dasharray": [1.5, 2],
+      },
+    });
+  }
+
+  if (!map.getLayer(SATELLITE_FUTURE_LAYER_ID)) {
+    map.addLayer({
+      id: SATELLITE_FUTURE_LAYER_ID,
+      type: "line",
+      source: SATELLITE_SOURCE_ID,
+      filter: ["==", ["get", "phase"], "future"],
+      layout: {
+        "line-cap": "round",
+        "line-join": "round",
+      },
+      paint: {
+        "line-color": color,
+        "line-width": 2,
+        "line-opacity": 0.92,
+      },
+    });
+  }
 }
 
 function distanceBetween(first: [number, number], second: [number, number]) {
-  const radius = 6371;
+  const radius = 6_371;
   const latitude = ((second[1] - first[1]) * Math.PI) / 180;
   const longitude = ((second[0] - first[0]) * Math.PI) / 180;
   const a =
@@ -44,132 +134,151 @@ function distanceBetween(first: [number, number], second: [number, number]) {
   return radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function buildArc(first: [number, number], second: [number, number]) {
-  const points: [number, number][] = [];
-  const lift = Math.hypot(second[0] - first[0], second[1] - first[1]) * 0.22;
-
-  for (let index = 0; index <= 120; index++) {
-    const progress = index / 120;
-    points.push([
-      first[0] + (second[0] - first[0]) * progress,
-      first[1] +
-        (second[1] - first[1]) * progress +
-        Math.sin(Math.PI * progress) * lift,
-    ]);
-  }
-  return points;
-}
-
 export default function LocationMap() {
-  const mapContainer = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
-  const meMarkerRef = useRef<Marker | null>(null);
+  const akashMarkerRef = useRef<Marker | null>(null);
   const visitorMarkerRef = useRef<Marker | null>(null);
-  const routeAnimationRef = useRef<number | null>(null);
+  const satelliteMarkersRef = useRef(new Map<number, SatelliteMarkerHandle>());
+  const selectedIdRef = useRef<number | null>(null);
   const mapThemeRef = useRef<"dark" | "light">("light");
-  const [time, setTime] = useState("");
+  const mapReadyRef = useRef(false);
+
   const [isClient, setIsClient] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapUnavailable, setMapUnavailable] = useState(false);
+  const [feed, setFeed] = useState<SatelliteFeed | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedSnapshot, setSelectedSnapshot] =
+    useState<SatelliteSnapshot | null>(null);
+  const [bearing, setBearing] = useState(0);
   const [visitorLocation, setVisitorLocation] = useState<
     [number, number] | null
   >(null);
-  const [distance, setDistance] = useState("");
+  const [locating, setLocating] = useState(false);
+  const [locationMessage, setLocationMessage] = useState("");
+  const [nativeFullscreen, setNativeFullscreen] = useState(false);
+  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
   const { resolvedTheme } = useTheme();
+
+  const trackedSatellites = useMemo(
+    () => createTrackedSatellites(feed?.records ?? []),
+    [feed],
+  );
+  const selectedTracked = trackedSatellites.find(
+    (tracked) => Number(tracked.record.NORAD_CAT_ID) === selectedId,
+  );
+  const fullscreen = nativeFullscreen || pseudoFullscreen;
 
   useEffect(() => {
     setIsClient(true);
-    const updateTime = () => {
-      setTime(
-        `${new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-          timeZone: "Asia/Kolkata",
-        })} IST`,
-      );
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadSatellites = async () => {
+      try {
+        const response = await fetch("/api/map/satellites", {
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error(`Satellite feed returned ${response.status}`);
+        }
+        const nextFeed = (await response.json()) as SatelliteFeed;
+        if (!Array.isArray(nextFeed.records) || !nextFeed.records.length) {
+          throw new Error("Satellite feed was empty");
+        }
+        setFeed(nextFeed);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setFeed(createFallbackSatelliteFeed());
+      }
     };
-    updateTime();
-    const interval = window.setInterval(updateTime, 60_000);
-    return () => window.clearInterval(interval);
+
+    void loadSatellites();
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
-    if (!("geolocation" in navigator)) return;
-    navigator.geolocation.getCurrentPosition(
-      (position) =>
-        setVisitorLocation([
-          position.coords.longitude,
-          position.coords.latitude,
-        ]),
-      () => {
-        // The map remains useful without location permission.
-      },
-      { timeout: 5_000, maximumAge: 300_000 },
-    );
-  }, []);
-
-  useEffect(() => {
-    if (!isClient || !mapContainer.current || mapRef.current) return;
+    if (!isClient || !mapContainerRef.current || mapRef.current) return;
     let cancelled = false;
+    let loadTimer = 0;
 
     const initialise = async () => {
       const maplibregl = (await import("maplibre-gl")).default;
-      if (cancelled || !mapContainer.current) return;
-      const initialTheme = resolvedTheme === "dark" ? "dark" : "light";
+      if (cancelled || !mapContainerRef.current) return;
+
+      const initialTheme = document.documentElement.classList.contains("dark")
+        ? "dark"
+        : "light";
       mapThemeRef.current = initialTheme;
 
       const map = new maplibregl.Map({
-        container: mapContainer.current,
-        style: initialTheme === "dark" ? DARK_STYLE : LIGHT_STYLE,
-        center: [78.5, 22.8],
-        zoom: 3.25,
-        minZoom: 2.5,
-        maxZoom: 6.5,
-        pitch: 0,
+        container: mapContainerRef.current,
+        style: MAP_STYLES[initialTheme],
+        center: [77.2, 24.2],
+        zoom: 2.8,
+        minZoom: 1.5,
+        maxZoom: 18,
+        pitch: 8,
+        maxPitch: 55,
         bearing: 0,
         dragPan: true,
-        dragRotate: false,
+        dragRotate: true,
         scrollZoom: true,
-        boxZoom: false,
+        boxZoom: true,
         doubleClickZoom: true,
-        keyboard: false,
+        keyboard: true,
         touchZoomRotate: true,
         touchPitch: false,
-        attributionControl: false,
+        attributionControl: { compact: true },
+        renderWorldCopies: false,
+        fadeDuration: 180,
+        zoomSnap: 0,
+        cancelPendingTileRequestsWhileZooming: false,
+        maxTileCacheZoomLevels: 4,
       });
-      map.touchZoomRotate.disableRotation();
+      map.touchZoomRotate.enable();
       mapRef.current = map;
 
-      const addTraffic = () => {
-        if (map.isStyleLoaded() && !map.getLayer(researchTrafficLayerId)) {
-          map.addLayer(createResearchTrafficLayer());
-        }
+      const handleStyleLoad = () => {
+        applyMapTheme(map, mapThemeRef.current);
       };
-
-      map.on("load", () => {
-        addTraffic();
+      const handleLoad = () => {
+        mapReadyRef.current = true;
+        window.clearTimeout(loadTimer);
         setMapLoaded(true);
+        setMapUnavailable(false);
         document.documentElement.dataset.heroMapReady = "true";
         window.dispatchEvent(new Event("hero-map-ready"));
-      });
-      map.on("style.load", addTraffic);
+      };
+      const handleRotateEnd = () => setBearing(map.getBearing());
+
+      map.on("style.load", handleStyleLoad);
+      map.on("load", handleLoad);
+      map.on("rotateend", handleRotateEnd);
+
+      loadTimer = window.setTimeout(() => {
+        if (!mapReadyRef.current) setMapUnavailable(true);
+      }, 8_000);
     };
 
     void initialise();
     return () => {
       cancelled = true;
-      if (routeAnimationRef.current) {
-        cancelAnimationFrame(routeAnimationRef.current);
-      }
+      window.clearTimeout(loadTimer);
+      mapReadyRef.current = false;
+      satelliteMarkersRef.current.forEach(({ marker }) => marker.remove());
+      satelliteMarkersRef.current.clear();
       visitorMarkerRef.current?.remove();
-      meMarkerRef.current?.remove();
+      akashMarkerRef.current?.remove();
       mapRef.current?.remove();
       visitorMarkerRef.current = null;
-      meMarkerRef.current = null;
+      akashMarkerRef.current = null;
       mapRef.current = null;
     };
-    // The theme is applied by the style effect after initialisation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isClient]);
 
   useEffect(() => {
@@ -179,110 +288,306 @@ export default function LocationMap() {
     if (mapThemeRef.current === nextTheme) return;
 
     mapThemeRef.current = nextTheme;
-    map.setStyle(nextTheme === "dark" ? DARK_STYLE : LIGHT_STYLE);
+    map.setStyle(MAP_STYLES[nextTheme]);
   }, [resolvedTheme, mapLoaded]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapLoaded) return;
+    if (!map || !mapLoaded || akashMarkerRef.current) return;
     let cancelled = false;
 
-    const installMarkersAndRoute = async () => {
-      if (cancelled || !map.isStyleLoaded()) return;
+    const addMarker = async () => {
       const maplibregl = (await import("maplibre-gl")).default;
       if (cancelled) return;
-
-      if (!meMarkerRef.current) {
-        meMarkerRef.current = new maplibregl.Marker({
-          element: createMarkerElement("akash"),
-          anchor: "center",
-        })
-          .setLngLat(AKASH_LOCATION)
-          .addTo(map);
-      }
-
-      if (!visitorLocation) return;
-
-      if (!visitorMarkerRef.current) {
-        visitorMarkerRef.current = new maplibregl.Marker({
-          element: createMarkerElement("visitor"),
-          anchor: "center",
-        })
-          .setLngLat(visitorLocation)
-          .addTo(map);
-      } else {
-        visitorMarkerRef.current.setLngLat(visitorLocation).addTo(map);
-      }
-
-      const routeData: GeoJSON.Feature<GeoJSON.LineString> = {
-        type: "Feature",
-        properties: {},
-        geometry: {
-          type: "LineString",
-          coordinates: buildArc(AKASH_LOCATION, visitorLocation),
-        },
+      const element = createLocationMarkerElement("akash");
+      const centerAkash = (event: Event) => {
+        event.stopPropagation();
+        map.easeTo({
+          center: AKASH_LOCATION,
+          zoom: Math.max(map.getZoom(), 8),
+          duration: 900,
+          essential: true,
+        });
       };
-
-      if (map.getSource("visitor-route")) {
-        (map.getSource("visitor-route") as GeoJSONSource).setData(routeData);
-      } else {
-        map.addSource("visitor-route", {
-          type: "geojson",
-          data: routeData,
-        });
-        map.addLayer({
-          id: "visitor-route",
-          type: "line",
-          source: "visitor-route",
-          layout: { "line-join": "round", "line-cap": "round" },
-          paint: {
-            "line-color": "#64748b",
-            "line-width": 2.2,
-            "line-dasharray": [1, 2],
-            "line-opacity": 0.74,
-          },
-        });
-      }
+      element.addEventListener("click", centerAkash);
+      akashMarkerRef.current = new maplibregl.Marker({
+        element,
+        anchor: "center",
+      })
+        .setLngLat(AKASH_LOCATION)
+        .addTo(map);
     };
 
-    void installMarkersAndRoute();
-    map.on("style.load", installMarkersAndRoute);
-
+    void addMarker();
     return () => {
       cancelled = true;
-      map.off("style.load", installMarkersAndRoute);
+    };
+  }, [mapLoaded]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || !visitorLocation) return;
+    let cancelled = false;
+
+    const addVisitorMarker = async () => {
+      const maplibregl = (await import("maplibre-gl")).default;
+      if (cancelled) return;
+      if (!visitorMarkerRef.current) {
+        visitorMarkerRef.current = new maplibregl.Marker({
+          element: createLocationMarkerElement("visitor"),
+          anchor: "center",
+        });
+      }
+      visitorMarkerRef.current.setLngLat(visitorLocation).addTo(map);
+    };
+
+    void addVisitorMarker();
+    return () => {
+      cancelled = true;
     };
   }, [mapLoaded, visitorLocation]);
 
-  const zoomToMe = () => {
-    mapRef.current?.flyTo({
-      center: AKASH_LOCATION,
-      duration: 1_600,
-      essential: true,
-    });
-  };
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || !trackedSatellites.length) return;
+    let cancelled = false;
+    let positionTimer = 0;
+    const clickHandlers = new Map<number, (event: Event) => void>();
 
-  const zoomToYou = () => {
-    if (!visitorLocation) return;
-    mapRef.current?.flyTo({
-      center: visitorLocation,
-      duration: 1_600,
-      essential: true,
-    });
-  };
+    const installSatellites = async () => {
+      const maplibregl = (await import("maplibre-gl")).default;
+      if (cancelled) return;
+
+      satelliteMarkersRef.current.forEach(({ marker }) => marker.remove());
+      satelliteMarkersRef.current.clear();
+
+      for (const tracked of trackedSatellites) {
+        const id = Number(tracked.record.NORAD_CAT_ID);
+        const initialSnapshot = satelliteSnapshot(tracked, new Date());
+        if (!initialSnapshot) continue;
+        const markerElement = createSatelliteMarkerElement(
+          tracked.record.OBJECT_NAME,
+        );
+        const handleClick = (event: Event) => {
+          event.stopPropagation();
+          setSelectedId(id);
+          const snapshot = satelliteSnapshot(tracked, new Date());
+          if (snapshot) setSelectedSnapshot(snapshot);
+        };
+        markerElement.element.addEventListener("click", handleClick);
+        clickHandlers.set(id, handleClick);
+
+        const marker = new maplibregl.Marker({
+          element: markerElement.element,
+          anchor: "bottom",
+          offset: [0, 4],
+        })
+          .setLngLat([initialSnapshot.longitude, initialSnapshot.latitude])
+          .addTo(map);
+        markerElement.setBearing(initialSnapshot.bearing);
+        satelliteMarkersRef.current.set(id, {
+          marker,
+          tracked,
+          setBearing: markerElement.setBearing,
+          setSelected: markerElement.setSelected,
+        });
+      }
+
+      const updatePositions = () => {
+        if (document.visibilityState === "hidden") return;
+        const now = new Date();
+        let nextSelectedSnapshot: SatelliteSnapshot | null = null;
+
+        satelliteMarkersRef.current.forEach((handle, id) => {
+          const snapshot = satelliteSnapshot(handle.tracked, now);
+          if (!snapshot) {
+            handle.marker.getElement().hidden = true;
+            return;
+          }
+          handle.marker.getElement().hidden = false;
+          handle.marker.setLngLat([snapshot.longitude, snapshot.latitude]);
+          handle.setBearing(snapshot.bearing);
+          handle.setSelected(id === selectedIdRef.current);
+          if (id === selectedIdRef.current) {
+            nextSelectedSnapshot = snapshot;
+          }
+        });
+
+        if (selectedIdRef.current !== null) {
+          setSelectedSnapshot(nextSelectedSnapshot);
+        }
+      };
+
+      updatePositions();
+      positionTimer = window.setInterval(updatePositions, 500);
+    };
+
+    void installSatellites();
+    return () => {
+      cancelled = true;
+      window.clearInterval(positionTimer);
+      satelliteMarkersRef.current.forEach((handle, id) => {
+        const clickHandler = clickHandlers.get(id);
+        if (clickHandler) {
+          handle.marker.getElement().removeEventListener("click", clickHandler);
+        }
+        handle.marker.remove();
+      });
+      satelliteMarkersRef.current.clear();
+    };
+  }, [mapLoaded, trackedSatellites]);
 
   useEffect(() => {
-    if (!visitorLocation) {
-      setDistance("");
+    selectedIdRef.current = selectedId;
+    satelliteMarkersRef.current.forEach((handle, id) => {
+      handle.setSelected(id === selectedId);
+    });
+    if (selectedId === null) setSelectedSnapshot(null);
+  }, [selectedId]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+    const syncTrack = () =>
+      syncSatelliteTrack(map, selectedTracked, mapThemeRef.current === "dark");
+
+    syncTrack();
+    map.on("style.load", syncTrack);
+    const trackTimer = window.setInterval(syncTrack, 30_000);
+    return () => {
+      window.clearInterval(trackTimer);
+      map.off("style.load", syncTrack);
+    };
+  }, [mapLoaded, selectedTracked, resolvedTheme]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setNativeFullscreen(document.fullscreenElement === rootRef.current);
+      window.setTimeout(() => mapRef.current?.resize(), 0);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPseudoFullscreen(false);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    window.setTimeout(() => mapRef.current?.resize(), 0);
+  }, [fullscreen]);
+
+  useEffect(() => {
+    if (!locationMessage) return;
+    const timer = window.setTimeout(() => setLocationMessage(""), 4_000);
+    return () => window.clearTimeout(timer);
+  }, [locationMessage]);
+
+  const zoomBy = (amount: number) => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.zoomTo(map.getZoom() + amount, {
+      duration: 260,
+      essential: true,
+    });
+  };
+
+  const locateVisitor = () => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (visitorLocation) {
+      map.easeTo({
+        center: visitorLocation,
+        zoom: Math.max(map.getZoom(), 8),
+        duration: 900,
+        essential: true,
+      });
       return;
     }
-    const kilometres = distanceBetween(AKASH_LOCATION, visitorLocation);
-    setDistance(
-      kilometres < 1
-        ? `${Math.round(kilometres * 1_000)} m`
-        : `${kilometres.toFixed(1)} km`,
+
+    if (!("geolocation" in navigator)) {
+      setLocationMessage("Location is not available in this browser.");
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextLocation: [number, number] = [
+          position.coords.longitude,
+          position.coords.latitude,
+        ];
+        setVisitorLocation(nextLocation);
+        setLocating(false);
+        setLocationMessage("");
+        map.easeTo({
+          center: nextLocation,
+          zoom: Math.max(map.getZoom(), 8),
+          duration: 900,
+          essential: true,
+        });
+      },
+      () => {
+        setLocating(false);
+        setLocationMessage("Location permission was not granted.");
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 7_000,
+        maximumAge: 300_000,
+      },
     );
-  }, [visitorLocation]);
+  };
+
+  const toggleFullscreen = async () => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    if (pseudoFullscreen) {
+      setPseudoFullscreen(false);
+      return;
+    }
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      return;
+    }
+    if (root.requestFullscreen) {
+      try {
+        await root.requestFullscreen();
+        return;
+      } catch {
+        setPseudoFullscreen(true);
+        return;
+      }
+    }
+    setPseudoFullscreen(true);
+  };
+
+  const centerSelectedSatellite = () => {
+    if (!selectedSnapshot) return;
+    mapRef.current?.easeTo({
+      center: [selectedSnapshot.longitude, selectedSnapshot.latitude],
+      zoom: Math.max(mapRef.current.getZoom(), 4.5),
+      duration: 900,
+      essential: true,
+    });
+  };
+
+  const visitorDistance = visitorLocation
+    ? distanceBetween(AKASH_LOCATION, visitorLocation)
+    : null;
+  const feedLabel = feed
+    ? feed.stale
+      ? "stale orbit cache"
+      : feed.mode === "celestrak"
+        ? `${trackedSatellites.length} live tracks`
+        : `${trackedSatellites.length} offline tracks`
+    : "loading orbits";
 
   if (!isClient) {
     return (
@@ -291,67 +596,98 @@ export default function LocationMap() {
   }
 
   return (
-    <div className="group relative h-48 overflow-hidden rounded-t-[11px]">
+    <div
+      ref={rootRef}
+      className={[
+        "group relative isolate overflow-hidden bg-[#eef1ef] dark:bg-[#152027]",
+        fullscreen ? "h-screen rounded-none" : "h-48 rounded-t-[11px]",
+        pseudoFullscreen ? "fixed inset-3 z-[100] h-auto rounded-xl" : "",
+      ].join(" ")}
+    >
       <div className="absolute inset-0">
-        <div ref={mapContainer} className="h-full w-full" />
+        <div ref={mapContainerRef} className="h-full w-full" />
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(transparent,#9d9da200_60%,#fafafa)] dark:bg-[linear-gradient(transparent,#18181b73_60%,#0a0a0a)]" />
+      <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(circle_at_52%_46%,transparent_48%,rgba(20,34,40,0.13)_100%)] dark:bg-[radial-gradient(circle_at_52%_46%,transparent_45%,rgba(2,10,15,0.32)_100%)]" />
 
-      <div
-        data-hidden={!mapLoaded}
-        className="pointer-events-none absolute inset-0 overflow-hidden opacity-100 transition-opacity duration-700 data-[hidden=true]:opacity-0"
-      >
-        <Image
-          src="/cloud.webp"
-          width={390}
-          height={347}
-          alt=""
-          priority
-          draggable={false}
-          className="animate-cloud absolute -top-14 -left-12 size-72 opacity-10 blur-[1px] invert dark:opacity-16 dark:invert-0"
-        />
-      </div>
+      <MapControls
+        bearing={bearing}
+        disabled={!mapLoaded}
+        fullscreen={fullscreen}
+        locateDisabled={
+          typeof navigator !== "undefined" && !("geolocation" in navigator)
+        }
+        locating={locating}
+        onFullscreen={() => void toggleFullscreen()}
+        onLocate={locateVisitor}
+        onResetNorth={() =>
+          mapRef.current?.easeTo({
+            bearing: 0,
+            pitch: 0,
+            duration: 450,
+            essential: true,
+          })
+        }
+        onZoomIn={() => zoomBy(1)}
+        onZoomOut={() => zoomBy(-1)}
+      />
 
-      <div className="absolute top-3 left-3 flex flex-col items-center gap-1">
-        <button
-          type="button"
-          onClick={zoomToMe}
-          title="Center on Akash"
-          className="bg-background/68 text-foreground hover:bg-background/88 flex size-8 items-center justify-center rounded-lg border border-white/20 shadow-lg backdrop-blur-md transition hover:scale-105 active:scale-95"
+      {!selectedId && (
+        <a
+          href={feed?.sourceUrl}
+          target="_blank"
+          rel="noreferrer"
+          title="Orbital elements from CelesTrak"
+          className="bg-background/90 border-border/70 text-muted-foreground hover:text-foreground absolute top-3 right-3 z-30 flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[10px] font-medium shadow-[0_8px_24px_rgba(15,23,42,0.12)] backdrop-blur-md transition-colors"
         >
-          <LocateFixed className="size-4 text-indigo-500" />
-        </button>
+          {feed ? (
+            <Satellite className="size-3.5 text-cyan-700 dark:text-cyan-300" />
+          ) : (
+            <LoaderCircle className="size-3.5 animate-spin" />
+          )}
+          <span>{feedLabel}</span>
+        </a>
+      )}
 
-        {distance && visitorLocation && (
-          <div className="flex flex-col items-center py-1">
-            <div className="h-3 w-px bg-slate-500/25" />
-            <span className="bg-background/78 text-muted-foreground rounded-full border border-white/10 px-2 py-0.5 text-[9px] font-bold whitespace-nowrap shadow-sm backdrop-blur-md">
-              {distance}
-            </span>
-            <div className="h-3 w-px bg-sky-500/20" />
-          </div>
+      {visitorDistance !== null && (
+        <div className="bg-background/88 border-border/65 text-muted-foreground absolute bottom-2 left-12 z-20 rounded-md border px-2 py-1 text-[9px] shadow-sm backdrop-blur-md">
+          {visitorDistance < 1
+            ? `${Math.round(visitorDistance * 1_000)} m`
+            : `${visitorDistance.toFixed(0)} km`}{" "}
+          from Akash
+        </div>
+      )}
+
+      {locationMessage && (
+        <div
+          role="status"
+          className="bg-background/94 border-border/70 text-foreground absolute top-3 left-12 z-40 rounded-md border px-2.5 py-1.5 text-[10px] shadow-md"
+        >
+          {locationMessage}
+        </div>
+      )}
+
+      {mapUnavailable && (
+        <div
+          role="status"
+          className="bg-background/92 text-muted-foreground absolute inset-0 z-20 flex items-center justify-center text-sm backdrop-blur-sm"
+        >
+          Basemap unavailable. Satellite data can still load offline.
+        </div>
+      )}
+
+      {feed &&
+        selectedTracked &&
+        selectedSnapshot &&
+        selectedId === selectedSnapshot.noradId && (
+          <SatellitePopup
+            feed={feed}
+            record={selectedTracked.record}
+            snapshot={selectedSnapshot}
+            onCenter={centerSelectedSatellite}
+            onClose={() => setSelectedId(null)}
+          />
         )}
-
-        {visitorLocation && (
-          <button
-            type="button"
-            onClick={zoomToYou}
-            title="Center on you"
-            className="bg-background/68 text-foreground hover:bg-background/88 flex size-8 items-center justify-center rounded-lg border border-white/20 shadow-lg backdrop-blur-md transition hover:scale-105 active:scale-95"
-          >
-            <Navigation className="size-4 text-sky-500" />
-          </button>
-        )}
-      </div>
-
-      <div className="bg-background/78 text-muted-foreground absolute top-3 right-3 rounded-lg border border-white/10 px-2.5 py-1.5 font-mono text-xs tabular-nums shadow-sm backdrop-blur-md">
-        {time || "00:00 AM IST"}
-      </div>
-
-      <div className="bg-background/78 text-muted-foreground/80 absolute right-2 bottom-2 rounded-md border border-white/5 px-2 py-1 font-mono text-[10px] tabular-nums shadow-sm backdrop-blur-md">
-        {AKASH_LOCATION[1].toFixed(6)}°N, {AKASH_LOCATION[0].toFixed(6)}°E
-      </div>
     </div>
   );
 }

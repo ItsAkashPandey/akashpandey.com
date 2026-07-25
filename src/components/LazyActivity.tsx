@@ -92,7 +92,7 @@ export default function LazyActivity({
 function ActivityCardSkeleton() {
   return (
     <div
-      className="record-surface relative overflow-hidden rounded-xl p-4 sm:p-7"
+      className="record-surface relative overflow-hidden rounded-lg p-4 sm:p-7"
       aria-hidden
     >
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-[300px_1fr] sm:items-center">

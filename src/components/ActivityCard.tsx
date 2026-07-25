@@ -184,7 +184,7 @@ export function ActivityCard({
   );
 
   return (
-    <article className="record-surface group relative max-w-full overflow-hidden rounded-xl p-4 transition-shadow duration-200 hover:shadow-[10px_16px_42px_rgba(12,35,36,0.11)] sm:p-6">
+    <article className="record-surface group relative max-w-full overflow-hidden rounded-lg p-4 transition-shadow duration-200 hover:shadow-[10px_16px_42px_rgba(12,35,36,0.11)] sm:p-6">
       <div className="bg-foreground/45 absolute top-0 left-8 h-[3px] w-12 rounded-b-full" />
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-[300px_1fr] sm:items-center">
@@ -278,7 +278,12 @@ export function ActivityCard({
           {links && links.length > 0 && (
             <div className="flex flex-row flex-wrap items-center gap-2 pt-1">
               {links.map((link, idx) => (
-                <Link href={link?.href} key={idx} target="_blank">
+                <Link
+                  href={link?.href}
+                  key={idx}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   <Badge className="flex gap-2 px-2.5 py-1 text-[10px] transition-colors duration-150">
                     <Icon name={link.icon} className="size-3" />
                     {link.name}

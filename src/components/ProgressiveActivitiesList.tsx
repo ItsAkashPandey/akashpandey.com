@@ -286,7 +286,7 @@ export default function ProgressiveActivitiesList({
 
   return (
     <div className="relative grid min-w-0 gap-5 lg:grid-cols-[232px_minmax(0,1fr)] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-8">
-      <aside className="filter-rail rounded-xl p-4 lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1">
+      <aside className="filter-rail rounded-lg p-4 lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1">
         <div className="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -456,7 +456,7 @@ export default function ProgressiveActivitiesList({
       <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1">
         <section className="relative z-10 flex min-w-0 flex-col gap-6">
           {filteredActivities.length === 0 ? (
-            <div className="bg-muted/55 text-muted-foreground rounded-xl px-6 py-16 text-center text-sm">
+            <div className="bg-muted/55 text-muted-foreground rounded-lg px-6 py-16 text-center text-sm">
               No activities found matching your filters.
             </div>
           ) : (
