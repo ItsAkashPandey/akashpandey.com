@@ -117,13 +117,15 @@ export default function Chat() {
           value="item-1"
           className={`fixed bottom-4 overflow-hidden border border-white/60 bg-white/72 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-3xl transition-all duration-300 ease-out sm:right-8 sm:bottom-8 sm:left-auto dark:border-white/10 dark:bg-zinc-950/76 dark:shadow-[0_24px_80px_rgba(0,0,0,0.36)] ${
             isExpanded
-              ? "right-4 left-4 w-auto rounded-[1.65rem] sm:left-auto sm:w-[420px]"
-              : "right-4 w-[172px] rounded-[1.35rem]"
+              ? "right-4 left-4 w-auto rounded-xl sm:left-auto sm:w-[420px]"
+              : "right-4 hidden w-[52px] rounded-lg sm:block sm:w-[172px] sm:rounded-xl"
           }`}
         >
           <AccordionTrigger
             className={`border-white/20 transition-colors hover:bg-white/24 hover:no-underline dark:border-white/10 dark:hover:bg-white/5 [&>svg:last-child]:hidden ${
-              isExpanded ? "border-b px-5 py-3.5" : "h-[64px] px-3 py-2"
+              isExpanded
+                ? "border-b px-5 py-3.5"
+                : "h-[52px] px-2 py-2 sm:h-[64px] sm:px-3"
             }`}
           >
             <ChatHeader compact={!isExpanded} />
@@ -136,7 +138,7 @@ export default function Chat() {
               <div
                 className={
                   isExpanded
-                    ? "flex max-h-[min(640px,calc(100vh-8rem))] min-h-[480px] flex-col justify-between rounded-b-[1.4rem] sm:max-h-[660px] sm:min-h-[560px]"
+                    ? "flex max-h-[min(640px,calc(100vh-8rem))] min-h-[480px] flex-col justify-between rounded-b-xl sm:max-h-[660px] sm:min-h-[560px]"
                     : "hidden"
                 }
               >

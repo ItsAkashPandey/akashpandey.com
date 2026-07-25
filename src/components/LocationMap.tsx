@@ -66,6 +66,7 @@ export default function LocationMap() {
   const meMarkerRef = useRef<Marker | null>(null);
   const visitorMarkerRef = useRef<Marker | null>(null);
   const routeAnimationRef = useRef<number | null>(null);
+  const mapThemeRef = useRef<"dark" | "light">("light");
   const [time, setTime] = useState("");
   const [isClient, setIsClient] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -114,10 +115,12 @@ export default function LocationMap() {
     const initialise = async () => {
       const maplibregl = (await import("maplibre-gl")).default;
       if (cancelled || !mapContainer.current) return;
+      const initialTheme = resolvedTheme === "dark" ? "dark" : "light";
+      mapThemeRef.current = initialTheme;
 
       const map = new maplibregl.Map({
         container: mapContainer.current,
-        style: resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE,
+        style: initialTheme === "dark" ? DARK_STYLE : LIGHT_STYLE,
         center: [78.5, 22.8],
         zoom: 3.25,
         minZoom: 2.5,
@@ -146,6 +149,8 @@ export default function LocationMap() {
       map.on("load", () => {
         addTraffic();
         setMapLoaded(true);
+        document.documentElement.dataset.heroMapReady = "true";
+        window.dispatchEvent(new Event("hero-map-ready"));
       });
       map.on("style.load", addTraffic);
     };
@@ -170,7 +175,11 @@ export default function LocationMap() {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded) return;
-    map.setStyle(resolvedTheme === "dark" ? DARK_STYLE : LIGHT_STYLE);
+    const nextTheme = resolvedTheme === "dark" ? "dark" : "light";
+    if (mapThemeRef.current === nextTheme) return;
+
+    mapThemeRef.current = nextTheme;
+    map.setStyle(nextTheme === "dark" ? DARK_STYLE : LIGHT_STYLE);
   }, [resolvedTheme, mapLoaded]);
 
   useEffect(() => {
@@ -277,12 +286,12 @@ export default function LocationMap() {
 
   if (!isClient) {
     return (
-      <div className="bg-muted/50 h-48 animate-pulse overflow-hidden rounded-t-3xl" />
+      <div className="bg-muted/50 h-48 animate-pulse overflow-hidden rounded-t-[11px]" />
     );
   }
 
   return (
-    <div className="group relative h-48 overflow-hidden rounded-t-3xl">
+    <div className="group relative h-48 overflow-hidden rounded-t-[11px]">
       <div className="absolute inset-0">
         <div ref={mapContainer} className="h-full w-full" />
       </div>

@@ -286,7 +286,7 @@ export default function ProgressiveActivitiesList({
 
   return (
     <div className="relative grid min-w-0 gap-5 lg:grid-cols-[232px_minmax(0,1fr)] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-8">
-      <aside className="border-border/60 bg-background/88 supports-[backdrop-filter]:bg-background/72 rounded-[24px] border p-4 shadow-[0_16px_45px_rgba(15,23,42,0.06)] backdrop-blur-2xl lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1">
+      <aside className="filter-rail rounded-xl p-4 lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1">
         <div className="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -304,7 +304,7 @@ export default function ProgressiveActivitiesList({
             size="icon"
             onClick={resetFilters}
             disabled={!isFiltered}
-            className="text-muted-foreground hover:text-foreground size-9 rounded-xl"
+            className="text-muted-foreground hover:text-foreground size-9 rounded-lg"
             title="Reset filters"
           >
             <RotateCcw className="size-3.5" />
@@ -316,7 +316,7 @@ export default function ProgressiveActivitiesList({
           <div className="flex min-w-0 flex-col gap-1.5">
             <Label
               htmlFor="activity-search"
-              className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
+              className="text-muted-foreground px-1 text-[9px] font-semibold uppercase"
             >
               Search
             </Label>
@@ -330,13 +330,13 @@ export default function ProgressiveActivitiesList({
                 placeholder="Topic or place"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                className="border-border/60 bg-background/70 h-10 rounded-xl pl-10 text-sm shadow-none"
+                className="border-border/60 bg-background/70 h-10 rounded-lg pl-10 text-sm shadow-none"
               />
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <p className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase">
+            <p className="text-muted-foreground px-1 text-[9px] font-semibold uppercase">
               Focus
             </p>
             <div className="grid grid-cols-3 gap-2 lg:grid-cols-1">
@@ -355,7 +355,7 @@ export default function ProgressiveActivitiesList({
                       type="button"
                       onClick={() => setSelectedType(type)}
                       className={cn(
-                        "group flex min-w-0 items-center gap-2.5 rounded-xl border p-2 text-left transition-all",
+                        "group flex min-w-0 items-center gap-2.5 rounded-lg border p-2 text-left transition-colors",
                         selectedType === type
                           ? "border-foreground/25 bg-foreground/[0.055] shadow-sm"
                           : "hover:border-border/70 hover:bg-muted/55 border-transparent",
@@ -363,7 +363,7 @@ export default function ProgressiveActivitiesList({
                     >
                       <span
                         className={cn(
-                          "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                          "flex size-8 shrink-0 items-center justify-center rounded-md",
                           config.soft,
                         )}
                       >
@@ -395,14 +395,14 @@ export default function ProgressiveActivitiesList({
             <div className="flex min-w-0 flex-col gap-1.5">
               <Label
                 htmlFor="activity-year-filter"
-                className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
+                className="text-muted-foreground px-1 text-[9px] font-semibold uppercase"
               >
                 Year
               </Label>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
                 <SelectTrigger
                   id="activity-year-filter"
-                  className="border-border/60 bg-background/70 h-10 w-full rounded-xl shadow-none"
+                  className="border-border/60 bg-background/70 h-10 w-full rounded-lg shadow-none"
                 >
                   <CalendarDays className="text-muted-foreground mr-2 size-3.5 shrink-0" />
                   <SelectValue />
@@ -421,7 +421,7 @@ export default function ProgressiveActivitiesList({
             <div className="flex min-w-0 flex-col gap-1.5">
               <Label
                 htmlFor="activity-sort-filter"
-                className="text-muted-foreground px-1 text-[10px] font-semibold tracking-[0.12em] uppercase"
+                className="text-muted-foreground px-1 text-[9px] font-semibold uppercase"
               >
                 Order
               </Label>
@@ -431,7 +431,7 @@ export default function ProgressiveActivitiesList({
               >
                 <SelectTrigger
                   id="activity-sort-filter"
-                  className="border-border/60 bg-background/70 h-10 w-full rounded-xl shadow-none"
+                  className="border-border/60 bg-background/70 h-10 w-full rounded-lg shadow-none"
                 >
                   <ArrowUpDown className="text-muted-foreground mr-2 size-3.5 shrink-0" />
                   <SelectValue />
@@ -456,7 +456,7 @@ export default function ProgressiveActivitiesList({
       <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1">
         <section className="relative z-10 flex min-w-0 flex-col gap-6">
           {filteredActivities.length === 0 ? (
-            <div className="border-border/70 bg-background/60 text-muted-foreground rounded-3xl border border-dashed px-6 py-16 text-center text-sm">
+            <div className="bg-muted/55 text-muted-foreground rounded-xl px-6 py-16 text-center text-sm">
               No activities found matching your filters.
             </div>
           ) : (
@@ -477,7 +477,7 @@ export default function ProgressiveActivitiesList({
                 type="button"
                 variant="outline"
                 onClick={loadMore}
-                className="rounded-xl"
+                className="rounded-lg"
               >
                 Load more
               </Button>

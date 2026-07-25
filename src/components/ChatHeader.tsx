@@ -8,7 +8,13 @@ export default function ChatHeader({ compact = false }: ChatHeaderProps) {
   return (
     <section className="flex w-full min-w-0 items-center justify-start gap-3">
       <KasiMark active size={compact ? "md" : "lg"} />
-      <div className="flex min-w-0 flex-col items-start">
+      <div
+        className={
+          compact
+            ? "hidden min-w-0 flex-col items-start sm:flex"
+            : "flex min-w-0 flex-col items-start"
+        }
+      >
         <p className="truncate text-sm leading-tight font-semibold">
           {compact ? "Ask Kasi" : "Kasi"}
         </p>

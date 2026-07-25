@@ -16,13 +16,13 @@ import SkillLogoTile from "@/components/SkillLogoTile";
 
 const LocationMap = dynamic(() => import("@/components/LocationMap"), {
   loading: () => (
-    <div className="border-border/50 bg-muted/40 h-48 w-full animate-pulse rounded-t-3xl border" />
+    <div className="bg-muted/55 h-48 w-full animate-pulse rounded-t-[11px]" />
   ),
 });
 
 const SwipeCards = dynamic(() => import("@/components/SwipeCards"), {
   loading: () => (
-    <div className="border-border/50 bg-muted/40 h-[233px] w-[175px] animate-pulse rounded-xl border" />
+    <div className="bg-muted/55 h-[233px] w-[175px] animate-pulse rounded-lg" />
   ),
 });
 
@@ -83,7 +83,7 @@ export default function Home() {
 
   return (
     <article className="mx-auto -mt-2 flex w-full max-w-6xl flex-col gap-10 pb-16 sm:gap-12">
-      <section className="border-border/55 bg-card/40 relative flex flex-col gap-1 overflow-hidden rounded-[30px] border p-3 shadow-[0_20px_55px_rgba(15,23,42,0.07)] sm:p-5">
+      <section className="record-surface relative flex flex-col gap-1 overflow-hidden rounded-xl p-3 sm:p-5">
         <LocationMap />
 
         <div className="mt-6 flex flex-col gap-6 px-2 pb-2 sm:mt-[22px] sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-10 sm:px-4 sm:pb-4">
@@ -126,13 +126,10 @@ export default function Home() {
         </div>
       </section>
 
-      <LazySection
-        heightHint={260}
-        className="border-border/55 bg-card/35 rounded-[28px] border p-5 shadow-[0_18px_48px_rgba(15,23,42,0.055)] sm:p-8"
-      >
+      <LazySection heightHint={260} className="paper-band paper-band--sage">
         <section className="flex flex-col gap-6">
           <div>
-            <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.18em] uppercase">
+            <p className="text-muted-foreground text-[11px] font-semibold uppercase">
               Background
             </p>
             <h2 className="title mt-2 text-2xl sm:text-3xl">the path so far</h2>
@@ -142,21 +139,11 @@ export default function Home() {
       </LazySection>
 
       {/* Skills Section - Unique floating logo cloud design */}
-      <LazySection
-        heightHint={350}
-        className="border-border/55 bg-card/35 rounded-[28px] border p-5 shadow-[0_18px_48px_rgba(15,23,42,0.055)] sm:p-8"
-      >
+      <LazySection heightHint={350} className="paper-band paper-band--paper">
         <section className="flex flex-col gap-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div>
-                <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.18em] uppercase">
-                  Working set
-                </p>
-                <h2 className="title mt-2 text-2xl sm:text-3xl">
-                  skills & tools
-                </h2>
-              </div>
+              <h2 className="title text-2xl sm:text-3xl">skills & tools</h2>
               <Badge variant="secondary" className="text-xs">
                 {totalSkills}+
               </Badge>
@@ -169,12 +156,7 @@ export default function Home() {
             />
           </div>
 
-          {/* Floating logo cloud with glassmorphism effect */}
-          <div className="border-border/50 from-muted/30 via-background to-muted/20 relative overflow-hidden rounded-2xl border bg-gradient-to-br p-6 sm:p-8">
-            {/* Background decorative elements */}
-            <div className="bg-primary/5 absolute -top-20 -right-20 h-40 w-40 rounded-full blur-3xl" />
-            <div className="bg-primary/5 absolute -bottom-20 -left-20 h-40 w-40 rounded-full blur-3xl" />
-
+          <div className="relative overflow-hidden py-2">
             {/* Skills grid - Two rows */}
             <div className="relative z-10 flex flex-col gap-6">
               {/* Top row - Software tools */}
@@ -230,17 +212,11 @@ export default function Home() {
         </section>
       </LazySection>
 
-      <LazySection
-        heightHint={300}
-        className="border-border/55 bg-card/35 rounded-[28px] border p-5 shadow-[0_18px_48px_rgba(15,23,42,0.055)] sm:p-8"
-      >
+      <LazySection heightHint={300} className="paper-band paper-band--blue">
         <section className="flex flex-col gap-8">
           <div className="flex justify-between">
             <div>
-              <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.18em] uppercase">
-                Selected research
-              </p>
-              <h2 className="title mt-2 text-2xl sm:text-3xl">
+              <h2 className="title text-2xl sm:text-3xl">
                 recent publications
               </h2>
             </div>
@@ -255,7 +231,7 @@ export default function Home() {
             {recentPublications.map((pub) => (
               <div
                 key={pub.id}
-                className="group border-border/50 hover:border-border rounded-lg border p-4 transition-all hover:shadow-sm"
+                className="group border-border/70 border-b py-5 last:border-b-0"
               >
                 <div className="flex flex-col gap-3">
                   <h3 className="text-base leading-snug font-semibold">
@@ -300,19 +276,11 @@ export default function Home() {
         </section>
       </LazySection>
 
-      <LazySection
-        heightHint={400}
-        className="border-border/55 bg-card/35 rounded-[28px] border p-5 shadow-[0_18px_48px_rgba(15,23,42,0.055)] sm:p-8"
-      >
+      <LazySection heightHint={400} className="paper-band paper-band--coral">
         <section className="flex flex-col gap-8">
           <div className="flex justify-between">
             <div>
-              <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.18em] uppercase">
-                In the field
-              </p>
-              <h2 className="title mt-2 text-2xl sm:text-3xl">
-                recent activities
-              </h2>
+              <h2 className="title text-2xl sm:text-3xl">recent activities</h2>
             </div>
             <LinkWithIcon
               href="/activities"

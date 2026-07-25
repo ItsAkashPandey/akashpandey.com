@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import {
   appendChatLogRows,
   type ChatLogAppendResult,
@@ -39,13 +39,13 @@ const FRIENDLY_ERRORS = {
 };
 
 const FREE_FALLBACK_MODELS = [
-  "openrouter/free",
-  "minimax/minimax-m2.5:free",
   "nvidia/nemotron-3-nano-30b-a3b:free",
-  "liquid/lfm-2.5-1.2b-thinking:free",
+  "inclusionai/ling-3.0-flash:free",
+  "openai/gpt-oss-20b:free",
 ];
 
-const MAX_HISTORY = 10;
+const DEFAULT_MODEL = FREE_FALLBACK_MODELS[0];
+const MAX_HISTORY = 6;
 const MAX_MESSAGE_LENGTH = 2400;
 const requestCounts = new Map<string, { count: number; resetAt: number }>();
 
@@ -208,7 +208,9 @@ function buildSystemPrompt(opts: {
     "For a named instrument or software tool, include the exact model and concrete tasks from context when they are available.",
     "For a named tool question, close with a brief invitation to use [the contact form](/contact) or email [akash_k@ce.iitr.ac.in](mailto:akash_k@ce.iitr.ac.in) for deployment-specific details.",
     "Never claim you can see private files or admin logs.",
-    "Adapt to the visitor's register and energy: concise to concise, playful to playful, romantic to warmly romantic, and blunt to direct.",
+    "Always reply in the language, script, or natural language mix used by the visitor unless they ask for another language.",
+    "Adapt to the visitor's register and energy: concise to concise, playful to playful, romantic to warmly romantic, blunt to direct, and Hinglish to natural Hinglish.",
+    "When a visitor uses casual profanity or insults, use one short dry or satirical line, set a calm boundary without moralizing, and pivot to Akash. Do not repeat their slur or turn hostile.",
     "Do not escalate harassment, demeaning language, hate, threats, or sexually explicit content. Keep tone-matching clever and bounded.",
     "If this is code request attempt 1 or 2, provide a genuinely useful answer and working code when the request is safe.",
     `Code request attempt in this conversation: ${opts.codeRequestAttempt || "none"}.`,
@@ -294,6 +296,111 @@ function directToolReply(message: string, docs: KnowledgeDoc[]) {
     .join("\n");
 }
 
+function directFastReply(message: string) {
+  const normalized = message
+    .toLowerCase()
+    .replace(/[!?.,]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const toneBoundary = directToneBoundary(message);
+
+  if (toneBoundary) return toneBoundary;
+
+  if (
+    /^(hi|hello|hey|hiya|namaste|good morning|good afternoon|good evening)( there)?$/.test(
+      normalized,
+    )
+  ) {
+    return {
+      reply:
+        normalized === "namaste"
+          ? "Namaste. Main kasi hoon. Akash ki research, activities, publications, skills ya contact ke baare mein poochho."
+          : "Hi, I'm kasi. Ask me about Akash's research, activities, publications, skills, or contact details.",
+      modelUsed: "local/greeting",
+    };
+  }
+
+  if (
+    /^(help|what can you do|how can you help|what do you know)$/.test(
+      normalized,
+    )
+  ) {
+    return {
+      reply:
+        "I can help you find Akash's research, field activities, publications, technical skills, education, work, and contact details.",
+      modelUsed: "local/help",
+    };
+  }
+
+  if (/(contact|email|reach|message|connect)/.test(normalized)) {
+    return {
+      reply:
+        "You can use [the contact form](/contact) or email [akash_k@ce.iitr.ac.in](mailto:akash_k@ce.iitr.ac.in).",
+      modelUsed: "local/contact",
+    };
+  }
+
+  if (
+    /^(who is akash|who is akash pandey|tell me about akash|about akash)$/.test(
+      normalized,
+    )
+  ) {
+    return {
+      reply:
+        "Akash Kumar Pandey is a PhD scholar in Geospatial Engineering at IIT Roorkee. His work focuses on remote sensing, vegetation phenology, UAV mapping, and precision agriculture.",
+      modelUsed: "local/profile",
+    };
+  }
+
+  return null;
+}
+
+function directToneBoundary(message: string) {
+  const lower = message.toLocaleLowerCase();
+  const containsAbuse =
+    /\b(chutiya|madarchod|behenchod|bhenchod|bhosdike|bsdk|gandu|gaandu|randi|fuck\s*(you|off)?|asshole|bastard|pendejo|gilipollas|connard)\b/i.test(
+      lower,
+    );
+
+  if (!containsAbuse) return null;
+
+  const isHindiOrHinglish =
+    /[\u0900-\u097f]/.test(message) ||
+    /\b(abe|akash|baap|bata|bta|hai|hain|kya|kuch|kuchh|nahi|nhi|tera|teri|tu|tum|yaar)\b/i.test(
+      lower,
+    );
+
+  if (isHindiOrHinglish) {
+    return {
+      reply:
+        "Gaali ka GPS thoda off-route hai. Thoda satire theek hai, par yahan gaali-galauj se kuchh milega nahi. Akash ki research, skills, publications ya kaam ke baare mein kuchh jaan-na hai to bolo.",
+      modelUsed: "local/tone-boundary-hi",
+    };
+  }
+
+  if (/\b(pendejo|gilipollas)\b/i.test(lower)) {
+    return {
+      reply:
+        "Mucho ruido y poca pregunta. El sarcasmo está bien; los insultos no ayudan. Pregunta por la investigación, publicaciones o trabajo de Akash.",
+      modelUsed: "local/tone-boundary-es",
+    };
+  }
+
+  if (/\bconnard\b/i.test(lower)) {
+    return {
+      reply:
+        "Belle entrée, mais aucune vraie question. Un peu de sarcasme passe; les insultes ne servent à rien. Demande-moi plutôt quelque chose sur le travail d’Akash.",
+      modelUsed: "local/tone-boundary-fr",
+    };
+  }
+
+  return {
+    reply:
+      "Strong opening, weak question. Banter is fine; abuse is not useful here. Ask me something about Akash's research, publications, skills, or work.",
+    modelUsed: "local/tone-boundary-en",
+  };
+}
+
 async function askOpenRouter(opts: {
   apiKey: string;
   model: string;
@@ -301,12 +408,12 @@ async function askOpenRouter(opts: {
   history: ChatHistoryMessage[];
   message: string;
 }): Promise<{ reply: string; modelUsed: string }> {
-  const modelsToTry = [
-    opts.model,
-    ...FREE_FALLBACK_MODELS.filter((model) => model !== opts.model),
-  ];
-
-  let lastError: string | null = null;
+  const modelsToTry = Array.from(
+    new Set([
+      opts.model,
+      ...FREE_FALLBACK_MODELS.filter((model) => model !== opts.model),
+    ]),
+  ).slice(0, 3);
   const messages = [
     { role: "system" as const, content: opts.systemPrompt },
     ...opts.history.map((message) => ({
@@ -315,49 +422,53 @@ async function askOpenRouter(opts: {
     })),
     { role: "user" as const, content: opts.message },
   ];
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 18_000);
 
-  for (const model of modelsToTry) {
-    try {
-      const response = await fetch(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${opts.apiKey}`,
-            "HTTP-Referer": "https://akashpandey.com",
-            "X-Title": "kasi - Akash Website Assistant",
-          },
-          body: JSON.stringify({
-            model,
-            messages,
-            temperature: 0.25,
-            max_tokens: 1000,
-          }),
+  try {
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${opts.apiKey}`,
+          "HTTP-Referer": "https://akashpandey.com",
+          "X-OpenRouter-Title": "kasi - Akash Website Assistant",
         },
-      );
+        body: JSON.stringify({
+          models: modelsToTry,
+          messages,
+          provider: {
+            sort: {
+              by: "latency",
+              partition: "none",
+            },
+          },
+          temperature: 0.3,
+          max_tokens: 480,
+        }),
+        signal: controller.signal,
+      },
+    );
 
-      if (response.status === 429) {
-        lastError = "rate-limited";
-        continue;
-      }
+    if (response.status === 429) throw new Error("rate-limited");
+    if (!response.ok) throw new Error(`model-${response.status}`);
 
-      if (!response.ok) {
-        lastError = String(response.status);
-        continue;
-      }
+    const result = (await response.json()) as {
+      model?: string;
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const reply = result.choices?.[0]?.message?.content?.trim();
+    if (!reply) throw new Error("model-empty");
 
-      const result = (await response.json()) as {
-        choices?: Array<{ message?: { content?: string } }>;
-      };
-      const reply = result.choices?.[0]?.message?.content?.trim();
-      if (reply) return { reply, modelUsed: model };
-    } catch {
-      lastError = "exception";
-    }
+    return {
+      reply,
+      modelUsed: result.model || modelsToTry[0],
+    };
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  throw new Error(lastError || "model-failed");
 }
 
 function buildNotes(input: Record<string, unknown>) {
@@ -399,25 +510,10 @@ export async function POST(req: Request) {
         ? body.visitorName.trim().slice(0, 80)
         : inferVisitorNameFast(message);
 
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    const model = process.env.OPENROUTER_MODEL || "openrouter/free";
-
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: FRIENDLY_ERRORS.config },
-        { status: 503 },
-      );
-    }
-
     const retrieval = retrieveSiteKnowledge(message);
     const intent = inferIntent(message);
-    const systemPrompt = buildSystemPrompt({
-      knowledgePrompt: buildKnowledgePrompt(retrieval.docs),
-      actions: retrieval.actions,
-      codeRequestAttempt: getCodeRequestAttempt(message, history),
-    });
-
     const codeRequestAttempt = getCodeRequestAttempt(message, history);
+    const fastReply = directFastReply(message);
     const toolReply =
       intent === "skills" ? directToolReply(message, retrieval.docs) : null;
     let reply: string;
@@ -430,7 +526,23 @@ export async function POST(req: Request) {
     } else if (toolReply) {
       reply = toolReply;
       modelUsed = "local/tool-detail";
+    } else if (fastReply) {
+      reply = fastReply.reply;
+      modelUsed = fastReply.modelUsed;
     } else {
+      const apiKey = process.env.OPENROUTER_API_KEY;
+      const model = process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
+      if (!apiKey) {
+        return NextResponse.json(
+          { error: FRIENDLY_ERRORS.config },
+          { status: 503 },
+        );
+      }
+      const systemPrompt = buildSystemPrompt({
+        knowledgePrompt: buildKnowledgePrompt(retrieval.docs),
+        actions: retrieval.actions,
+        codeRequestAttempt,
+      });
       const modelResponse = await askOpenRouter({
         apiKey,
         model,
@@ -454,61 +566,63 @@ export async function POST(req: Request) {
 
     const latencyMs = Date.now() - startedAt;
     const turnId = crypto.randomUUID();
-    let logResult: ChatLogAppendResult | null = null;
+    after(async () => {
+      let logResult: ChatLogAppendResult | null = null;
 
-    try {
-      const timestamp = new Date().toISOString();
-      const commonNotes = {
-        turnId,
-        intent,
-        latencyMs,
-        model: modelUsed,
-        page: body.client?.page || null,
-        contextRefs: retrieval.docs.map((doc) => doc.id),
-        actions: retrieval.actions.map((action) => ({
-          label: action.label,
-          href: action.href ?? null,
-          prompt: action.prompt ?? null,
-        })),
-      };
+      try {
+        const timestamp = new Date().toISOString();
+        const commonNotes = {
+          turnId,
+          intent,
+          latencyMs,
+          model: modelUsed,
+          page: body.client?.page || null,
+          contextRefs: retrieval.docs.map((doc) => doc.id),
+          actions: retrieval.actions.map((action) => ({
+            label: action.label,
+            href: action.href ?? null,
+            prompt: action.prompt ?? null,
+          })),
+        };
 
-      const rows: ChatLogRow[] = [
-        {
-          timestamp,
-          visitorId,
-          visitorName,
-          conversationId,
-          role: "user",
-          message,
-          notes: buildNotes({ ...commonNotes, sequence: 1 }),
-        },
-        {
-          timestamp,
-          visitorId,
-          visitorName,
-          conversationId,
-          role: "assistant",
-          message: reply,
-          notes: buildNotes({ ...commonNotes, sequence: 2 }),
-        },
-      ];
+        const rows: ChatLogRow[] = [
+          {
+            timestamp,
+            visitorId,
+            visitorName,
+            conversationId,
+            role: "user",
+            message,
+            notes: buildNotes({ ...commonNotes, sequence: 1 }),
+          },
+          {
+            timestamp,
+            visitorId,
+            visitorName,
+            conversationId,
+            role: "assistant",
+            message: reply,
+            notes: buildNotes({ ...commonNotes, sequence: 2 }),
+          },
+        ];
 
-      logResult = await appendChatLogRows(rows);
-    } catch (logError) {
-      console.warn("[Chat Log Warning]", logError);
-      logResult = {
-        status: "error",
-        error:
-          logError instanceof Error ? logError.message : "Unknown log error",
-      };
-    }
+        logResult = await appendChatLogRows(rows);
+      } catch (logError) {
+        console.warn("[Chat Log Warning]", logError);
+        logResult = {
+          status: "error",
+          error:
+            logError instanceof Error ? logError.message : "Unknown log error",
+        };
+      }
 
-    if (logResult?.status === "disabled") {
-      console.warn(`[Chat Log Disabled] ${logResult.reason}`);
-    }
-    if (logResult?.status === "error") {
-      console.warn(`[Chat Log Failed] ${logResult.error}`);
-    }
+      if (logResult?.status === "disabled") {
+        console.warn(`[Chat Log Disabled] ${logResult.reason}`);
+      }
+      if (logResult?.status === "error") {
+        console.warn(`[Chat Log Failed] ${logResult.error}`);
+      }
+    });
 
     const response = NextResponse.json({
       reply,
@@ -522,7 +636,7 @@ export async function POST(req: Request) {
               latencyMs,
               model: modelUsed,
               contextRefs: retrieval.docs.map((doc) => doc.id),
-              chatLog: logResult,
+              chatLog: "scheduled",
             },
           }
         : {}),

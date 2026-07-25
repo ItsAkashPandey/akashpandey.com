@@ -129,8 +129,8 @@ const config: Config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "cloud": "cloud 60s linear infinite",
-        "plane": "plane 20s linear infinite",
+        cloud: "cloud 60s linear infinite",
+        plane: "plane 20s linear infinite",
         "plane-shadow": "plane-shadow 20s linear infinite",
         "smooth-bounce": "smooth-bounce 1s ease-in-out infinite",
       },

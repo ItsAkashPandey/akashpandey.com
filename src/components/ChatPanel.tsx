@@ -95,7 +95,7 @@ export default function ChatPanel({ isExpanded }: ChatPanelProps) {
           body: JSON.stringify({
             message: trimmedInput,
             history: messagesRef.current
-              .slice(-8)
+              .slice(-6)
               .map(({ role, content }) => ({ role, content })),
             conversationId: conversationIdRef.current,
             visitorName: visitorName || undefined,
