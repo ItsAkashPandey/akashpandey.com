@@ -373,7 +373,7 @@
     border-radius: inherit !important;
   }
 
-  .hero-map-frame button {
+  .hero-map-frame [role="group"] > button {
     border-color: hsl(var(--border) / 0.82) !important;
     border-radius: 6px !important;
     background: hsl(var(--card) / 0.86) !important;
@@ -383,7 +383,7 @@
     backdrop-filter: blur(8px);
   }
 
-  .hero-map-frame button svg {
+  .hero-map-frame [role="group"] > button svg {
     color: hsl(var(--map-accent)) !important;
     stroke-width: 1.75;
   }
@@ -391,14 +391,6 @@
   .hero-map-frame [class*="font-mono"] {
     font-family: var(--font-sans);
     letter-spacing: 0;
-  }
-
-  .hero-map-frame .maplibregl-canvas {
-    filter: saturate(0.76) contrast(1.03);
-  }
-
-  .dark .hero-map-frame .maplibregl-canvas {
-    filter: saturate(0.62) brightness(0.83) contrast(1.08);
   }
 
   @media (max-width: 639px) {

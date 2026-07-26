@@ -249,9 +249,9 @@ export default function TimelineBar({ entries, onSelectEntry }: Props) {
               <div
                 key={year.year}
                 className={cn(
-                  "absolute right-0 left-0 border-t transition-colors duration-300",
+                  "absolute right-0 left-0 border-t transition-[background-color,border-color] duration-300",
                   isActive
-                    ? "border-sky-400/65"
+                    ? "border-sky-400/65 bg-sky-500/[0.07]"
                     : index % 2 === 0
                       ? "border-border/65"
                       : "border-border/45",

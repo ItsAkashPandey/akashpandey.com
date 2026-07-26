@@ -17,7 +17,7 @@ import SectionHeading from "@/components/SectionHeading";
 
 const LocationMap = dynamic(() => import("@/components/LocationMap"), {
   loading: () => (
-    <div className="bg-muted/55 h-48 w-full animate-pulse rounded-t-[11px]" />
+    <div className="bg-muted/55 h-64 w-full animate-pulse rounded-t-md" />
   ),
 });
 
@@ -123,14 +123,14 @@ export default function Home() {
                   <FileDown className="ml-1 size-3.5 sm:ml-2 sm:size-5" />
                 </Button>
               </Link>
-              <Socials />
+              <Socials variant="hero" />
             </section>
           </div>
         </div>
       </section>
 
       <LazySection heightHint={260} className="paper-band paper-band--sage">
-        <section className="flex flex-col gap-7">
+        <section className="flex flex-col gap-5">
           <SectionHeading title="the path so far" />
           <Experience />
         </section>
@@ -234,12 +234,12 @@ export default function Home() {
                   <div className="flex flex-wrap items-center gap-2">
                     {pub.journal && (
                       <Badge variant="outline" className="text-xs">
-                        {pub.journal}
+                        Peer-reviewed journal · {pub.journal}
                       </Badge>
                     )}
                     {pub.conference && (
                       <Badge variant="outline" className="text-xs">
-                        {pub.conference}
+                        Conference paper · {pub.conference}
                       </Badge>
                     )}
                     <Badge variant="outline" className="text-xs">

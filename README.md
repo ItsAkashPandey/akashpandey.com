@@ -9,32 +9,20 @@ Live site: [www.akashpandey.com](https://www.akashpandey.com/)
 
 ## A small note
 
-This is not a vibe-coded website. I did not give one prompt to an AI and publish
-whatever came out. I made the first version myself, then kept changing it as I
-learned what worked and what did not.
-
-I have deliberately kept many parts simple and a little old-fashioned:
-
-- Most content is in JSON and Markdown files under `src/data`.
-- Photos, logos, and the CV are normal files under `public`.
-- Images are converted to WebP before I put them on the site.
-- Portfolio content does not need a CMS or a database.
-- Pages use static data wherever possible, so less work is left for the browser.
-- KASI answers some common questions locally before calling an external model.
-
-These choices are not fashionable, but I can understand and edit them, and they
-keep the site fairly predictable.
-
-ChatGPT helped me a little with debugging, checking code, and a few things where
-I was stuck. It did not decide the website or make the whole thing for me.
+This is not a vibe-coded website. I made it for myself and still change it when
+I learn something new. I deliberately keep the content in JSON and Markdown,
+store the photos and CV as normal files, and use static pages where possible.
+It is a little old-fashioned, but it is quick and easy for me to edit. I took
+some help from ChatGPT when I got stuck.
 
 ## How I made it
 
 I started with Next.js and React, used Tailwind CSS for styling, and kept the
-small UI pieces inside the repository. MapLibre renders OpenFreeMap's keyless
-basemap. Public orbital data is fetched from CelesTrak and cached by the site.
-KASI uses OpenRouter when a question needs a model. The contact form sends mail
-through Resend.
+small UI pieces inside the repository. MapLibre renders NASA GIBS satellite
+imagery. CelesTrak supplies the public orbital data, and Three.js draws the
+small satellite models and side scenes. KASI answers common questions locally
+and uses OpenRouter when it needs a model. The contact form sends mail through
+Resend.
 
 The site is deployed on Vercel from this GitHub repository.
 
@@ -58,6 +46,7 @@ chat logging need the matching values from `.env.example`.
 Before pushing a change, I normally run:
 
 ```bash
+npm run lint
 npm run build
 ```
 
@@ -99,7 +88,9 @@ Do not commit `.env.local`. It contains private keys.
 ## Thanks
 
 Thanks to [tedawf.com](https://tedawf.com/) for the original inspiration,
-especially the way photographs and research work are presented.
+especially the way photographs and research work are presented. The open-source
+[WorldWideView](https://github.com/silvertakana/worldwideview) project was also
+useful while I was learning how orbit tracks can be presented.
 
 ## License
 

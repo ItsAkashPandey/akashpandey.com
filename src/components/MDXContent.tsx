@@ -21,7 +21,7 @@ function Code({ children, ...props }: any) {
     return <Mermaid chart={String(children).trim()} />;
   }
 
-  let codeHTML = highlight(String(children));
+  const codeHTML = highlight(String(children));
   return <code dangerouslySetInnerHTML={{ __html: codeHTML }} {...props} />;
 }
 
@@ -46,8 +46,8 @@ function TableHeaderSection(props: JSX.IntrinsicElements["thead"]) {
     <UITableHeader
       {...rest}
       className={cn(
-        "bg-muted/70 text-foreground [&_tr]:border-b [&_tr]:border-border/60",
-        "[&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wide",
+        "bg-muted/70 text-foreground [&_tr]:border-border/60 [&_tr]:border-b",
+        "[&_th]:font-semibold [&_th]:tracking-wide [&_th]:uppercase",
         className,
       )}
     />

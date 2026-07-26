@@ -678,8 +678,8 @@
       "imageFolder": "Mapathon",
       "links": [
         {
-          "name": "Result link",
-          "href": "https://iitb-aai-mapathon-2025.fossee.in/results",
+          "name": "Mapathon website",
+          "href": "https://iitb-aai-mapathon-2025.fossee.in/",
           "icon": "globe"
         }
       ],
