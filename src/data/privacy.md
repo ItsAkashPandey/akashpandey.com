@@ -38,15 +38,17 @@ read and reply to the message. I do not add it to a mailing list.
 
 ## Map, tiles, and satellite positions
 
-MapLibre renders the map in your browser. The light and dark basemap styles and
-tiles come from OpenFreeMap and use OpenStreetMap data. OpenFreeMap receives the
-normal request details needed to send those files, such as your IP address,
-browser information, and request time.
+MapLibre renders the map in your browser. The false-colour satellite imagery
+comes from NASA EOSDIS GIBS. NASA's tile server receives the normal request
+details needed to send those files, such as your IP address, browser
+information, and request time. The map does not load a political boundary or
+place-label layer.
 
 The site server fetches public orbital records from CelesTrak and caches them
-for about six hours. Your browser receives only the small set of satellites
-selected for the map. Visitors do not provide satellite data, and no visitor,
-chat, or location data is sent to CelesTrak.
+for about six hours. Your browser receives only the small set of
+Earth-observation satellites selected for the map. Their small 3D models are
+drawn locally in your browser. Visitors do not provide satellite data, and no
+visitor, chat, or location data is sent to CelesTrak.
 
 The map can ask your browser for optional location permission. If you allow it,
 your coordinates stay in the open browser tab and are used to show your marker

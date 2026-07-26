@@ -1,6 +1,11 @@
 "use client";
 
 import { Activity } from "@/lib/schemas";
+import {
+  createSearchDocument,
+  normalizeSearchText,
+  scoreSearchDocument,
+} from "@/lib/search";
 import { cn } from "@/lib/utils";
 import {
   ArrowUpDown,
@@ -141,26 +146,42 @@ export default function ProgressiveActivitiesList({
     );
   }, [allActivities]);
 
+  const searchIndex = useMemo(
+    () =>
+      new Map(
+        allActivities.map((activity) => {
+          const activityType = getActivityType(activity);
+          return [
+            activity.elementId,
+            createSearchDocument([
+              { value: activity.name, weight: 6 },
+              { value: activity.description, weight: 2 },
+              { value: activity.location, weight: 3 },
+              { value: activity.date },
+              { value: activityType, weight: 2 },
+            ]),
+          ];
+        }),
+      ),
+    [allActivities],
+  );
+
   const filteredActivities = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
+    const normalizedQuery = normalizeSearchText(query);
 
     return allActivities
-      .filter((activity) => {
+      .map((activity) => ({
+        activity,
+        score: scoreSearchDocument(
+          searchIndex.get(activity.elementId) ?? [],
+          normalizedQuery,
+        ),
+      }))
+      .filter(({ activity, score }) => {
         const activityType = getActivityType(activity);
         const activityYear = new Date(activity.date).getFullYear().toString();
-        const haystack = [
-          activity.name,
-          activity.description,
-          activity.location ?? "",
-          activity.date,
-          activityType,
-        ]
-          .join(" ")
-          .toLowerCase();
 
-        if (normalizedQuery && !haystack.includes(normalizedQuery)) {
-          return false;
-        }
+        if (normalizedQuery && score === 0) return false;
         if (selectedYear !== "all" && activityYear !== selectedYear) {
           return false;
         }
@@ -170,11 +191,13 @@ export default function ProgressiveActivitiesList({
         return true;
       })
       .sort((a, b) => {
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
+        if (normalizedQuery && b.score !== a.score) return b.score - a.score;
+        const dateA = new Date(a.activity.date).getTime();
+        const dateB = new Date(b.activity.date).getTime();
         return sortBy === "newest" ? dateB - dateA : dateA - dateB;
-      });
-  }, [allActivities, query, selectedYear, selectedType, sortBy]);
+      })
+      .map(({ activity }) => activity);
+  }, [allActivities, query, searchIndex, selectedYear, selectedType, sortBy]);
 
   const hasMore = visibleCount < filteredActivities.length;
   const visibleActivities = useMemo(

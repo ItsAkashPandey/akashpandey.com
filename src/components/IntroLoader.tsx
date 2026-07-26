@@ -76,15 +76,24 @@ export default function IntroLoader() {
         .intro-loader__image { animation: introImageSettle 1.5s cubic-bezier(.22,.8,.24,1) both; }
         .intro-loader__word, .intro-loader__final {
           position: absolute;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 1.85em;
           opacity: 0;
           white-space: nowrap;
-          line-height: 1.35;
-          padding: .18em .12em .28em;
+          line-height: 1.5;
+          padding: .3em .22em .46em;
+          overflow: visible;
           text-shadow: 0 2px 22px rgba(0,0,0,.42);
           font-family: var(--font-sans), "Nirmala UI", "Noto Sans Devanagari", sans-serif;
         }
         .intro-loader__word { animation: introWord 82ms cubic-bezier(.22,.8,.24,1) both; }
-        .intro-loader__final { animation: introFinal 220ms cubic-bezier(.22,.8,.24,1) both; }
+        .intro-loader__final {
+          min-height: 2em;
+          padding-block: .42em .58em;
+          animation: introFinal 220ms cubic-bezier(.22,.8,.24,1) both;
+        }
         .intro-loader__progress {
           animation: introProgress ${MINIMUM_LOADER_MS}ms linear forwards;
         }
@@ -139,7 +148,7 @@ export default function IntroLoader() {
         <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,12,14,0.16),rgba(8,12,14,0.46))]" />
 
         <div
-          className="relative flex h-40 w-full items-center justify-center overflow-visible px-5 sm:h-48"
+          className="relative flex h-52 w-full items-center justify-center overflow-visible px-5 sm:h-60"
           aria-hidden="true"
         >
           {greetings.map((greeting, index) => (

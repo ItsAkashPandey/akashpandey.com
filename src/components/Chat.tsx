@@ -115,10 +115,10 @@ export default function Chat() {
         <AccordionItem
           ref={chatRootRef}
           value="item-1"
-          className={`fixed bottom-4 overflow-hidden border border-white/60 bg-white/72 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-3xl transition-all duration-300 ease-out sm:right-8 sm:bottom-8 sm:left-auto dark:border-white/10 dark:bg-zinc-950/76 dark:shadow-[0_24px_80px_rgba(0,0,0,0.36)] ${
+          className={`fixed bottom-4 overflow-hidden border border-white/60 bg-white/72 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-3xl transition-all duration-300 ease-out sm:right-auto sm:bottom-8 sm:left-8 dark:border-white/10 dark:bg-zinc-950/76 dark:shadow-[0_24px_80px_rgba(0,0,0,0.36)] ${
             isExpanded
-              ? "right-4 left-4 w-auto rounded-lg sm:left-auto sm:w-[420px]"
-              : "right-4 hidden w-[52px] rounded-lg sm:block sm:w-[172px]"
+              ? "right-4 left-4 w-auto rounded-md sm:right-auto sm:w-[420px]"
+              : "right-4 hidden w-[52px] rounded-md sm:right-auto sm:block sm:w-[172px]"
           }`}
         >
           <AccordionTrigger

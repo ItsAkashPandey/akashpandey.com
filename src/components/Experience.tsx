@@ -16,7 +16,7 @@ export default function Experience() {
 
   return (
     <Tabs defaultValue="education">
-      <TabsList className={`${sectionSwitcherListClass} mb-5`}>
+      <TabsList className={`${sectionSwitcherListClass} mb-3`}>
         <TabsTrigger value="education" className={sectionSwitcherTriggerClass}>
           <SectionSwitcherVisual
             Icon={GraduationCap}
@@ -34,10 +34,10 @@ export default function Experience() {
           />
         </TabsTrigger>
       </TabsList>
-      <TabsContent value="education">
+      <TabsContent value="education" className="mt-0">
         <Timeline experience={education}></Timeline>
       </TabsContent>
-      <TabsContent value="work">
+      <TabsContent value="work" className="mt-0">
         <Timeline experience={career}></Timeline>
       </TabsContent>
     </Tabs>

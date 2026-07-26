@@ -137,9 +137,9 @@ export default function SkillsPage() {
         <h1 className="title">my skills.</h1>
       </header>
 
-      <section className="paper-band paper-band--paper">
+      <section className="border-border/65 border-b pb-6">
         <div
-          className={cn(sectionSwitcherListClass, "mb-6")}
+          className={cn(sectionSwitcherListClass, "mb-5")}
           role="tablist"
           aria-label="Skills sections"
         >
@@ -173,18 +173,18 @@ export default function SkillsPage() {
           })}
         </div>
 
-        <div className="grid gap-7 px-2 pb-2 sm:px-3 sm:pb-3 lg:grid-cols-[minmax(0,1fr)_250px] lg:items-center">
+        <div className="grid gap-5 px-1 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
           <div className="min-w-0">
-            <h2 className="title text-3xl leading-tight sm:text-4xl">
+            <h2 className="font-serif text-3xl leading-tight sm:text-4xl">
               {categoryLabel(activeCategory.mainCategory).toLowerCase()}
             </h2>
-            <p className="text-muted-foreground mt-4 max-w-[70ch] text-sm leading-7 sm:text-base">
+            <p className="text-muted-foreground mt-3 max-w-[70ch] text-sm leading-6 sm:text-base">
               {activeCategory.description}
             </p>
           </div>
 
           {categoryImages?.length ? (
-            <div className="mx-auto h-[188px] w-[250px] lg:mx-0 lg:justify-self-end">
+            <div className="mx-auto h-[165px] w-[220px] lg:mx-0 lg:justify-self-end">
               <SwipeCards
                 images={categoryImages}
                 baselineWidth={4}
@@ -193,7 +193,7 @@ export default function SkillsPage() {
               />
             </div>
           ) : (
-            <div className="bg-muted/45 relative hidden aspect-square w-[210px] overflow-hidden rounded-lg lg:grid lg:place-items-center">
+            <div className="bg-muted/35 relative hidden aspect-square w-[180px] overflow-hidden rounded-sm lg:grid lg:place-items-center">
               <Code2 className="text-primary size-12" strokeWidth={1.3} />
             </div>
           )}
@@ -244,7 +244,7 @@ export default function SkillsPage() {
                     <article
                       key={tool.name}
                       id={slugify(tool.name)}
-                      className="record-surface group/tool overflow-hidden rounded-lg transition-shadow hover:shadow-lg"
+                      className="group/tool border-border/55 overflow-hidden border-b last:border-b-0"
                     >
                       <button
                         type="button"
@@ -252,13 +252,13 @@ export default function SkillsPage() {
                         onClick={() =>
                           popupImages?.length && openLightbox(popupImages)
                         }
-                        className="w-full p-3 text-left disabled:cursor-default"
+                        className="w-full py-3 text-left disabled:cursor-default"
                       >
                         <div className="flex min-w-0 gap-3.5">
                           <SkillLogoTile
                             logo={tool.logo}
                             name={tool.name}
-                            className="h-[82px] w-[96px]"
+                            className="h-[74px] w-[86px] rounded-sm"
                           />
 
                           <span className="min-w-0 flex-1">
@@ -275,7 +275,7 @@ export default function SkillsPage() {
                                   )}
                               </span>
                               {interactive && (
-                                <span className="bg-muted text-muted-foreground group-hover/tool:text-foreground inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[10px] font-semibold transition-colors">
+                                <span className="bg-muted text-muted-foreground group-hover/tool:text-foreground inline-flex shrink-0 items-center gap-1 rounded-sm px-2 py-1 text-[10px] font-semibold transition-colors">
                                   <GalleryHorizontalEnd className="size-3" />
                                   photos
                                 </span>

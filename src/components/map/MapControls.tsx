@@ -4,8 +4,6 @@ import {
   LocateFixed,
   Maximize2,
   Minimize2,
-  Minus,
-  Plus,
 } from "lucide-react";
 
 type MapControlsProps = {
@@ -17,8 +15,6 @@ type MapControlsProps = {
   onFullscreen: () => void;
   onLocate: () => void;
   onResetNorth: () => void;
-  onZoomIn: () => void;
-  onZoomOut: () => void;
 };
 
 const buttonClass =
@@ -33,8 +29,6 @@ export default function MapControls({
   onFullscreen,
   onLocate,
   onResetNorth,
-  onZoomIn,
-  onZoomOut,
 }: MapControlsProps) {
   return (
     <div
@@ -42,26 +36,6 @@ export default function MapControls({
       aria-label="Map controls"
       className="bg-background/90 border-border/70 divide-border/65 absolute top-3 left-3 z-30 flex flex-col divide-y overflow-hidden rounded-lg border shadow-[0_8px_24px_rgba(15,23,42,0.14)] backdrop-blur-md"
     >
-      <button
-        type="button"
-        title="Zoom in"
-        aria-label="Zoom in"
-        disabled={disabled}
-        onClick={onZoomIn}
-        className={buttonClass}
-      >
-        <Plus className="size-4" />
-      </button>
-      <button
-        type="button"
-        title="Zoom out"
-        aria-label="Zoom out"
-        disabled={disabled}
-        onClick={onZoomOut}
-        className={buttonClass}
-      >
-        <Minus className="size-4" />
-      </button>
       <button
         type="button"
         title="Reset north"
@@ -77,8 +51,8 @@ export default function MapControls({
       </button>
       <button
         type="button"
-        title="Center on you"
-        aria-label="Center on you"
+        title="Fit you and Akash"
+        aria-label="Fit you and Akash"
         disabled={disabled || locateDisabled || locating}
         onClick={onLocate}
         className={buttonClass}

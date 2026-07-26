@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowUpDown,
@@ -32,6 +33,11 @@ import {
 import { HighlightText } from "@/components/HighlightedText";
 import ImageLightbox from "@/components/ImageLightbox";
 import StackedImageDeck from "@/components/StackedImageDeck";
+import {
+  createSearchDocument,
+  normalizeSearchText,
+  scoreSearchDocument,
+} from "@/lib/search";
 import { cn } from "@/lib/utils";
 
 interface PublicationMedia {
@@ -159,7 +165,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [selectedType, setSelectedType] =
     useState<PublicationTypeFilter>("all");
-  const normalizedQuery = query.trim();
+  const normalizedQuery = normalizeSearchText(query);
 
   const years = useMemo(() => {
     return Array.from(new Set(publications.map((pub) => pub.year))).sort(
@@ -179,28 +185,39 @@ export default function PublicationsWithSearch({ publications }: Props) {
     return typeOrder.filter((type) => availableTypes.has(type));
   }, [publications]);
 
+  const searchIndex = useMemo(
+    () =>
+      new Map(
+        publications.map((pub) => {
+          const venue =
+            pub.journal || pub.conference || pub.book || pub.publisher || "";
+          return [
+            pub.id,
+            createSearchDocument([
+              { value: pub.title, weight: 6 },
+              { value: pub.authors, weight: 3 },
+              { value: venue, weight: 3 },
+              { value: pub.type, weight: 2 },
+              { value: pub.status, weight: 2 },
+              { value: pub.year },
+            ]),
+          ];
+        }),
+      ),
+    [publications],
+  );
+
   const filtered = useMemo(() => {
     return publications
-      .filter((pub) => {
-        const venue =
-          pub.journal || pub.conference || pub.book || pub.publisher || "";
-        const haystack = [
-          pub.title,
-          pub.authors,
-          venue,
-          pub.type,
-          pub.status,
-          pub.year,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        if (
-          normalizedQuery &&
-          !haystack.includes(normalizedQuery.toLowerCase())
-        ) {
-          return false;
-        }
+      .map((pub) => ({
+        pub,
+        score: scoreSearchDocument(
+          searchIndex.get(pub.id) ?? [],
+          normalizedQuery,
+        ),
+      }))
+      .filter(({ pub, score }) => {
+        if (normalizedQuery && score === 0) return false;
         if (selectedYear !== "all" && pub.year !== parseInt(selectedYear)) {
           return false;
         }
@@ -209,18 +226,27 @@ export default function PublicationsWithSearch({ publications }: Props) {
         return true;
       })
       .sort((a, b) => {
+        if (normalizedQuery && b.score !== a.score) return b.score - a.score;
         switch (sortBy) {
           case "newest":
-            return b.year - a.year || a.id - b.id;
+            return b.pub.year - a.pub.year || a.pub.id - b.pub.id;
           case "oldest":
-            return a.year - b.year || a.id - b.id;
+            return a.pub.year - b.pub.year || a.pub.id - b.pub.id;
           case "title":
-            return a.title.localeCompare(b.title);
+            return a.pub.title.localeCompare(b.pub.title);
           default:
             return 0;
         }
-      });
-  }, [publications, normalizedQuery, selectedYear, selectedType, sortBy]);
+      })
+      .map(({ pub }) => pub);
+  }, [
+    publications,
+    normalizedQuery,
+    searchIndex,
+    selectedYear,
+    selectedType,
+    sortBy,
+  ]);
 
   const typeCounts = useMemo(() => {
     return publications.reduce(
@@ -448,7 +474,7 @@ function PublicationCard({
   return (
     <article
       className={cn(
-        "record-surface group relative overflow-hidden rounded-lg p-5 transition-shadow duration-200 hover:shadow-[10px_16px_42px_rgba(12,35,36,0.11)] sm:p-6",
+        "record-surface group relative overflow-hidden rounded-md p-4 transition-shadow duration-200 hover:shadow-[8px_12px_34px_rgba(12,35,36,0.1)] sm:p-5",
         recordTone,
       )}
     >
@@ -459,53 +485,47 @@ function PublicationCard({
         )}
       />
 
-      <header className="border-border/65 border-b pb-4">
-        <h2 className="group-hover:text-primary max-w-[34ch] text-xl leading-snug font-semibold text-balance transition-colors sm:text-2xl lg:max-w-none">
+      <header className="border-border/65 border-b pb-3">
+        <h2 className="group-hover:text-primary text-lg leading-snug font-semibold text-balance transition-colors sm:text-xl">
           <HighlightText text={publication.title} query={query} />
         </h2>
       </header>
 
       <div
         className={cn(
-          "grid gap-6 pt-5",
-          hasMedia && "md:grid-cols-[minmax(0,1fr)_300px] md:items-start",
+          "grid gap-4 pt-4 md:grid-cols-[160px_minmax(0,1fr)] md:items-start",
+          hasMedia &&
+            "lg:grid-cols-[160px_minmax(0,1fr)_230px] lg:items-center",
         )}
       >
-        <div className="flex min-w-0 flex-col gap-5">
+        <aside className="border-border/55 flex min-w-0 flex-col gap-3 border-b pb-3 md:border-r md:border-b-0 md:pr-4 md:pb-0">
           <PublicationMetadata publication={publication} query={query} />
 
-          <div>
-            <p className="text-muted-foreground text-[9px] font-semibold uppercase">
-              Authors
-            </p>
-            <p className="mt-2 text-sm leading-relaxed sm:text-[15px]">
-              <HighlightText text={publication.authors} query={query} />
-            </p>
-          </div>
-
           {venue && (
-            <div className="border-border/65 flex items-center gap-3 border-y py-4">
+            <div className="flex items-start gap-2.5">
               {logo ? (
-                <img
+                <Image
                   src={logo}
                   alt={venue}
-                  className="bg-card size-12 shrink-0 rounded-md object-contain p-1"
+                  width={36}
+                  height={36}
+                  className="bg-card size-9 shrink-0 rounded-sm object-contain p-1"
                 />
               ) : (
                 <span
                   className={cn(
-                    "flex size-12 shrink-0 items-center justify-center rounded-md",
+                    "flex size-9 shrink-0 items-center justify-center rounded-sm",
                     typeConfig.soft,
                   )}
                 >
-                  <GraduationCap className="size-5" />
+                  <GraduationCap className="size-4" />
                 </span>
               )}
               <div className="min-w-0">
-                <p className="text-sm leading-snug font-semibold">
+                <p className="text-xs leading-snug font-semibold">
                   <HighlightText text={venue} query={query} />
                 </p>
-                <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px]">
+                <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px]">
                   {publication.impactFactor && (
                     <span>IF {publication.impactFactor}</span>
                   )}
@@ -522,6 +542,17 @@ function PublicationCard({
               </div>
             </div>
           )}
+        </aside>
+
+        <div className="flex min-w-0 flex-col gap-4">
+          <div>
+            <p className="text-muted-foreground text-[9px] font-semibold uppercase">
+              Authors
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed">
+              <HighlightText text={publication.authors} query={query} />
+            </p>
+          </div>
 
           <div>
             {actionHref ? (
@@ -529,13 +560,13 @@ function PublicationCard({
                 href={actionHref}
                 target="_blank"
                 rel="noreferrer"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold shadow-[3px_4px_0_hsl(var(--foreground)/.13)] transition-[background-color,box-shadow] hover:shadow-[2px_3px_0_hsl(var(--foreground)/.18)]"
+                className="text-primary hover:text-primary/75 inline-flex h-8 items-center gap-1.5 border-b border-current text-xs font-semibold transition-colors"
               >
                 <span>{actionLabel}</span>
-                <ExternalLink className="size-4" />
+                <ExternalLink className="size-3.5" />
               </Link>
             ) : (
-              <span className="text-muted-foreground inline-flex h-10 items-center text-xs">
+              <span className="text-muted-foreground inline-flex h-8 items-center text-xs">
                 Link pending
               </span>
             )}
@@ -543,7 +574,7 @@ function PublicationCard({
         </div>
 
         {hasMedia && publication.media && (
-          <div className="min-w-0">
+          <div className="border-border/55 min-w-0 border-t pt-4 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-4">
             <PublicationMediaPreview media={publication.media} />
           </div>
         )}
@@ -565,10 +596,10 @@ function PublicationMetadata({
   const StatusIcon = statusConfig.Icon;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 text-[10px]">
+    <div className="flex flex-row flex-wrap items-center gap-x-2 gap-y-1.5 text-[10px] md:flex-col md:items-start">
       <span
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 font-semibold",
+          "inline-flex items-center gap-1.5 rounded-sm border px-2 py-1 font-semibold",
           typeConfig.chip,
         )}
       >
@@ -598,18 +629,18 @@ function PublicationMediaPreview({ media }: { media: PublicationMedia[] }) {
 
   return (
     <>
-      <div className="flex min-h-[250px] items-center justify-center overflow-visible">
+      <div className="flex min-h-[190px] items-center justify-center overflow-visible">
         <StackedImageDeck
           images={media.map((item) => item.image)}
           labels={media.map((item) => item.label)}
           alt={media[0]?.alt ?? "Publication visual"}
           imageWidth={900}
           imageHeight={680}
-          sizes="(max-width: 1024px) calc(100vw - 3rem), 300px"
+          sizes="(max-width: 1024px) calc(100vw - 3rem), 230px"
           quality={88}
           idleQuality={88}
           stackSize={Math.min(3, media.length)}
-          className="h-[250px] w-full max-w-[300px]"
+          className="h-[190px] w-full max-w-[230px]"
           onImageClick={setLightboxIndex}
         />
       </div>
