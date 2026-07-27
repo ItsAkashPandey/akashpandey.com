@@ -458,6 +458,47 @@
   }
 }
 
+.page-motion {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .page-motion {
+    position: fixed;
+    inset: 4.25rem 0 0;
+    /* Above the page background, below .site-shell, which is z-10. */
+    z-index: 0;
+    display: block;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .page-motion__video {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    opacity: 0.5;
+    /* Held to the margins so it never competes with the column of text. */
+    mask-image: linear-gradient(
+      to right,
+      black,
+      transparent 24%,
+      transparent 76%,
+      black
+    );
+  }
+
+  .dark .page-motion__video {
+    opacity: 0.62;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-motion {
+    display: none;
+  }
+}
+
 .research-edges {
   display: none;
 }
