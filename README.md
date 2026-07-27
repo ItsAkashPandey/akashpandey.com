@@ -101,6 +101,15 @@ both is written down in [docs/chat-logging.md](docs/chat-logging.md).
 
 Do not commit `.env.local`. It contains private keys.
 
+## Credits for the 3D models and background clips
+
+The satellites on the map are the real NASA models from
+[NASA 3D Resources](https://github.com/nasa/NASA-3D-Resources). The short
+background clips behind each page come from the
+[NASA Scientific Visualization Studio](https://svs.gsfc.nasa.gov/). Both are
+public domain. I trimmed and re-encoded the clips so they are small enough to
+serve; the full list with links is in `public/motion/attribution.txt`.
+
 ## Thanks
 
 Thanks to [tedawf.com](https://tedawf.com/) for the original inspiration,

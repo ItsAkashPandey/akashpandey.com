@@ -1,0 +1,29 @@
+Background motion sequences
+
+All clips are from the NASA Scientific Visualization Studio and are in the
+public domain. Each was trimmed to a short loop and re-encoded for the web;
+the originals are much larger and are linked below.
+
+home.mp4
+  Earth: Our Living Planet — twenty years of global biosphere data from
+  SeaWiFS, MODIS and VIIRS.
+  https://svs.gsfc.nasa.gov/4597/
+
+activities.mp4
+  Landsat Next Planned Orbits and Swath Coverage (version 2).
+  https://svs.gsfc.nasa.gov/5112/
+
+publications.mp4
+  Normalized Difference Vegetation Index (NDVI) Seasonal Cycles.
+  https://svs.gsfc.nasa.gov/4816/
+
+skills.mp4
+  Landsat with Sentinel — Global Coverage (Landsat 8/9 with Sentinel-2A/2B).
+  https://svs.gsfc.nasa.gov/4745/
+
+contact.mp4
+  Landsat with Sentinel — Global Coverage (Landsat 8 and 9 only).
+  https://svs.gsfc.nasa.gov/4745/
+
+NASA media usage guidelines:
+https://www.nasa.gov/nasa-brand-center/images-and-media/

@@ -1,6 +1,7 @@
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Providers from "@/components/Providers";
+import PageMotion from "@/components/PageMotion";
 import ResearchEdges from "@/components/ResearchEdges";
 import siteData from "@/data/site.json";
 import { cn } from "@/lib/utils";
@@ -114,6 +115,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>
+          <PageMotion />
           <ResearchEdges />
           <Header />
           <div className="site-shell relative z-10 flex flex-col">
