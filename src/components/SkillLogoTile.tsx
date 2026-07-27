@@ -17,7 +17,7 @@ export default function SkillLogoTile({
   return (
     <span
       className={cn(
-        "skill-logo-tile relative isolate grid shrink-0 place-items-center overflow-hidden rounded-lg",
+        "skill-logo-tile relative isolate grid shrink-0 place-items-center overflow-hidden rounded-md",
         className,
       )}
     >

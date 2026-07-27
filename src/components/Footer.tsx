@@ -5,9 +5,9 @@ import Socials from "./Socials";
 export default function Footer() {
   return (
     <footer className="site-footer relative z-10 mt-4 w-full pt-8">
-      <div className="site-shell flex flex-col items-center justify-center pb-32 sm:flex-row-reverse sm:justify-between sm:pb-10 sm:pl-48 lg:pl-52">
+      <div className="site-shell flex flex-col items-center justify-center gap-6 pb-28 sm:pb-10">
         <Socials />
-        <section className="mt-8 text-center sm:mt-0 sm:text-left">
+        <section className="text-center">
           <p className="text-muted-foreground text-xs">
             &copy; {new Date().getFullYear()}{" "}
             <Link className="link" href="/">
@@ -26,6 +26,16 @@ export default function Footer() {
               year: "numeric",
               timeZone: "UTC",
             }).format(new Date(`${siteData.lastUpdated}T00:00:00.000Z`))}
+          </p>
+          <p className="text-muted-foreground/60 mt-1.5 text-[10px]">
+            <Link
+              className="link"
+              href="https://github.com/ItsAkashPandey"
+              target="_blank"
+              rel="noreferrer"
+            >
+              built with Next.js, Tailwind and coffee
+            </Link>
           </p>
         </section>
       </div>

@@ -13,8 +13,8 @@ export default function TimelineItem({ experience }: Props) {
   const logoArray = logos || (logo ? [logo] : []);
 
   return (
-    <li className="border-border/45 relative ml-5 border-b py-3.5 last:border-b-0 sm:ml-6 sm:py-4">
-      <div className="absolute top-3 -left-[2.65rem] flex flex-col sm:-left-[3rem]">
+    <li className="border-border/45 relative ml-4 border-b py-3 last:border-b-0 sm:ml-5 sm:py-3.5">
+      <div className="absolute top-3 -left-[2.35rem] flex flex-col sm:-left-[2.7rem]">
         {logoArray.map((logoSrc, idx) => {
           return (
             <Link
@@ -22,7 +22,7 @@ export default function TimelineItem({ experience }: Props) {
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="border-border/70 flex size-10 items-center justify-center overflow-hidden rounded-sm border bg-white p-1 shadow-sm transition-transform duration-200 hover:scale-[1.03] sm:size-11 dark:bg-slate-100"
+              className="border-border/70 flex size-9 items-center justify-center overflow-hidden rounded-full border bg-white p-1 shadow-sm transition-transform duration-200 hover:scale-[1.03] sm:size-10 dark:bg-slate-100"
             >
               <Image
                 src={logoSrc}
@@ -37,7 +37,7 @@ export default function TimelineItem({ experience }: Props) {
       </div>
       <div className="flex min-w-0 flex-1 flex-col justify-start gap-1.5">
         <Link href={href} target="_blank" rel="noreferrer" className="w-fit">
-          <h2 className="text-[15px] leading-tight font-bold tracking-normal sm:text-base">
+                  <h2 className="text-[15px] leading-tight font-bold tracking-normal">
             {name}
           </h2>
         </Link>
@@ -59,7 +59,7 @@ export default function TimelineItem({ experience }: Props) {
                   {position.description.map((desc, i) => (
                     <li
                       key={i}
-                      className="text-muted-foreground max-w-none pr-0 text-sm leading-relaxed sm:pr-2"
+                    className="text-muted-foreground max-w-none pr-0 text-sm leading-snug sm:pr-2"
                     >
                       {desc}
                     </li>

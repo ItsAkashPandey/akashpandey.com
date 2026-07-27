@@ -1,4 +1,4 @@
-_Last updated: 26 July 2026_
+_Last updated: 27 July 2026_
 
 ## The short version
 
@@ -38,11 +38,11 @@ read and reply to the message. I do not add it to a mailing list.
 
 ## Map, tiles, and satellite positions
 
-MapLibre renders the map in your browser. The false-colour satellite imagery
-comes from NASA EOSDIS GIBS. NASA's tile server receives the normal request
-details needed to send those files, such as your IP address, browser
-information, and request time. The map does not load a political boundary or
-place-label layer.
+MapLibre renders the map in your browser. The low-zoom satellite imagery comes
+from NASA EOSDIS GIBS. High-zoom imagery and light map labels may come from
+Esri and OpenStreetMap tile services so the map can zoom closer to buildings.
+Those tile servers receive the normal request details needed to send map tiles,
+such as your IP address, browser information, and request time.
 
 The site server fetches public orbital records from CelesTrak and caches them
 for about six hours. Your browser receives only the small set of

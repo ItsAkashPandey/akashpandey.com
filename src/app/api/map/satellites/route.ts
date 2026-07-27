@@ -79,7 +79,10 @@ export async function GET() {
       return record ? [record] : [];
     });
 
-    if (liveRecords.length < 4 || records.length < 8) {
+    if (
+      liveRecords.length < 4 ||
+      records.length < SATELLITE_FALLBACK_RECORDS.length
+    ) {
       throw new Error("CelesTrak returned too few tracked satellites");
     }
 

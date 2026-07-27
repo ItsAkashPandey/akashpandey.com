@@ -415,7 +415,7 @@ export default function PublicationsWithSearch({ publications }: Props) {
                 <SelectContent align="end">
                   <SelectItem value="newest">Newest first</SelectItem>
                   <SelectItem value="oldest">Oldest first</SelectItem>
-                  <SelectItem value="title">Title A–Z</SelectItem>
+                  <SelectItem value="title">Title A-Z</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -474,7 +474,7 @@ function PublicationCard({
   return (
     <article
       className={cn(
-        "record-surface group relative overflow-hidden rounded-md p-4 transition-shadow duration-200 hover:shadow-[8px_12px_34px_rgba(12,35,36,0.1)] sm:p-5",
+        "record-surface group relative overflow-hidden rounded-md p-4 transition-shadow duration-200 hover:shadow-[8px_12px_34px_rgba(12,35,36,0.1)]",
         recordTone,
       )}
     >
@@ -493,9 +493,9 @@ function PublicationCard({
 
       <div
         className={cn(
-          "grid gap-4 pt-4 md:grid-cols-[160px_minmax(0,1fr)] md:items-start",
+          "grid gap-3 pt-3 md:grid-cols-[150px_minmax(0,1fr)] md:items-start",
           hasMedia &&
-            "lg:grid-cols-[160px_minmax(0,1fr)_230px] lg:items-center",
+            "lg:grid-cols-[150px_minmax(0,1fr)_220px] lg:items-center",
         )}
       >
         <aside className="border-border/55 flex min-w-0 flex-col gap-3 border-b pb-3 md:border-r md:border-b-0 md:pr-4 md:pb-0">
