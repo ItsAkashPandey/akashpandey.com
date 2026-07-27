@@ -26,9 +26,12 @@ const TEXT_FONT_MEDIUM = ["Noto Sans Medium"];
  */
 const palette = {
   dark: {
-    ground: "#0b1013",
-    water: "#0d1a21",
-    green: "#111b18",
+    // Land is lifted off the ocean far enough that coastlines read at globe
+    // zoom, where these two were previously within a few points of each other
+    // and the whole planet rendered as one black disc.
+    ground: "#182126",
+    water: "#060b0f",
+    green: "#1b2723",
     builtUp: "#141b20",
     building: "#1c262d",
     buildingTop: "#26333c",
@@ -46,9 +49,9 @@ const palette = {
     imageryBrightnessMax: 0.94,
   },
   light: {
-    ground: "#eceee9",
-    water: "#d3dee3",
-    green: "#e2e8dd",
+    ground: "#eaece6",
+    water: "#b9cbd5",
+    green: "#dde5d8",
     builtUp: "#e5e6e1",
     building: "#d8dcd8",
     buildingTop: "#e6eae6",
