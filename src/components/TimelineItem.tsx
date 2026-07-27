@@ -13,7 +13,7 @@ export default function TimelineItem({ experience }: Props) {
   const logoArray = logos || (logo ? [logo] : []);
 
   return (
-    <li className="border-border/45 relative ml-4 border-b py-3 last:border-b-0 sm:ml-5 sm:py-3.5">
+    <li className="relative ml-4 py-3 sm:ml-5 sm:py-3.5">
       <div className="absolute top-3 -left-[2.35rem] flex flex-col sm:-left-[2.7rem]">
         {logoArray.map((logoSrc, idx) => {
           return (
@@ -22,7 +22,7 @@ export default function TimelineItem({ experience }: Props) {
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="border-border/70 flex size-9 items-center justify-center overflow-hidden rounded-full border bg-white p-1 shadow-sm transition-transform duration-200 hover:scale-[1.03] sm:size-10 dark:bg-slate-100"
+              className="flex size-9 items-center justify-center overflow-hidden rounded-full transition-transform duration-200 hover:scale-[1.04] sm:size-10"
             >
               <Image
                 src={logoSrc}
@@ -48,7 +48,7 @@ export default function TimelineItem({ experience }: Props) {
                 <p className="text-muted-foreground min-w-0 text-sm leading-tight font-semibold">
                   {position.title}
                 </p>
-                <time className="text-muted-foreground/90 border-border/60 border-l pl-2 text-[11px] tabular-nums">
+                <time className="text-muted-foreground/80 text-[11px] tabular-nums">
                   <span>{position.start}</span>
                   <span>{" - "}</span>
                   <span>{position.end ?? "Present"}</span>

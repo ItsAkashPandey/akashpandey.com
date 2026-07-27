@@ -462,9 +462,9 @@
   display: none;
 }
 
-@media (min-width: 1536px) {
+@media (min-width: 1024px) {
   .research-edges {
-    --edge-width: max(72px, calc((100vw - 80rem) / 2));
+    --edge-width: max(64px, calc((100vw - 72rem) / 2));
     position: fixed;
     inset: 4.25rem 0 0;
     z-index: 0;
