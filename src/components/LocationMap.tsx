@@ -18,6 +18,8 @@ import { createLocationMarkerElement } from "@/lib/map/map-markers";
 import {
   applyMapTheme,
   createMapStyle,
+  disableThreeDimensions,
+  enableThreeDimensions,
   type MapTheme,
 } from "@/lib/map/map-style";
 import {
@@ -86,6 +88,8 @@ export default function LocationMap() {
   const [snapshots, setSnapshots] = useState<SatelliteSnapshot[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [bearing, setBearing] = useState(0);
+  const [pitch, setPitch] = useState(0);
+  const [threeD, setThreeD] = useState(false);
   const [visitorLocation, setVisitorLocation] = useState<
     [number, number] | null
   >(null);
@@ -112,6 +116,12 @@ export default function LocationMap() {
     ? distanceKm(AKASH_LOCATION, visitorLocation)
     : null;
   const fullscreen = nativeFullscreen || pseudoFullscreen;
+  const showCoverage = pitch > 8 || Math.abs(bearing) > 4;
+  const showCoverageRef = useRef(showCoverage);
+
+  useEffect(() => {
+    showCoverageRef.current = showCoverage;
+  }, [showCoverage]);
 
   useEffect(() => setIsClient(true), []);
 
@@ -167,10 +177,8 @@ export default function LocationMap() {
     return () => window.clearInterval(timer);
   }, [trackedSatellites]);
 
-  useEffect(() => {
-    if (selectedId !== null || !snapshots.length) return;
-    setSelectedId(snapshots[0].noradId);
-  }, [selectedId, snapshots]);
+  // No satellite is selected until the visitor clicks one, so the map stays
+  // clean and the detail panel is never open uninvited.
 
   useEffect(() => {
     if (!isClient || !mapContainerRef.current || mapRef.current) return;
@@ -194,9 +202,10 @@ export default function LocationMap() {
         center: AKASH_LOCATION,
         zoom: 13.2,
         minZoom: 1,
-        maxZoom: 21,
-        pitch: 48,
-        maxPitch: 72,
+        maxZoom: 22,
+        // Flat by default; the 3D control opts into pitch, terrain and buildings.
+        pitch: 0,
+        maxPitch: 80,
         bearing: 0,
         dragPan: true,
         dragRotate: true,
@@ -227,10 +236,14 @@ export default function LocationMap() {
         document.documentElement.dataset.heroMapReady = "true";
         window.dispatchEvent(new Event("hero-map-ready"));
       };
-      const handleRotate = () => setBearing(map.getBearing());
+      const handleMove = () => {
+        setBearing(map.getBearing());
+        setPitch(map.getPitch());
+      };
 
       map.on("load", handleLoad);
-      map.on("rotate", handleRotate);
+      map.on("rotate", handleMove);
+      map.on("pitch", handleMove);
       loadTimer = window.setTimeout(() => {
         if (!mapReadyRef.current) setMapUnavailable(true);
       }, 8_000);
@@ -261,6 +274,19 @@ export default function LocationMap() {
 
   useEffect(() => {
     const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+
+    if (threeD) {
+      enableThreeDimensions(map, mapThemeRef.current);
+      map.easeTo({ pitch: 62, duration: 700, essential: true });
+    } else {
+      disableThreeDimensions(map);
+      map.easeTo({ pitch: 0, bearing: 0, duration: 700, essential: true });
+    }
+  }, [mapLoaded, threeD]);
+
+  useEffect(() => {
+    const map = mapRef.current;
     if (!map || !mapLoaded || akashMarkerRef.current) return;
     let active = true;
 
@@ -275,7 +301,6 @@ export default function LocationMap() {
           map.easeTo({
             center: AKASH_LOCATION,
             zoom: Math.max(map.getZoom(), 14),
-            pitch: Math.max(map.getPitch(), 48),
             duration: 850,
             essential: true,
           });
@@ -350,6 +375,7 @@ export default function LocationMap() {
         map,
         orbitTrackRef.current,
         selectedSnapshotRef.current,
+        showCoverageRef.current,
       );
     };
     updateTrack();
@@ -360,8 +386,13 @@ export default function LocationMap() {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded) return;
-    updateSelectedOrbit(map, orbitTrackRef.current, selectedSnapshot);
-  }, [mapLoaded, selectedSnapshot]);
+    updateSelectedOrbit(
+      map,
+      orbitTrackRef.current,
+      selectedSnapshot,
+      showCoverage,
+    );
+  }, [mapLoaded, selectedSnapshot, showCoverage]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -491,12 +522,14 @@ export default function LocationMap() {
           typeof navigator !== "undefined" && !("geolocation" in navigator)
         }
         locating={locating}
+        threeD={threeD}
         onFullscreen={() => void toggleFullscreen()}
         onLocate={locateVisitor}
+        onToggleThreeD={() => setThreeD((current) => !current)}
         onResetNorth={() =>
           mapRef.current?.easeTo({
             bearing: 0,
-            pitch: 0,
+            pitch: threeD ? 62 : 0,
             duration: 420,
             essential: true,
           })
