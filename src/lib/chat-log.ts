@@ -20,6 +20,14 @@ type WebhookPayload = {
   rows: ChatLogRow[];
 };
 
+function safeParseJson(text: string): { error?: string } | null {
+  try {
+    return JSON.parse(text) as { error?: string };
+  } catch {
+    return null;
+  }
+}
+
 export async function appendChatLogRows(rows: ChatLogRow[]) {
   const databaseUrl =
     process.env.CHAT_LOG_DATABASE_URL ||
@@ -50,11 +58,19 @@ export async function appendChatLogRows(rows: ChatLogRow[]) {
         body: JSON.stringify(payload),
       });
 
+      const body = await response.text().catch(() => "");
+
       if (!response.ok) {
-        const body = await response.text().catch(() => "");
         throw new Error(
           `Chat log webhook failed: ${response.status} ${response.statusText}${body ? ` — ${body}` : ""}`,
         );
+      }
+
+      // Apps Script answers 200 even when the script itself threw, so the
+      // payload is the only reliable signal that the row was actually stored.
+      const parsed = body ? safeParseJson(body) : null;
+      if (parsed?.error) {
+        throw new Error(`Chat log webhook rejected the write: ${parsed.error}`);
       }
 
       return { status: "ok", mode: "webhook" } as const;
