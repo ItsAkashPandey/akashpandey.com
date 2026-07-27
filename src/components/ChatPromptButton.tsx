@@ -12,7 +12,7 @@ export default function ChatPromptButton({ chatPrompt }: Props) {
 
     return (
         <div
-            className="mt-6 flex items-center gap-1 group cursor-pointer w-fit"
+            className="mx-auto mt-6 flex w-fit items-center gap-1 group cursor-pointer sm:mx-0"
             onClick={toggleChat}
         >
             <p className="text-balance text-sm font-semibold sm:text-base">

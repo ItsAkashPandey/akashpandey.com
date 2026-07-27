@@ -92,7 +92,7 @@ export default function Home() {
         <div className="mt-6 flex flex-col gap-6 px-2 pb-2 sm:mt-[22px] sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-10 sm:px-4 sm:pb-4">
           <SwipeCards className="mx-auto shrink-0 sm:mx-0" />
 
-          <div className="flex min-w-0 flex-1 flex-col text-center sm:max-w-3xl sm:text-left">
+          <div className="flex min-w-0 flex-1 flex-col items-center text-center sm:max-w-3xl sm:items-start sm:text-left">
             <h1 className="title text-3xl leading-tight text-balance sm:text-5xl">
               {homeContent.introduction.greeting.replace(" 👋", "")}
               <span className="ml-1 inline-block origin-bottom-right hover:animate-[wave_1.3s_ease-in-out]">
@@ -109,11 +109,13 @@ export default function Home() {
               data.
             </p>
 
-            <ChatPromptButton
-              chatPrompt={homeContent.introduction.chatPrompt}
-            />
+            <div className="mx-auto w-full max-w-md sm:mx-0">
+              <ChatPromptButton
+                chatPrompt={homeContent.introduction.chatPrompt}
+              />
+            </div>
 
-            <section className="mt-6 flex flex-wrap items-center justify-center gap-2 px-0 sm:justify-start sm:gap-4">
+            <section className="mt-6 flex w-full flex-wrap items-center justify-center gap-2 px-0 sm:justify-start sm:gap-4">
               <Link href="/resume.pdf" target="_blank" rel="noreferrer">
                 <Button
                   variant="outline"
@@ -234,12 +236,12 @@ export default function Home() {
                   <div className="flex flex-wrap items-center gap-2">
                     {pub.journal && (
                       <Badge variant="outline" className="text-xs">
-                        Peer-reviewed journal · {pub.journal}
+                        {pub.journal}
                       </Badge>
                     )}
                     {pub.conference && (
                       <Badge variant="outline" className="text-xs">
-                        Conference paper · {pub.conference}
+                        {pub.conference.replace(/\s*2026\b/g, "")}
                       </Badge>
                     )}
                     <Badge variant="outline" className="text-xs">

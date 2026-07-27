@@ -12,19 +12,23 @@ Live site: [www.akashpandey.com](https://www.akashpandey.com/)
 This is not a vibe-coded website. I made it for myself and still change it when
 I learn something new. I deliberately keep the content in JSON and Markdown,
 store the photos and CV as normal files, and use static pages where possible.
-It is a little old-fashioned, but it is quick and easy for me to edit. I took
-some help from ChatGPT when I got stuck.
+It is a little old-fashioned, but it is quick for me to edit and easy to host.
+I took some help from ChatGPT when I got stuck.
+
+The photo stack on the home page is inspired by the clean stacked-card feeling
+on [tedawf.com](https://tedawf.com). Thank you for the design inspiration.
 
 ## How I made it
 
-I started with Next.js and React, used Tailwind CSS for styling, and kept the
-small UI pieces inside the repository. MapLibre renders NASA GIBS satellite
-imagery. CelesTrak supplies the public orbital data, and Three.js draws the
-small satellite models and side scenes. KASI answers common questions locally
-and uses OpenRouter when it needs a model. The contact form sends mail through
-Resend.
+The site uses Next.js, React, Tailwind CSS, and a few small local components.
+Most content lives in `src/data` as JSON or Markdown. Photos and documents live
+in `public`, so I can update the site without touching too much code.
 
-The site is deployed on Vercel from this GitHub repository.
+MapLibre renders the map. NASA GIBS is used for the low-zoom satellite view,
+Esri imagery helps at high zoom, CelesTrak supplies public orbital records, and
+satellite.js calculates the ground positions and tracks. KASI answers common
+questions from local site knowledge and can use OpenRouter when needed. The
+contact form sends email through Resend.
 
 ## Run it locally
 
@@ -40,8 +44,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The normal pages work from the local files. KASI, contact mail, and optional
-chat logging need the matching values from `.env.example`.
+The normal pages work from local files. KASI, contact mail, optional chat
+logging, and live satellite refresh need the matching values from `.env.example`.
 
 Before pushing a change, I normally run:
 
@@ -52,13 +56,12 @@ npm run build
 
 ## Editing the content
 
-- `src/data/activities.json` contains activities and their links.
-- `src/data/publications.json` contains papers, DOI links, and publication
-  images.
-- `src/data/skills.json` contains tools, instruments, and skill photos.
-- `src/data/career.json` and `src/data/education.json` contain the timeline.
-- `src/data/profile.md` contains the facts used by KASI.
-- `src/data/privacy.md` is the privacy text shown on the site.
+- `src/data/activities.json` has activities and links.
+- `src/data/publications.json` has papers, DOI links, and publication images.
+- `src/data/skills.json` has tools, instruments, and skill photos.
+- `src/data/career.json` and `src/data/education.json` have the timeline.
+- `src/data/profile.md` has the facts used by KASI.
+- `src/data/privacy.md` is the privacy page text.
 - `public/resume.pdf` is the CV linked from the home page.
 
 Activity photos go in a folder under `public`. This command rebuilds the

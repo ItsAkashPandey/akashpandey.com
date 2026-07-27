@@ -9,25 +9,26 @@ const greetings = [
   "Bonjour",
   "Ciao",
   "Hallo",
-  "Olá",
+  "Ola",
   "Hej",
   "Jambo",
   "Merhaba",
   "Halo",
-  "مرحبا",
-  "שלום",
-  "你好",
-  "こんにちは",
-  "안녕하세요",
-  "নমস্কার",
-  "வணக்கம்",
-  "ਸਤ ਸ੍ਰੀ ਅਕਾਲ",
-  "नमस्ते",
+  "Marhaba",
+  "Shalom",
+  "Ni hao",
+  "Konnichiwa",
+  "Annyeong",
+  "Nomoskar",
+  "Vanakkam",
+  "Sat Sri Akal",
+  "Namaste",
 ];
 
 const GREETING_STEP_MS = 58;
 const FINAL_GREETING_DELAY_MS = (greetings.length - 1) * GREETING_STEP_MS;
-const MINIMUM_LOADER_MS = FINAL_GREETING_DELAY_MS + 460;
+const FINAL_GREETING_HOLD_MS = 900;
+const MINIMUM_LOADER_MS = FINAL_GREETING_DELAY_MS + FINAL_GREETING_HOLD_MS;
 
 export default function IntroLoader() {
   const [leaving, setLeaving] = useState(false);
@@ -58,7 +59,10 @@ export default function IntroLoader() {
       minimumElapsed = true;
       leaveWhenReady();
     }, MINIMUM_LOADER_MS);
-    const safetyTimer = window.setTimeout(() => setLeaving(true), 2_500);
+    const safetyTimer = window.setTimeout(
+      () => setLeaving(true),
+      MINIMUM_LOADER_MS + 650,
+    );
 
     return () => {
       window.removeEventListener("hero-map-ready", handleMapReady);
@@ -71,7 +75,7 @@ export default function IntroLoader() {
   return (
     <>
       <style>{`
-        .intro-loader { animation: introSafety 2.75s cubic-bezier(.22,.8,.24,1) forwards; }
+        .intro-loader { animation: introSafety ${MINIMUM_LOADER_MS + 500}ms cubic-bezier(.22,.8,.24,1) forwards; }
         .intro-loader[data-leaving="true"] { animation: introOverlayExit 220ms cubic-bezier(.22,.8,.24,1) forwards; }
         .intro-loader__image { animation: introImageSettle 1.5s cubic-bezier(.22,.8,.24,1) both; }
         .intro-loader__word, .intro-loader__final {
@@ -79,19 +83,19 @@ export default function IntroLoader() {
           display: flex;
           align-items: center;
           justify-content: center;
-          min-height: 1.85em;
+          min-height: 2.45em;
           opacity: 0;
           white-space: nowrap;
-          line-height: 1.5;
-          padding: .3em .22em .46em;
+          line-height: 1.18;
+          padding: .34em .26em .48em;
           overflow: visible;
           text-shadow: 0 2px 22px rgba(0,0,0,.42);
-          font-family: var(--font-sans), "Nirmala UI", "Noto Sans Devanagari", sans-serif;
+          font-family: var(--font-sans), "Nirmala UI", sans-serif;
         }
         .intro-loader__word { animation: introWord 82ms cubic-bezier(.22,.8,.24,1) both; }
         .intro-loader__final {
-          min-height: 2em;
-          padding-block: .42em .58em;
+          min-height: 2.65em;
+          padding-block: .5em .72em;
           animation: introFinal 220ms cubic-bezier(.22,.8,.24,1) both;
         }
         .intro-loader__progress {
@@ -148,13 +152,12 @@ export default function IntroLoader() {
         <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,12,14,0.16),rgba(8,12,14,0.46))]" />
 
         <div
-          className="relative flex h-52 w-full items-center justify-center overflow-visible px-5 sm:h-60"
+          className="relative flex h-64 w-full items-center justify-center overflow-visible px-5 sm:h-72"
           aria-hidden="true"
         >
           {greetings.map((greeting, index) => (
             <span
               key={greeting}
-              lang={index === greetings.length - 1 ? "hi" : undefined}
               className={`text-4xl font-medium sm:text-6xl lg:text-7xl ${
                 index === greetings.length - 1
                   ? "intro-loader__final font-semibold"

@@ -5,11 +5,21 @@ export const CELESTRAK_RESOURCE_URL =
 
 export const CELESTRAK_EARTH_OBSERVATION_URLS = [
   CELESTRAK_RESOURCE_URL,
+  "https://celestrak.org/NORAD/elements/gp.php?CATNR=39634&FORMAT=JSON",
+  "https://celestrak.org/NORAD/elements/gp.php?CATNR=40697&FORMAT=JSON",
+  "https://celestrak.org/NORAD/elements/gp.php?CATNR=41335&FORMAT=JSON",
+  "https://celestrak.org/NORAD/elements/gp.php?CATNR=42063&FORMAT=JSON",
+  "https://celestrak.org/NORAD/elements/gp.php?CATNR=43437&FORMAT=JSON",
   "https://celestrak.org/NORAD/elements/gp.php?CATNR=65053&FORMAT=JSON",
   "https://celestrak.org/NORAD/elements/gp.php?CATNR=58271&FORMAT=JSON",
 ] as const;
 
 export const TRACKED_NORAD_IDS = [
+  39634, // Sentinel-1A
+  40697, // Sentinel-2A
+  41335, // Sentinel-3A
+  42063, // Sentinel-2B
+  43437, // Sentinel-3B
   25994, // Terra / MODIS
   27424, // Aqua / MODIS
   39084, // Landsat 8

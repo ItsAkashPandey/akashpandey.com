@@ -174,14 +174,8 @@ export function ActivityCard({
         : [];
 
   // Format date nicely
-  const formattedDate = new Date(`${date}T12:00:00`).toLocaleDateString(
-    "en-US",
-    {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    },
-  );
+  const dateObj = new Date(`${date}T12:00:00`);
+  const year = dateObj.getFullYear();
 
   return (
     <article className="record-surface group relative max-w-full overflow-hidden rounded-lg p-4 transition-shadow duration-200 hover:shadow-[10px_16px_42px_rgba(12,35,36,0.11)] sm:p-6">
@@ -192,9 +186,19 @@ export function ActivityCard({
         <div className="flex flex-col items-center gap-3 sm:items-start">
           {/* Date & Location */}
           <div className="flex w-full flex-col gap-1.5">
-            <div className="text-foreground inline-flex items-center gap-1.5 text-[11px] font-medium">
-              <Calendar className="size-3.5" />
-              <time dateTime={date}>{formattedDate}</time>
+            <div className="flex items-center gap-2">
+              <span className="bg-primary/12 text-primary inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-bold tabular-nums">
+                {year}
+              </span>
+              <div className="text-muted-foreground inline-flex items-center gap-1.5 text-[11px] font-medium">
+                <Calendar className="size-3.5" />
+                <time dateTime={date}>
+                  {dateObj.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </time>
+              </div>
             </div>
             {location && (
               <div className="text-muted-foreground inline-flex items-center gap-1.5 text-[11px]">

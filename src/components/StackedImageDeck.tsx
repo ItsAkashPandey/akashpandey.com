@@ -59,8 +59,7 @@ function fitInsideDeck(ratio: number, bounds: DeckBounds) {
 
 function repeatedIndexes(total: number) {
   if (total <= 0) return [];
-  const repeats = total < 4 ? 3 : 1;
-  return Array.from({ length: total * repeats }, (_, index) => index % total);
+  return Array.from({ length: total }, (_, index) => index);
 }
 
 export default function StackedImageDeck({
@@ -85,11 +84,11 @@ export default function StackedImageDeck({
     () => repeatedIndexes(images.length),
     [images.length],
   );
-  const initialSlide = images.length < 4 ? images.length : 0;
+  const initialSlide = 0;
   const [viewportRef, emblaApi] = useEmblaCarousel({
     align: "center",
     containScroll: false,
-    duration: 24,
+    duration: 28,
     loop: images.length > 1,
     skipSnaps: false,
     startIndex: initialSlide,

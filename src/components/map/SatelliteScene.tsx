@@ -304,7 +304,7 @@ export default function SatelliteScene({
         if (!visible) continue;
 
         const selected = snapshot.noradId === selectedIdRef.current;
-        const scale = Math.min(4.7, Math.max(2.45, 2.2 + zoom * 0.22));
+        const scale = Math.min(3.4, Math.max(1.7, 1.6 + zoom * 0.15));
         handle.group.position.set(handle.screenX, handle.screenY, 4);
         handle.group.scale.setScalar(scale * (selected ? 1.12 : 1));
         handle.group.rotation.z = (-snapshot.bearing * Math.PI) / 180;

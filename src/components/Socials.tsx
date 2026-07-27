@@ -33,7 +33,7 @@ const brandStyles: Record<string, string> = {
 };
 
 const socialClass =
-  "group/social border-border/60 bg-card/65 hover:bg-card relative flex size-9 items-center justify-center rounded-sm border shadow-sm transition-[background-color,border-color,transform] duration-200 hover:-translate-y-px";
+  "group/social border-border/60 bg-card/72 hover:bg-card relative flex size-9 items-center justify-center rounded-md border shadow-sm transition-[background-color,border-color,transform] duration-200 hover:-translate-y-px";
 
 export default function Socials({
   variant = "footer",
@@ -62,7 +62,7 @@ export default function Socials({
   };
 
   return (
-    <section className="flex flex-wrap gap-2.5" aria-label="Social profiles">
+    <section className="flex flex-wrap justify-center gap-2.5" aria-label="Social profiles">
       {socials.map((item) => {
         const Icon = iconMap[item.name];
         const className = cn(

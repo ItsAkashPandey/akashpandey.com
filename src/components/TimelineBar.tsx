@@ -251,7 +251,7 @@ export default function TimelineBar({ entries, onSelectEntry }: Props) {
                 className={cn(
                   "absolute right-0 left-0 border-t transition-[background-color,border-color] duration-300",
                   isActive
-                    ? "border-sky-400/65 bg-sky-500/[0.07]"
+                    ? "border-sky-400/75 bg-sky-500/[0.12] shadow-[inset_2px_0_0_rgba(14,165,233,.75)]"
                     : index % 2 === 0
                       ? "border-border/65"
                       : "border-border/45",
@@ -269,9 +269,9 @@ export default function TimelineBar({ entries, onSelectEntry }: Props) {
                   type="button"
                   onClick={() => selectEntry(year.firstId)}
                   className={cn(
-                    "absolute top-1/2 right-[17px] -translate-y-1/2 px-1 py-0.5 text-[10px] font-bold tabular-nums transition-colors duration-200",
+                    "absolute top-1/2 right-[17px] -translate-y-1/2 rounded-sm px-1 py-0.5 text-[10px] font-bold tabular-nums transition-colors duration-200",
                     isActive
-                      ? "text-sky-600 dark:text-sky-300"
+                      ? "bg-background/85 text-sky-700 shadow-sm dark:text-sky-200"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                   aria-current={isActive ? "date" : undefined}

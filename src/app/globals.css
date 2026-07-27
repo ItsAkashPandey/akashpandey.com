@@ -48,29 +48,29 @@
   }
 
   .dark {
-    --background: 216 16% 17%;
+    --background: 216 14% 21%;
     --foreground: 210 16% 93%;
-    --card: 216 15% 21%;
+    --card: 216 13% 25%;
     --card-foreground: 210 16% 93%;
-    --popover: 216 16% 19%;
+    --popover: 216 14% 24%;
     --popover-foreground: 210 16% 93%;
     --primary: 210 20% 94%;
     --primary-foreground: 218 20% 13%;
-    --secondary: 216 12% 26%;
+    --secondary: 216 11% 30%;
     --secondary-foreground: 210 16% 93%;
-    --muted: 216 11% 24%;
+    --muted: 216 10% 29%;
     --muted-foreground: 214 12% 72%;
-    --accent: 34 10% 27%;
+    --accent: 34 9% 31%;
     --accent-foreground: 210 16% 93%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 20% 98%;
-    --border: 215 11% 33%;
-    --input: 215 11% 37%;
+    --border: 215 10% 39%;
+    --input: 215 10% 42%;
     --ring: 188 26% 68%;
-    --surface-sage: 165 9% 22%;
-    --surface-blue: 208 13% 22%;
-    --surface-warm: 28 10% 22%;
-    --surface-paper: 216 11% 21%;
+    --surface-sage: 165 8% 27%;
+    --surface-blue: 208 11% 27%;
+    --surface-warm: 28 9% 27%;
+    --surface-paper: 216 10% 26%;
     --map-accent: 183 38% 65%;
     --edge-accent: 188 24% 66%;
     --chart-1: 220 70% 50%;
@@ -142,17 +142,12 @@
     content: "";
     @apply pointer-events-none fixed inset-0 z-[-1];
     background-image:
-      repeating-radial-gradient(
-        ellipse at 4% 12%,
-        transparent 0 52px,
-        hsl(var(--foreground) / 0.032) 53px 54px,
-        transparent 55px 78px
-      ),
-      repeating-radial-gradient(
-        ellipse at 97% 74%,
-        transparent 0 64px,
-        hsl(var(--foreground) / 0.028) 65px 66px,
-        transparent 67px 98px
+      linear-gradient(180deg, hsl(var(--edge-accent) / 0.08), transparent 32%),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 42px,
+        hsl(var(--foreground) / 0.032) 43px 44px,
+        transparent 45px 88px
       );
     background-size:
       640px 460px,
@@ -321,8 +316,8 @@
   }
 
   .skill-logo-color {
-    opacity: 0.82;
-    filter: saturate(0.72) contrast(0.96) brightness(0.94);
+    opacity: 0.88;
+    filter: saturate(0.85) contrast(0.98) brightness(0.98);
   }
 
   .skill-logo-detail {
@@ -331,8 +326,8 @@
   }
 
   .dark .skill-logo-color {
-    opacity: 0.92;
-    filter: saturate(0.68) contrast(1.02) brightness(1.16);
+    opacity: 0.96;
+    filter: saturate(0.92) contrast(1.05) brightness(1.2);
   }
 
   .dark .skill-logo-detail {
@@ -381,6 +376,10 @@
       0 5px 16px hsl(var(--foreground) / 0.12),
       inset 0 1px hsl(var(--foreground) / 0.05) !important;
     backdrop-filter: blur(8px);
+  }
+
+  .hero-map-frame .maplibregl-ctrl-attrib {
+    display: none !important;
   }
 
   .hero-map-frame [role="group"] > button svg {
