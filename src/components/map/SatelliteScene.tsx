@@ -20,12 +20,63 @@ type Props = {
 type ModelHandle = {
   button: HTMLButtonElement;
   group: THREE.Group;
+  orient: THREE.Group;
   ring: THREE.Mesh;
   stem: THREE.Line;
   groundPoint: THREE.Mesh;
   screenX: number;
   screenY: number;
 };
+
+/**
+ * Public-domain spacecraft from NASA's 3D Resources collection. They are
+ * fetched after the map is interactive and swapped in over the procedural
+ * stand-ins, so nothing blocks first paint on four megabytes of geometry.
+ */
+const MODEL_URLS: Record<SatelliteFamily, string> = {
+  landsat: "/models/landsat.glb",
+  modis: "/models/modis.glb",
+  sentinel: "/models/sentinel.glb",
+  planet: "/models/cubesat.glb",
+  spot: "/models/spot.glb",
+  nisar: "/models/sentinel.glb",
+};
+
+/** Longest edge each loaded model is normalised to, in scene units. */
+const MODEL_TARGET_SIZE = 3.4;
+
+const modelCache = new Map<string, Promise<THREE.Group>>();
+
+async function loadFamilyModel(family: SatelliteFamily): Promise<THREE.Group> {
+  const url = MODEL_URLS[family];
+  const cached = modelCache.get(url);
+  if (cached) return cached;
+
+  const pending = (async () => {
+    const { GLTFLoader } = await import(
+      "three/examples/jsm/loaders/GLTFLoader.js"
+    );
+    const gltf = await new GLTFLoader().loadAsync(url);
+    const model = gltf.scene;
+
+    // The collection has no shared unit convention, so each model is measured
+    // and normalised to one on-screen size before it is ever displayed.
+    const box = new THREE.Box3().setFromObject(model);
+    const size = new THREE.Vector3();
+    const centre = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(centre);
+
+    const longest = Math.max(size.x, size.y, size.z) || 1;
+    model.scale.setScalar(MODEL_TARGET_SIZE / longest);
+    model.position.sub(centre.multiplyScalar(MODEL_TARGET_SIZE / longest));
+
+    return model;
+  })();
+
+  modelCache.set(url, pending);
+  return pending;
+}
 
 // Multi-layer insulation reads gold; structure reads dark graphite rather than
 // bare white, which was blowing out against bright imagery.
@@ -196,8 +247,6 @@ function createSatelliteModel(family: SatelliteFamily) {
     }
   }
 
-  group.rotation.x = 0.52;
-  group.rotation.y = -0.34;
   return group;
 }
 
@@ -261,11 +310,32 @@ export default function SatelliteScene({
     rimLight.position.set(6, 5, -8);
     scene.add(rimLight);
 
+    let disposed = false;
     const handles = new Map<number, ModelHandle>();
     for (const snapshot of snapshotsRef.current) {
       const family = satelliteFamily(snapshot.noradId, snapshot.name);
-      const group = createSatelliteModel(family);
+
+      // Outer group carries screen position and heading; the inner one holds
+      // the fixed viewing tilt so the model can be replaced without disturbing
+      // either.
+      const group = new THREE.Group();
+      const orient = new THREE.Group();
+      orient.rotation.x = 0.52;
+      orient.rotation.y = -0.34;
+      const placeholder = createSatelliteModel(family);
+      orient.add(placeholder);
+      group.add(orient);
       scene.add(group);
+
+      void loadFamilyModel(family)
+        .then((model) => {
+          if (disposed) return;
+          orient.remove(placeholder);
+          orient.add(model.clone(true));
+        })
+        .catch(() => {
+          // The procedural stand-in is already on screen; nothing to do.
+        });
 
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(3.7, 0.11, 8, 44),
@@ -318,6 +388,7 @@ export default function SatelliteScene({
       handles.set(snapshot.noradId, {
         button,
         group,
+        orient,
         ring,
         stem,
         groundPoint,
@@ -375,13 +446,15 @@ export default function SatelliteScene({
         const selected = snapshot.noradId === selectedIdRef.current;
         // Genuinely tied to the map scale: barely a speck at world view, a
         // readable spacecraft once the visitor is down at city zoom.
-        const scale = Math.min(9, Math.max(1.2, 1.1 + zoom * 0.52));
+        // Floor raised so the fleet still reads at globe zoom, where the old
+        // 1.2 minimum left them as specks against the planet.
+        const scale = Math.min(9, Math.max(2.7, 1.1 + zoom * 0.52));
         handle.group.position.set(handle.screenX, handle.screenY, 4);
         handle.group.scale.setScalar(scale * (selected ? 1.15 : 1));
         handle.group.rotation.z = (-snapshot.bearing * Math.PI) / 180;
         // A slow roll on the cross-track axis gives the model real depth
         // instead of reading as a flat sprite.
-        handle.group.rotation.y = -0.34 + Math.sin(time * 0.0004) * 0.22;
+        handle.orient.rotation.y = -0.34 + Math.sin(time * 0.0004) * 0.22;
         handle.ring.visible = selected;
         handle.ring.rotation.z += 0.012;
 
@@ -400,6 +473,7 @@ export default function SatelliteScene({
     animationFrame = window.requestAnimationFrame(render);
 
     return () => {
+      disposed = true;
       window.cancelAnimationFrame(animationFrame);
       resizeObserver.disconnect();
       for (const handle of handles.values()) handle.button.remove();
