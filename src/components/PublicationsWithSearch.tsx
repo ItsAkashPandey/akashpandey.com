@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { HighlightText } from "@/components/HighlightedText";
 import ImageLightbox from "@/components/ImageLightbox";
-import StackedImageDeck from "@/components/StackedImageDeck";
+import StackedImageDeck, { DECK_SIZE } from "@/components/StackedImageDeck";
 import {
   createSearchDocument,
   normalizeSearchText,
@@ -495,12 +495,12 @@ function PublicationCard({
         className={cn(
           // The venue block needs a real column; 150px truncated most journal
           // names to an ellipsis.
-          "grid gap-4 pt-3 md:grid-cols-[minmax(210px,240px)_minmax(0,1fr)] md:items-start",
+          "grid gap-5 pt-3 md:grid-cols-[minmax(210px,250px)_minmax(0,1fr)] md:items-start",
           hasMedia &&
-            "lg:grid-cols-[minmax(210px,240px)_minmax(0,1fr)_220px] lg:items-start",
+            "lg:grid-cols-[minmax(210px,250px)_minmax(0,1fr)_264px] lg:items-start",
         )}
       >
-        <aside className="border-border/55 flex min-w-0 flex-col gap-3 border-b pb-3 md:border-r md:border-b-0 md:pr-4 md:pb-0">
+        <aside className="flex min-w-0 flex-col gap-3 md:pr-2">
           <PublicationMetadata publication={publication} query={query} />
 
           {venue && (
@@ -631,18 +631,18 @@ function PublicationMediaPreview({ media }: { media: PublicationMedia[] }) {
 
   return (
     <>
-      <div className="flex min-h-[190px] items-center justify-center overflow-visible">
+      <div className="flex items-center justify-center overflow-visible">
         <StackedImageDeck
           images={media.map((item) => item.image)}
           labels={media.map((item) => item.label)}
           alt={media[0]?.alt ?? "Publication visual"}
-          imageWidth={900}
-          imageHeight={680}
-          sizes="(max-width: 1024px) calc(100vw - 3rem), 230px"
-          quality={88}
-          fit="contain"
+          imageWidth={264}
+          imageHeight={198}
+          sizes="264px"
+          quality={86}
+          fit="cover"
           stackSize={Math.min(3, media.length)}
-          className="h-[190px] w-full max-w-[230px]"
+          className={cn(DECK_SIZE.landscape, "rounded-lg")}
           onImageClick={setLightboxIndex}
         />
       </div>

@@ -137,7 +137,7 @@ export default function SkillsPage() {
         <h1 className="title">my skills.</h1>
       </header>
 
-      <section className="border-border/65 border-b pb-6">
+      <section className="pb-6">
         <div
           className={cn(sectionSwitcherListClass, "mb-5")}
           role="tablist"
@@ -212,7 +212,7 @@ export default function SkillsPage() {
           return (
             <section
               key={subcategory.name}
-              className="border-border/70 min-w-0 border-t pt-5"
+              className="min-w-0 pt-5"
             >
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex items-center gap-3">
@@ -244,7 +244,7 @@ export default function SkillsPage() {
                     <article
                       key={tool.name}
                       id={slugify(tool.name)}
-                      className="group/tool border-border/55 overflow-hidden border-b last:border-b-0"
+                      className="group/tool overflow-hidden"
                     >
                       <button
                         type="button"

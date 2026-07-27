@@ -2,22 +2,26 @@ import {
   Box,
   Compass,
   LoaderCircle,
-  LocateFixed,
+  Map as MapIcon,
   Maximize2,
   Minimize2,
+  Satellite,
   Square,
+  Waypoints,
 } from "lucide-react";
 
 type MapControlsProps = {
   bearing: number;
   disabled: boolean;
   fullscreen: boolean;
+  imagery: boolean;
   locateDisabled: boolean;
   locating: boolean;
   threeD: boolean;
   onFullscreen: () => void;
   onLocate: () => void;
   onResetNorth: () => void;
+  onToggleImagery: () => void;
   onToggleThreeD: () => void;
 };
 
@@ -28,12 +32,14 @@ export default function MapControls({
   bearing,
   disabled,
   fullscreen,
+  imagery,
   locateDisabled,
   locating,
   threeD,
   onFullscreen,
   onLocate,
   onResetNorth,
+  onToggleImagery,
   onToggleThreeD,
 }: MapControlsProps) {
   return (
@@ -57,8 +63,8 @@ export default function MapControls({
       </button>
       <button
         type="button"
-        title="Fit you and Akash"
-        aria-label="Fit you and Akash"
+        title="Show the distance between you and Akash"
+        aria-label="Show the distance between you and Akash"
         disabled={disabled || locateDisabled || locating}
         onClick={onLocate}
         className={buttonClass}
@@ -66,7 +72,24 @@ export default function MapControls({
         {locating ? (
           <LoaderCircle className="size-4 animate-spin text-sky-700 dark:text-sky-300" />
         ) : (
-          <LocateFixed className="size-4 text-sky-700 dark:text-sky-300" />
+          <Waypoints className="size-4 text-sky-700 dark:text-sky-300" />
+        )}
+      </button>
+      <button
+        type="button"
+        title={imagery ? "Switch to the vector map" : "Switch to satellite imagery"}
+        aria-label={
+          imagery ? "Switch to the vector map" : "Switch to satellite imagery"
+        }
+        aria-pressed={imagery}
+        disabled={disabled}
+        onClick={onToggleImagery}
+        className={buttonClass}
+      >
+        {imagery ? (
+          <MapIcon className="size-4" />
+        ) : (
+          <Satellite className="size-4" />
         )}
       </button>
       <button

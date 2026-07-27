@@ -28,6 +28,16 @@ interface StackedImageDeckProps {
 /** Past this many pixels of horizontal travel the card leaves the stack. */
 const THROW_THRESHOLD = 100;
 
+/**
+ * One optical size for every deck on the site. Orientation changes, area does
+ * not, so a portrait photo and a landscape poster carry the same visual weight
+ * on whichever page they appear.
+ */
+export const DECK_SIZE = {
+  portrait: "h-[264px] w-[198px]",
+  landscape: "h-[198px] w-[264px]",
+} as const;
+
 export function wrapDeckIndex(index: number, total: number) {
   if (total <= 0) return 0;
   return ((index % total) + total) % total;
@@ -49,7 +59,9 @@ type CardProps = {
   priority: boolean;
   cardClassName?: string;
   imageClassName?: string;
-  onThrow: () => void;
+  /** False for single-image decks, which must never be thrown off screen. */
+  canThrow: boolean;
+  onThrow: (direction: -1 | 1) => void;
   onOpen: () => void;
 };
 
@@ -69,6 +81,7 @@ function DeckCard({
   priority,
   cardClassName,
   imageClassName,
+  canThrow,
   onThrow,
   onOpen,
 }: CardProps) {
@@ -93,22 +106,19 @@ function DeckCard({
     info: { offset: { x: number }; velocity: { x: number } },
   ) => {
     const thrown =
-      Math.abs(info.offset.x) > THROW_THRESHOLD ||
-      Math.abs(info.velocity.x) > 500;
+      canThrow &&
+      (Math.abs(info.offset.x) > THROW_THRESHOLD ||
+        Math.abs(info.velocity.x) > 500);
 
     if (!thrown) {
       animate(x, 0, { type: "spring", stiffness: 400, damping: 40 });
       return;
     }
 
-    const direction = info.offset.x < 0 ? -1 : 1;
-    void animate(x, direction * 420, {
-      type: "spring",
-      stiffness: 320,
-      damping: 42,
-    }).then(() => {
-      onThrow();
-    });
+    // Reorder on release rather than after an exit tween. Waiting for the
+    // throw to finish added ~400ms of dead time before the next card became
+    // draggable, which is what made the deck feel jerky.
+    onThrow(info.offset.x < 0 ? -1 : 1);
   };
 
   return (
@@ -218,13 +228,20 @@ export default function StackedImageDeck({
 
   const frontIndex = order[order.length - 1] ?? 0;
 
-  // Thrown cards return to the back of the stack, so the deck never dead-ends.
-  const recycle = useCallback(() => {
+  /**
+   * Throwing left advances to the next image, throwing right goes back to the
+   * previous one, and the card that leaves rejoins the far end of the stack so
+   * the deck never dead-ends.
+   */
+  const recycle = useCallback((direction: -1 | 1) => {
     setOrder((previous) => {
       if (previous.length < 2) return previous;
       const next = previous.slice();
-      const front = next.pop()!;
-      next.unshift(front);
+      if (direction < 0) {
+        next.unshift(next.pop()!);
+      } else {
+        next.push(next.shift()!);
+      }
       return next;
     });
   }, []);
@@ -281,9 +298,12 @@ export default function StackedImageDeck({
       aria-label={`${alt} gallery, drag to browse`}
       tabIndex={0}
       onKeyDown={(event) => {
-        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        if (event.key === "ArrowLeft") {
           event.preventDefault();
-          recycle();
+          recycle(1);
+        } else if (event.key === "ArrowRight") {
+          event.preventDefault();
+          recycle(-1);
         } else if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           onImageClick?.(frontIndex);
@@ -314,11 +334,33 @@ export default function StackedImageDeck({
             priority={priority}
             cardClassName={cardClassName}
             imageClassName={imageClassName}
+            canThrow={images.length > 1}
             onThrow={recycle}
             onOpen={() => onImageClick?.(index)}
           />
         );
       })}
+
+      {images.length > 1 && (
+        <>
+          <button
+            type="button"
+            aria-label="Previous image"
+            onClick={() => recycle(1)}
+            className="text-foreground/45 hover:text-foreground absolute top-1/2 -left-7 z-[200] hidden -translate-y-1/2 text-[10px] font-medium tracking-wide transition-colors sm:block"
+          >
+            prev
+          </button>
+          <button
+            type="button"
+            aria-label="Next image"
+            onClick={() => recycle(-1)}
+            className="text-foreground/45 hover:text-foreground absolute top-1/2 -right-7 z-[200] hidden -translate-y-1/2 text-[10px] font-medium tracking-wide transition-colors sm:block"
+          >
+            next
+          </button>
+        </>
+      )}
     </div>
   );
 }
