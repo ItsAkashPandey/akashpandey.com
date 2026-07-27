@@ -118,7 +118,7 @@ export default function Chat() {
           className={`fixed right-4 bottom-[4.75rem] overflow-hidden border border-white/60 bg-white/72 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-3xl transition-all duration-300 ease-out sm:right-8 sm:bottom-8 dark:border-white/10 dark:bg-zinc-900/88 dark:shadow-[0_24px_80px_rgba(0,0,0,0.36)] ${
             isExpanded
               ? "left-4 w-auto rounded-md sm:left-auto sm:w-[420px]"
-              : "hidden w-[52px] rounded-md sm:block sm:w-[172px]"
+              : "block w-[52px] rounded-md sm:w-[172px]"
           }`}
         >
           <AccordionTrigger
