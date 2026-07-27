@@ -1,10 +1,6 @@
 import { createHmac, scryptSync, timingSafeEqual } from "node:crypto";
 
 const COOKIE_NAME = "hal_admin_session";
-const FALLBACK_ADMIN_USERNAME = "AkashWebsiteAdmin";
-const FALLBACK_ADMIN_PASSWORD_HASH =
-  "scrypt:admin-akashpandey-com-2026:9cdb0a5ebdd9236359e5567ea93957c65b4dfefb6da894295531c7829c550ffabaa860bdec6c0825926872ea639d894e78da51e66dfe8586d692f1953a1980bf";
-const FALLBACK_SESSION_SECRET = `akashpandey-admin-session:${FALLBACK_ADMIN_PASSWORD_HASH}`;
 
 function timingSafeStringEqual(a: string, b: string): boolean {
   const aBuffer = Buffer.from(a);
@@ -21,37 +17,41 @@ function verifyScryptPassword(password: string, encodedHash: string): boolean {
   return timingSafeStringEqual(actualHash, expectedHash);
 }
 
+/** Empty when unconfigured, which makes every session check fail closed. */
 export function getAdminSessionSecret(): string {
   return (
     process.env.ADMIN_SESSION_SECRET ||
     process.env.AUTH_SECRET ||
     process.env.NEXTAUTH_SECRET ||
-    process.env.REVALIDATE_SECRET ||
-    process.env.CHAT_LOG_WEBHOOK_TOKEN ||
-    process.env.GEMINI_API_KEY ||
-    process.env.RESEND_API_KEY ||
-    FALLBACK_SESSION_SECRET
+    ""
   );
 }
 
 export function getAdminUsername(): string {
-  return process.env.ADMIN_USERNAME || FALLBACK_ADMIN_USERNAME;
+  return process.env.ADMIN_USERNAME || "";
 }
 
+/**
+ * Credentials live only in the environment — there is deliberately no baked-in
+ * fallback, so a misconfigured deploy locks admin out rather than shipping a
+ * known password in the repository.
+ */
 export function verifyAdminCredentials(
   username: string,
   password: string,
 ): boolean {
-  if (!timingSafeStringEqual(username, getAdminUsername())) return false;
+  const expectedUsername = getAdminUsername();
+  const expectedPassword = process.env.ADMIN_PASSWORD;
+  const expectedHash = process.env.ADMIN_PASSWORD_HASH;
 
-  if (process.env.ADMIN_PASSWORD) {
-    return timingSafeStringEqual(password, process.env.ADMIN_PASSWORD);
+  if (!expectedUsername || (!expectedPassword && !expectedHash)) return false;
+  if (!timingSafeStringEqual(username, expectedUsername)) return false;
+
+  if (expectedPassword) {
+    return timingSafeStringEqual(password, expectedPassword);
   }
 
-  return verifyScryptPassword(
-    password,
-    process.env.ADMIN_PASSWORD_HASH || FALLBACK_ADMIN_PASSWORD_HASH,
-  );
+  return verifyScryptPassword(password, expectedHash!);
 }
 
 function base64UrlEncode(input: string | Buffer): string {
@@ -123,6 +123,7 @@ export function verifyAdminSessionCookieValue(
   value: string,
   secret: string,
 ): boolean {
+  if (!secret) return false;
   return Boolean(decodeAdminSessionCookieValue(value, secret));
 }
 

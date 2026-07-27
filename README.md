@@ -71,6 +71,12 @@ Activity photos go in a folder under `public`. This command rebuilds the
 npx ts-node scripts/resolve-activity-images.ts
 ```
 
+New photos are large, so I shrink them before committing:
+
+```bash
+node scripts/optimize-images.mjs
+```
+
 I keep external links in the same JSON record as the related activity or
 publication. I check a link before adding it instead of guessing a post URL.
 
@@ -85,6 +91,13 @@ publication. I check a link before adding it instead of guessing a post URL.
 
 The `main` branch is connected to Vercel. Add the required environment variables
 in Vercel, push to `main`, and Vercel builds the site.
+
+Admin sign-in reads `ADMIN_USERNAME`, `ADMIN_PASSWORD` and `ADMIN_SESSION_SECRET`
+from the environment. There is no default, so if those are missing the admin page
+simply refuses every login.
+
+Saving the KASI chat messages needs a database or a Google Sheet. The setup for
+both is written down in [docs/chat-logging.md](docs/chat-logging.md).
 
 Do not commit `.env.local`. It contains private keys.
 

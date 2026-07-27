@@ -61,7 +61,9 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         tiles: esriImageryTiles,
         tileSize: 256,
         minzoom: 9,
-        maxzoom: 22,
+        // Esri World Imagery only serves to z19; declaring the real ceiling lets
+        // MapLibre upscale past it instead of rendering blank tiles.
+        maxzoom: 19,
         attribution: "Imagery © Esri, Maxar, Earthstar Geographics",
       },
       "osm-labels": {
@@ -69,7 +71,7 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         tiles: osmTiles,
         tileSize: 256,
         minzoom: 10,
-        maxzoom: 22,
+        maxzoom: 19,
         attribution: "© OpenStreetMap contributors",
       },
     },
