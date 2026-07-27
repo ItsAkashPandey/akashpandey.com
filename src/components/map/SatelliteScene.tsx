@@ -27,15 +27,17 @@ type ModelHandle = {
   screenY: number;
 };
 
+// Multi-layer insulation reads gold; structure reads dark graphite rather than
+// bare white, which was blowing out against bright imagery.
 const busMaterial = new THREE.MeshStandardMaterial({
-  color: 0xc99b55,
-  roughness: 0.46,
-  metalness: 0.58,
+  color: 0xb8873f,
+  roughness: 0.38,
+  metalness: 0.72,
 });
 const silverMaterial = new THREE.MeshStandardMaterial({
-  color: 0xb7c1c5,
-  roughness: 0.3,
-  metalness: 0.78,
+  color: 0x7c878d,
+  roughness: 0.34,
+  metalness: 0.86,
 });
 const solarMaterial = new THREE.MeshStandardMaterial({
   color: 0x1e657c,
@@ -182,10 +184,15 @@ export default function SatelliteScene({
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(0, 1, 0, 1, -100, 100);
     camera.position.z = 20;
-    scene.add(new THREE.HemisphereLight(0xf5fbff, 0x223039, 2.25));
-    const keyLight = new THREE.DirectionalLight(0xfff1d2, 2.5);
-    keyLight.position.set(-4, -6, 12);
+    // One warm key plus a cool rim keeps the panels legible without washing the
+    // bus to white the way a single bright key did.
+    scene.add(new THREE.HemisphereLight(0xdceaf5, 0x1a232b, 1.1));
+    const keyLight = new THREE.DirectionalLight(0xfff0d6, 2.1);
+    keyLight.position.set(-5, -7, 12);
     scene.add(keyLight);
+    const rimLight = new THREE.DirectionalLight(0x8fc7ff, 0.9);
+    rimLight.position.set(6, 5, -8);
+    scene.add(rimLight);
 
     const handles = new Map<number, ModelHandle>();
     for (const snapshot of snapshotsRef.current) {
@@ -304,10 +311,15 @@ export default function SatelliteScene({
         if (!visible) continue;
 
         const selected = snapshot.noradId === selectedIdRef.current;
-        const scale = Math.min(3.4, Math.max(1.7, 1.6 + zoom * 0.15));
+        // Genuinely tied to the map scale: barely a speck at world view, a
+        // readable spacecraft once the visitor is down at city zoom.
+        const scale = Math.min(9, Math.max(1.2, 1.1 + zoom * 0.52));
         handle.group.position.set(handle.screenX, handle.screenY, 4);
-        handle.group.scale.setScalar(scale * (selected ? 1.12 : 1));
+        handle.group.scale.setScalar(scale * (selected ? 1.15 : 1));
         handle.group.rotation.z = (-snapshot.bearing * Math.PI) / 180;
+        // A slow roll on the cross-track axis gives the model real depth
+        // instead of reading as a flat sprite.
+        handle.group.rotation.y = -0.34 + Math.sin(time * 0.0004) * 0.22;
         handle.ring.visible = selected;
         handle.ring.rotation.z += 0.012;
 

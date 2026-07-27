@@ -164,6 +164,8 @@ export function updateSelectedOrbit(
   map: MapLibreMap,
   track: SatelliteTrack | null,
   snapshot: SatelliteSnapshot | null,
+  /** Coverage reads as a sensor swath only once the view is tilted or turned. */
+  showFootprint = true,
 ) {
   const orbitSource = map.getSource(ORBIT_SOURCE) as GeoJSONSource | undefined;
   orbitSource?.setData(track ?? emptyLines());
@@ -172,7 +174,7 @@ export function updateSelectedOrbit(
     | GeoJSONSource
     | undefined;
   footprintSource?.setData(
-    snapshot
+    snapshot && showFootprint
       ? {
           type: "FeatureCollection",
           features: [

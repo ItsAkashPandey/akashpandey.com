@@ -3,8 +3,15 @@ import type { SatelliteFeed, SatelliteOmm } from "@/lib/map/satellite-types";
 export const CELESTRAK_RESOURCE_URL =
   "https://celestrak.org/NORAD/elements/gp.php?GROUP=RESOURCE&FORMAT=JSON";
 
+/**
+ * Earth-observation groups only — no crewed craft, launchers or comms. RESOURCE
+ * carries Landsat, Sentinel-2, SPOT and friends; the others fill in the polar
+ * weather sounders and the Planet Labs constellation.
+ */
 export const CELESTRAK_EARTH_OBSERVATION_URLS = [
   CELESTRAK_RESOURCE_URL,
+  "https://celestrak.org/NORAD/elements/gp.php?GROUP=PLANET&FORMAT=JSON",
+  "https://celestrak.org/NORAD/elements/gp.php?GROUP=NOAA&FORMAT=JSON",
   "https://celestrak.org/NORAD/elements/gp.php?CATNR=39634&FORMAT=JSON",
   "https://celestrak.org/NORAD/elements/gp.php?CATNR=40697&FORMAT=JSON",
   "https://celestrak.org/NORAD/elements/gp.php?CATNR=41335&FORMAT=JSON",
@@ -13,6 +20,9 @@ export const CELESTRAK_EARTH_OBSERVATION_URLS = [
   "https://celestrak.org/NORAD/elements/gp.php?CATNR=65053&FORMAT=JSON",
   "https://celestrak.org/NORAD/elements/gp.php?CATNR=58271&FORMAT=JSON",
 ] as const;
+
+/** Ceiling on how many live satellites reach the browser at once. */
+export const MAX_TRACKED_SATELLITES = 48;
 
 export const TRACKED_NORAD_IDS = [
   39634, // Sentinel-1A

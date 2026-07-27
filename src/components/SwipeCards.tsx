@@ -36,8 +36,8 @@ export default function SwipeCards({
         imageHeight={baselineHeight}
         sizes="(max-width: 640px) 175px, 280px"
         quality={84}
-        idleQuality={84}
         priority={usesHomepageImages}
+        fit="cover"
         stackSize={4}
         className={cn("h-[233px] w-[175px] rounded-lg", className)}
         onImageClick={setLightboxIndex}
