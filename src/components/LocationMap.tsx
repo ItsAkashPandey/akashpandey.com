@@ -20,6 +20,7 @@ import {
   createMapStyle,
   disableThreeDimensions,
   enableThreeDimensions,
+  setImageryVisible,
   type MapTheme,
 } from "@/lib/map/map-style";
 import {
@@ -60,8 +61,10 @@ function fitLocations(
       ],
     ],
     {
-      padding: { top: 52, right: 56, bottom: 52, left: 56 },
-      maxZoom: 8.5,
+      padding: { top: 56, right: 60, bottom: 56, left: 60 },
+      // A 8.5 ceiling collapsed two nearby points into one dot. Only cap far
+      // enough back that a same-city pair still reads as two markers.
+      maxZoom: 12,
       duration: 950,
       essential: true,
     },
@@ -90,6 +93,7 @@ export default function LocationMap() {
   const [bearing, setBearing] = useState(0);
   const [pitch, setPitch] = useState(0);
   const [threeD, setThreeD] = useState(false);
+  const [imagery, setImagery] = useState(false);
   const [visitorLocation, setVisitorLocation] = useState<
     [number, number] | null
   >(null);
@@ -210,7 +214,8 @@ export default function LocationMap() {
         dragPan: true,
         dragRotate: true,
         scrollZoom: true,
-        boxZoom: true,
+        // Shift-drag box zoom fights the drag-to-pan people actually expect.
+        boxZoom: false,
         doubleClickZoom: true,
         keyboard: true,
         touchZoomRotate: true,
@@ -238,7 +243,11 @@ export default function LocationMap() {
       };
       const handleMove = () => {
         setBearing(map.getBearing());
-        setPitch(map.getPitch());
+        const nextPitch = map.getPitch();
+        setPitch(nextPitch);
+        // Tilting is the gesture that asks for the 3D scene, so honour it
+        // without making the visitor find the control first.
+        if (nextPitch > 15) setThreeD(true);
       };
 
       map.on("load", handleLoad);
@@ -278,12 +287,20 @@ export default function LocationMap() {
 
     if (threeD) {
       enableThreeDimensions(map, mapThemeRef.current);
-      map.easeTo({ pitch: 62, duration: 700, essential: true });
+      if (map.getPitch() < 15) {
+        map.easeTo({ pitch: 62, duration: 700, essential: true });
+      }
     } else {
       disableThreeDimensions(map);
       map.easeTo({ pitch: 0, bearing: 0, duration: 700, essential: true });
     }
   }, [mapLoaded, threeD]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+    setImageryVisible(map, imagery);
+  }, [mapLoaded, imagery]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -523,8 +540,10 @@ export default function LocationMap() {
         }
         locating={locating}
         threeD={threeD}
+        imagery={imagery}
         onFullscreen={() => void toggleFullscreen()}
         onLocate={locateVisitor}
+        onToggleImagery={() => setImagery((current) => !current)}
         onToggleThreeD={() => setThreeD((current) => !current)}
         onResetNorth={() =>
           mapRef.current?.easeTo({

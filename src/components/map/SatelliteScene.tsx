@@ -84,49 +84,116 @@ function addSolarWing(
   }
 }
 
+/**
+ * Each family gets a silhouette you can name without reading the label: a SAR
+ * plank, a wide scanner paddle, a long optical barrel, a cubesat slab, a dish
+ * on a boom. Shape carries the classification, not colour alone.
+ */
 function createSatelliteModel(family: SatelliteFamily) {
   const group = new THREE.Group();
-  const bus =
-    family === "planet"
-      ? box(0.8, 1.2, 0.8, busMaterial)
-      : box(1.35, 1.55, 1.05, busMaterial);
-  group.add(bus);
 
-  const wingLength = family === "modis" ? 2.8 : family === "nisar" ? 2.5 : 2.15;
-  addSolarWing(group, -1, wingLength, family === "planet" ? 2 : 4);
-  addSolarWing(group, 1, wingLength, family === "planet" ? 2 : 4);
-
-  if (family === "nisar") {
-    const boom = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.08, 0.08, 2.4, 8),
-      silverMaterial,
-    );
-    boom.rotation.z = Math.PI / 2;
-    boom.position.y = -1.15;
-    group.add(boom);
-
-    const reflector = new THREE.Mesh(
-      new THREE.TorusGeometry(1.05, 0.09, 8, 32),
-      silverMaterial,
-    );
-    reflector.position.y = -2;
-    reflector.rotation.x = 0.35;
-    group.add(reflector);
-  } else if (family === "modis") {
-    const sensor = box(0.72, 0.55, 0.72, darkSolarMaterial);
-    sensor.position.y = -1.02;
-    group.add(sensor);
-  } else if (family === "sentinel") {
-    const radar = box(1.55, 0.32, 0.55, silverMaterial);
-    radar.position.y = -1.12;
-    group.add(radar);
-  } else {
-    const lens = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.28, 0.38, 0.65, 16),
-      darkSolarMaterial,
-    );
-    lens.position.y = -1.05;
-    group.add(lens);
+  switch (family) {
+    case "sentinel": {
+      // Sentinel-1: single long SAR antenna plank, one asymmetric wing.
+      group.add(box(0.95, 1.25, 0.85, busMaterial));
+      const panel = box(3.4, 0.42, 0.12, silverMaterial);
+      panel.position.set(0, -1.05, 0.1);
+      group.add(panel);
+      addSolarWing(group, -1, 2.4, 5);
+      addSolarWing(group, 1, 2.4, 5);
+      break;
+    }
+    case "modis": {
+      // Terra/Aqua: deep bus with a broad cross-track scanner head.
+      group.add(box(1.5, 1.9, 1.2, busMaterial));
+      const scanner = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.62, 0.62, 0.5, 20),
+        darkSolarMaterial,
+      );
+      scanner.rotation.x = Math.PI / 2;
+      scanner.position.y = -1.25;
+      group.add(scanner);
+      addSolarWing(group, 1, 3.4, 6);
+      break;
+    }
+    case "landsat": {
+      // Landsat: tall bus, long telescope barrel, one wing.
+      group.add(box(1.15, 1.85, 1.0, busMaterial));
+      const barrel = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.42, 0.52, 1.5, 18),
+        silverMaterial,
+      );
+      barrel.position.y = -1.5;
+      group.add(barrel);
+      const hood = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.56, 0.42, 0.3, 18),
+        darkSolarMaterial,
+      );
+      hood.position.y = -2.3;
+      group.add(hood);
+      addSolarWing(group, 1, 3.1, 6);
+      break;
+    }
+    case "spot": {
+      // SPOT: compact box, twin short wings, small forward optics.
+      group.add(box(1.2, 1.3, 1.2, busMaterial));
+      const optics = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 0.42, 0.8, 16),
+        darkSolarMaterial,
+      );
+      optics.position.y = -1.1;
+      group.add(optics);
+      addSolarWing(group, -1, 1.7, 3);
+      addSolarWing(group, 1, 1.7, 3);
+      break;
+    }
+    case "planet": {
+      // SuperDove: 3U cubesat slab, two thin deployed panels.
+      group.add(box(0.5, 1.5, 0.5, silverMaterial));
+      const lens = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.18, 0.22, 0.42, 12),
+        darkSolarMaterial,
+      );
+      lens.position.y = -0.95;
+      group.add(lens);
+      addSolarWing(group, -1, 1.35, 2);
+      addSolarWing(group, 1, 1.35, 2);
+      break;
+    }
+    default: {
+      // NISAR: drum bus with a large deployable mesh reflector on a boom.
+      group.add(box(1.25, 1.5, 1.05, busMaterial));
+      const boom = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.07, 0.07, 2.8, 8),
+        silverMaterial,
+      );
+      boom.rotation.z = Math.PI / 3.2;
+      boom.position.set(1.1, -1.1, 0);
+      group.add(boom);
+      const reflector = new THREE.Mesh(
+        new THREE.TorusGeometry(1.15, 0.08, 8, 28),
+        silverMaterial,
+      );
+      reflector.position.set(2.2, -2.1, 0);
+      reflector.rotation.set(0.5, 0.4, 0);
+      group.add(reflector);
+      const mesh = new THREE.Mesh(
+        new THREE.CircleGeometry(1.1, 24),
+        new THREE.MeshStandardMaterial({
+          color: 0x9aa7ad,
+          roughness: 0.7,
+          metalness: 0.3,
+          transparent: true,
+          opacity: 0.34,
+          side: THREE.DoubleSide,
+        }),
+      );
+      mesh.position.copy(reflector.position);
+      mesh.rotation.copy(reflector.rotation);
+      group.add(mesh);
+      addSolarWing(group, -1, 2.3, 4);
+      break;
+    }
   }
 
   group.rotation.x = 0.52;
@@ -273,12 +340,11 @@ export default function SatelliteScene({
     resizeObserver.observe(root);
 
     let animationFrame = 0;
-    let lastFrame = 0;
     const render = (time: number) => {
       animationFrame = window.requestAnimationFrame(render);
-      if (document.visibilityState === "hidden" || time - lastFrame < 32)
-        return;
-      lastFrame = time;
+      // Every frame. Throttling to 30fps left the models stepping while the
+      // map itself panned at 60, which read as jitter.
+      if (document.visibilityState === "hidden") return;
 
       const zoom = map.getZoom();
       for (const snapshot of snapshotsRef.current) {
@@ -289,15 +355,11 @@ export default function SatelliteScene({
           34,
           Math.max(7, (snapshot.altitudeKm / 95) * 2 ** ((zoom - 3) * 0.23)),
         );
-        const targetX = point.x;
-        const targetY = point.y - altitudePixels;
-        if (!Number.isFinite(handle.screenX)) {
-          handle.screenX = targetX;
-          handle.screenY = targetY;
-        } else {
-          handle.screenX += (targetX - handle.screenX) * 0.16;
-          handle.screenY += (targetY - handle.screenY) * 0.16;
-        }
+        // Locked to the projected point, exactly like the location markers.
+        // The old easing lagged a frame behind every pan, which is what made
+        // the satellites look like they were sliding around on the map.
+        handle.screenX = point.x;
+        handle.screenY = point.y - altitudePixels;
 
         const visible =
           point.x > -45 &&

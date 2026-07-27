@@ -7,7 +7,7 @@ interface Props {
 
 export default function Timeline({ experience }: Props) {
   return (
-    <ul className="border-border/65 ml-4 border-l sm:ml-5">
+    <ul className="ml-4 sm:ml-5">
       {experience.map((exp, id) => (
         <TimelineItem key={id} experience={exp} />
       ))}

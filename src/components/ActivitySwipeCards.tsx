@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { useCallback, useState } from "react";
 import ImageLightbox from "./ImageLightbox";
-import StackedImageDeck from "./StackedImageDeck";
+import StackedImageDeck, { DECK_SIZE } from "./StackedImageDeck";
 
 interface ActivitySwipeCardsProps {
   className?: string;
@@ -30,15 +30,12 @@ export default function ActivitySwipeCards({
       <StackedImageDeck
         images={images}
         alt="Activity photo"
-        imageWidth={300}
-        imageHeight={220}
-        sizes="(max-width: 640px) min(280px, calc(100vw - 4rem)), 300px"
-        quality={84}
+        imageWidth={264}
+        imageHeight={198}
+        sizes="264px"
+        quality={82}
         showCounter
-        className={cn(
-          "h-[200px] w-full max-w-[280px] rounded-lg sm:h-[220px] sm:max-w-[300px]",
-          className,
-        )}
+        className={cn(DECK_SIZE.landscape, "rounded-lg", className)}
         onImageClick={openLightbox}
       />
 

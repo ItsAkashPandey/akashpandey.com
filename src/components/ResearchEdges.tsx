@@ -282,7 +282,9 @@ export default function ResearchEdges() {
 
   useEffect(() => {
     const root = rootRef.current;
-    const wide = window.matchMedia("(min-width: 1536px)");
+    // Was gated at 1536px, which meant the scenes never rendered on an
+    // ordinary laptop. 1024px is the first width with real gutter to spend.
+    const wide = window.matchMedia("(min-width: 1024px)");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (!root || !wide.matches || reducedMotion.matches) return;
 
@@ -295,7 +297,7 @@ export default function ResearchEdges() {
     renderer.setClearColor(0x000000, 0);
     renderer.domElement.dataset.researchScene = route;
     renderer.domElement.style.cssText =
-      "position:absolute;inset:0;width:100%;height:100%;opacity:.62";
+      "position:absolute;inset:0;width:100%;height:100%;opacity:.9";
     root.append(renderer.domElement);
 
     const scene = new THREE.Scene();
@@ -338,10 +340,11 @@ export default function ResearchEdges() {
 
     const render = (time: number) => {
       animationFrame = window.requestAnimationFrame(render);
-      if (document.visibilityState === "hidden" || time - lastFrame < 32)
-        return;
+      if (document.visibilityState === "hidden") return;
       lastFrame = time;
-      currentScroll += (targetScroll - currentScroll) * 0.08;
+      // Trails the scroll position rather than tracking it, which is what
+      // gives the panels their weight as they swing.
+      currentScroll += (targetScroll - currentScroll) * 0.075;
       const progress = currentScroll / Math.max(1, document.body.scrollHeight);
       left.rotation.y = progress * Math.PI * 1.4;
       left.rotation.z = progress * 0.45;
