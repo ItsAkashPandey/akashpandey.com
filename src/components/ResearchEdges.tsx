@@ -325,7 +325,8 @@ export default function ResearchEdges() {
       const gutterPixels = Math.max(80, (width - 1_280) / 2);
       const contentHalfWidth = Math.min(640, width / 2) * unitsPerPixel;
       const gutterCenter = (gutterPixels / 2) * unitsPerPixel;
-      const edgeScale = Math.min(1, Math.max(0.46, gutterPixels / 300));
+      // The old 0.46 floor left the scenes as hairlines in a narrow gutter.
+      const edgeScale = Math.min(1.35, Math.max(0.78, gutterPixels / 210));
       left.position.x = -contentHalfWidth - gutterCenter;
       right.position.x = contentHalfWidth + gutterCenter;
       left.scale.setScalar(edgeScale);
@@ -346,12 +347,20 @@ export default function ResearchEdges() {
       // gives the panels their weight as they swing.
       currentScroll += (targetScroll - currentScroll) * 0.075;
       const progress = currentScroll / Math.max(1, document.body.scrollHeight);
-      left.rotation.y = progress * Math.PI * 1.4;
+      // Scroll drives the sweep; an independent slow drift keeps the scene
+      // alive while the page is still, so it reads as footage rather than a
+      // diagram that only moves when you touch it.
+      const drift = time * 0.00006;
+      left.rotation.y = progress * Math.PI * 1.4 + drift;
+      left.rotation.x = 0.18 + Math.sin(drift * 1.7) * 0.16;
       left.rotation.z = progress * 0.45;
-      right.rotation.y = -progress * Math.PI * 1.6;
+      right.rotation.y = -progress * Math.PI * 1.6 - drift * 0.8;
+      right.rotation.x = -0.14 + Math.cos(drift * 1.3) * 0.14;
       right.rotation.z = -progress * 0.36;
-      left.position.y = Math.sin(progress * Math.PI * 3) * 0.7;
-      right.position.y = Math.cos(progress * Math.PI * 2.5) * 0.72;
+      left.position.y =
+        Math.sin(progress * Math.PI * 3) * 0.7 + Math.sin(drift * 2.1) * 0.22;
+      right.position.y =
+        Math.cos(progress * Math.PI * 2.5) * 0.72 + Math.cos(drift * 1.9) * 0.2;
       renderer.render(scene, camera);
     };
     animationFrame = window.requestAnimationFrame(render);
