@@ -493,9 +493,11 @@ function PublicationCard({
 
       <div
         className={cn(
-          "grid gap-3 pt-3 md:grid-cols-[150px_minmax(0,1fr)] md:items-start",
+          // The venue block needs a real column; 150px truncated most journal
+          // names to an ellipsis.
+          "grid gap-4 pt-3 md:grid-cols-[minmax(210px,240px)_minmax(0,1fr)] md:items-start",
           hasMedia &&
-            "lg:grid-cols-[150px_minmax(0,1fr)_220px] lg:items-center",
+            "lg:grid-cols-[minmax(210px,240px)_minmax(0,1fr)_220px] lg:items-start",
         )}
       >
         <aside className="border-border/55 flex min-w-0 flex-col gap-3 border-b pb-3 md:border-r md:border-b-0 md:pr-4 md:pb-0">
@@ -522,10 +524,10 @@ function PublicationCard({
                 </span>
               )}
               <div className="min-w-0">
-                <p className="text-xs leading-snug font-semibold">
+                <p className="text-[13px] leading-snug font-semibold text-pretty">
                   <HighlightText text={venue} query={query} />
                 </p>
-                <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px]">
+                <div className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px]">
                   {publication.impactFactor && (
                     <span>IF {publication.impactFactor}</span>
                   )}
@@ -638,7 +640,7 @@ function PublicationMediaPreview({ media }: { media: PublicationMedia[] }) {
           imageHeight={680}
           sizes="(max-width: 1024px) calc(100vw - 3rem), 230px"
           quality={88}
-          idleQuality={88}
+          fit="contain"
           stackSize={Math.min(3, media.length)}
           className="h-[190px] w-full max-w-[230px]"
           onImageClick={setLightboxIndex}

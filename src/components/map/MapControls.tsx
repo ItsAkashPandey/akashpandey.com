@@ -1,9 +1,11 @@
 import {
+  Box,
   Compass,
   LoaderCircle,
   LocateFixed,
   Maximize2,
   Minimize2,
+  Square,
 } from "lucide-react";
 
 type MapControlsProps = {
@@ -12,9 +14,11 @@ type MapControlsProps = {
   fullscreen: boolean;
   locateDisabled: boolean;
   locating: boolean;
+  threeD: boolean;
   onFullscreen: () => void;
   onLocate: () => void;
   onResetNorth: () => void;
+  onToggleThreeD: () => void;
 };
 
 const buttonClass =
@@ -26,9 +30,11 @@ export default function MapControls({
   fullscreen,
   locateDisabled,
   locating,
+  threeD,
   onFullscreen,
   onLocate,
   onResetNorth,
+  onToggleThreeD,
 }: MapControlsProps) {
   return (
     <div
@@ -61,6 +67,21 @@ export default function MapControls({
           <LoaderCircle className="size-4 animate-spin text-sky-700 dark:text-sky-300" />
         ) : (
           <LocateFixed className="size-4 text-sky-700 dark:text-sky-300" />
+        )}
+      </button>
+      <button
+        type="button"
+        title={threeD ? "Switch to flat view" : "Switch to 3D view"}
+        aria-label={threeD ? "Switch to flat view" : "Switch to 3D view"}
+        aria-pressed={threeD}
+        disabled={disabled}
+        onClick={onToggleThreeD}
+        className={buttonClass}
+      >
+        {threeD ? (
+          <Square className="size-4" />
+        ) : (
+          <Box className="size-4" />
         )}
       </button>
       <button

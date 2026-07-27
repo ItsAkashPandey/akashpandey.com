@@ -2,6 +2,7 @@ import {
   CELESTRAK_EARTH_OBSERVATION_URLS,
   CELESTRAK_RESOURCE_URL,
   createFallbackSatelliteFeed,
+  MAX_TRACKED_SATELLITES,
   SATELLITE_FALLBACK_RECORDS,
   TRACKED_NORAD_IDS,
 } from "@/data/satellite-fallback";
@@ -69,20 +70,32 @@ export async function GET() {
     const liveRecords = responses.flatMap((result) =>
       result.status === "fulfilled" ? result.value : [],
     );
+    if (liveRecords.length < 4) {
+      throw new Error("CelesTrak returned too few tracked satellites");
+    }
+
     const byNoradId = new Map<number, SatelliteOmm>();
     for (const record of [...SATELLITE_FALLBACK_RECORDS, ...liveRecords]) {
-      const id = Number(record.NORAD_CAT_ID);
-      if (trackedIds.has(id)) byNoradId.set(id, record);
+      byNoradId.set(Number(record.NORAD_CAT_ID), record);
     }
-    const records = TRACKED_NORAD_IDS.flatMap((id) => {
+
+    // The curated missions lead, then the rest of the live fleet fills the slots
+    // that remain, newest element sets first.
+    const curated = TRACKED_NORAD_IDS.flatMap((id) => {
       const record = byNoradId.get(id);
       return record ? [record] : [];
     });
 
-    if (
-      liveRecords.length < 4 ||
-      records.length < SATELLITE_FALLBACK_RECORDS.length
-    ) {
+    const remaining = [...byNoradId.values()]
+      .filter((record) => !trackedIds.has(Number(record.NORAD_CAT_ID)))
+      .sort((a, b) => b.EPOCH.localeCompare(a.EPOCH));
+
+    const records = [...curated, ...remaining].slice(
+      0,
+      MAX_TRACKED_SATELLITES,
+    );
+
+    if (records.length < SATELLITE_FALLBACK_RECORDS.length) {
       throw new Error("CelesTrak returned too few tracked satellites");
     }
 
