@@ -79,7 +79,15 @@ export async function GET(req: Request) {
       const json = (await response.json().catch(() => null)) as {
         rows?: any[];
         viewUrl?: string;
+        error?: string;
       } | null;
+
+      // Apps Script returns 200 with an error payload when the script throws
+      // (most often it has lost permission to open the spreadsheet).
+      if (json?.error) {
+        throw new Error(json.error);
+      }
+
       const rawRows = Array.isArray(json?.rows) ? json!.rows : [];
 
       const rows = rawRows
@@ -182,8 +190,9 @@ export async function GET(req: Request) {
       {
         rows: [],
         storage: "none",
-        message:
-          "Chat storage is not connected. Add CHAT_LOG_DATABASE_URL for Postgres, or CHAT_LOG_WEBHOOK_URL for Google Sheets, in your Vercel environment variables.",
+        message: readWarning
+          ? `${readWarning} Add CHAT_LOG_DATABASE_URL for Postgres, or repair the Google Sheets web app, in your Vercel environment variables.`
+          : "Chat storage is not connected. Add CHAT_LOG_DATABASE_URL for Postgres, or CHAT_LOG_WEBHOOK_URL for Google Sheets, in your Vercel environment variables.",
       },
       {
         headers: {

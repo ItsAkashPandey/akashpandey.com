@@ -4,7 +4,6 @@
       "id": 1,
       "mainCategory": "instrument handling",
       "description": "During my PhD at IIT Roorkee, I got the chance to work with many different field surveying instruments. I learned how to handle both traditional surveying tools and newer technologies like UAVs, GPS, and ground sensors through regular and extensive fieldworks.",
-      "image": "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&h=600&fit=crop",
       "images": [
         "/skills/MySkillPhotos/20230926_111450.webp",
         "/skills/MySkillPhotos/20230926_112133.webp",
@@ -258,7 +257,6 @@
       "id": 2,
       "mainCategory": "software",
       "description": "These are the tools I return to in day-to-day research. I use them to clean field observations, process satellite and UAV data, test ideas, make maps, and turn the result into something another person can actually use.",
-      "image": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&h=600&fit=crop",
       "subcategories": [
         {
           "name": "Programming",

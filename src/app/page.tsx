@@ -234,6 +234,12 @@ export default function Home() {
                   </h3>
                   <p className="text-muted-foreground text-sm">{pub.authors}</p>
                   <div className="flex flex-wrap items-center gap-2">
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] tracking-wide uppercase"
+                    >
+                      {pub.type}
+                    </Badge>
                     {pub.journal && (
                       <Badge variant="outline" className="text-xs">
                         {pub.journal}
@@ -241,7 +247,7 @@ export default function Home() {
                     )}
                     {pub.conference && (
                       <Badge variant="outline" className="text-xs">
-                        {pub.conference.replace(/\s*2026\b/g, "")}
+                        {pub.conference}
                       </Badge>
                     )}
                     <Badge variant="outline" className="text-xs">
