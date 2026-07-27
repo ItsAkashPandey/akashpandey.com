@@ -2,10 +2,10 @@ import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
 export const sectionSwitcherListClass =
-  "border-border/65 grid h-auto w-full grid-cols-2 gap-0 rounded-none border-0 border-b bg-transparent p-0";
+  "border-border/65 bg-card/58 grid h-auto w-full grid-cols-2 gap-1 rounded-md border p-1 shadow-sm";
 
 export const sectionSwitcherTriggerClass =
-  "group relative flex h-auto min-w-0 items-center justify-start gap-2 rounded-none border-0 border-b-2 border-transparent bg-transparent px-2 py-2.5 text-left text-sm shadow-none transition-colors sm:gap-3 sm:px-3 data-[state=active]:border-foreground/70 data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none";
+  "group relative flex h-auto min-w-0 items-center justify-start gap-2 rounded-sm border border-transparent bg-transparent px-2 py-2 text-left text-sm shadow-none transition-colors sm:gap-2.5 sm:px-3 data-[state=active]:border-border/70 data-[state=active]:bg-background/82 data-[state=active]:text-foreground data-[state=active]:shadow-sm";
 
 const toneClasses = {
   sky: "bg-sky-500/11 text-sky-700 dark:text-sky-300",
@@ -31,11 +31,11 @@ export function SectionSwitcherVisual({
     <>
       <span
         className={cn(
-          "grid size-8 shrink-0 place-items-center rounded-sm sm:size-9",
+          "grid size-7 shrink-0 place-items-center rounded-sm sm:size-8",
           toneClasses[tone],
         )}
       >
-        <Icon className="size-4 sm:size-[18px]" strokeWidth={1.8} />
+        <Icon className="size-3.5 sm:size-4" strokeWidth={1.8} />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex min-w-0 items-center gap-2">

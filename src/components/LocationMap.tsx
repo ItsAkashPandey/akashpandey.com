@@ -168,6 +168,11 @@ export default function LocationMap() {
   }, [trackedSatellites]);
 
   useEffect(() => {
+    if (selectedId !== null || !snapshots.length) return;
+    setSelectedId(snapshots[0].noradId);
+  }, [selectedId, snapshots]);
+
+  useEffect(() => {
     if (!isClient || !mapContainerRef.current || mapRef.current) return;
     let cancelled = false;
     let loadTimer = 0;
@@ -186,12 +191,12 @@ export default function LocationMap() {
       const map = new maplibregl.Map({
         container: mapContainerRef.current,
         style: createMapStyle(theme),
-        center: [76.5, 23],
-        zoom: 1.55,
+        center: AKASH_LOCATION,
+        zoom: 13.2,
         minZoom: 1,
-        maxZoom: 18,
-        pitch: 0,
-        maxPitch: 52,
+        maxZoom: 21,
+        pitch: 48,
+        maxPitch: 72,
         bearing: 0,
         dragPan: true,
         dragRotate: true,
@@ -203,10 +208,10 @@ export default function LocationMap() {
         touchPitch: false,
         attributionControl: false,
         renderWorldCopies: false,
-        fadeDuration: 120,
+        fadeDuration: 80,
         zoomSnap: 0,
         cancelPendingTileRequestsWhileZooming: false,
-        maxTileCacheZoomLevels: 5,
+        maxTileCacheZoomLevels: 8,
       });
       map.touchZoomRotate.enable();
       mapRef.current = map;
@@ -269,7 +274,8 @@ export default function LocationMap() {
         } else {
           map.easeTo({
             center: AKASH_LOCATION,
-            zoom: Math.max(map.getZoom(), 7),
+            zoom: Math.max(map.getZoom(), 14),
+            pitch: Math.max(map.getPitch(), 48),
             duration: 850,
             essential: true,
           });
@@ -550,7 +556,7 @@ export default function LocationMap() {
           onCenter={() =>
             mapRef.current?.easeTo({
               center: [selectedSnapshot.longitude, selectedSnapshot.latitude],
-              zoom: Math.max(mapRef.current.getZoom(), 5),
+            zoom: Math.max(mapRef.current.getZoom(), 6),
               duration: 850,
               essential: true,
             })
