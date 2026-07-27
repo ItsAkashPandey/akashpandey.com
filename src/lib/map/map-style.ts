@@ -39,9 +39,11 @@ const palette = {
     label: "#93a7b3",
     labelHalo: "#070c0f",
     placeLabel: "#c6d5de",
-    imageryOpacity: 0.82,
-    imagerySaturation: -0.3,
-    imageryBrightnessMax: 0.72,
+    // Imagery is now a deliberate choice, so it is shown close to true tone
+    // rather than dimmed to sit under the dark vector paint.
+    imageryOpacity: 1,
+    imagerySaturation: -0.12,
+    imageryBrightnessMax: 0.94,
   },
   light: {
     ground: "#eceee9",
@@ -84,7 +86,10 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         tiles: IMAGERY_TILES,
         tileSize: 256,
         minzoom: 0,
-        maxzoom: 19,
+        // Esri stops at z18 over most of India and answers z19+ with a 2521
+        // byte "Map data not yet available" placeholder. Declaring 18 makes
+        // MapLibre upscale the real tile instead of fetching that placeholder.
+        maxzoom: 18,
         attribution: "Imagery © Esri, Maxar, Earthstar Geographics",
       },
     },
@@ -319,9 +324,33 @@ export function applyMapTheme(map: MapLibreMap, theme: MapTheme) {
   set("buildings-3d", "fill-extrusion-color", c.building);
 }
 
+/** Opaque vector paint that would otherwise bury the imagery underneath it. */
+const GROUND_COVER_LAYERS = [
+  "landcover-green",
+  "landuse-builtup",
+  "water",
+  "waterway",
+  "building",
+];
+
 export function setImageryVisible(map: MapLibreMap, visible: boolean) {
   if (!map.isStyleLoaded() || !map.getLayer("imagery")) return;
   map.setLayoutProperty("imagery", "visibility", visible ? "visible" : "none");
+
+  // The imagery sits at the bottom of the stack, so the vector fills have to
+  // step aside or the visitor just sees the dark basemap again.
+  for (const layer of GROUND_COVER_LAYERS) {
+    if (map.getLayer(layer)) {
+      map.setLayoutProperty(layer, "visibility", visible ? "none" : "visible");
+    }
+  }
+
+  // Roads and labels stay, but they need to read against photography.
+  for (const layer of ["road-minor", "road-major", "road-trunk"]) {
+    if (map.getLayer(layer)) {
+      map.setPaintProperty(layer, "line-opacity", visible ? 0.28 : 1);
+    }
+  }
 }
 
 /**
@@ -375,7 +404,12 @@ export function enableThreeDimensions(map: MapLibreMap, theme: MapTheme) {
 export function disableThreeDimensions(map: MapLibreMap) {
   if (!map.isStyleLoaded()) return;
   if (map.getLayer("buildings-3d")) map.removeLayer("buildings-3d");
-  if (map.getLayer("building")) {
+
+  // Only hand the flat footprints back if imagery is not the active base.
+  const imageryOn =
+    map.getLayer("imagery") &&
+    map.getLayoutProperty("imagery", "visibility") === "visible";
+  if (map.getLayer("building") && !imageryOn) {
     map.setLayoutProperty("building", "visibility", "visible");
   }
 }
