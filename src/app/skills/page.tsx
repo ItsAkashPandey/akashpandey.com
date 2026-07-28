@@ -173,7 +173,7 @@ export default function SkillsPage() {
           })}
         </div>
 
-        <div className="grid gap-5 px-1 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
+        <div className="grid gap-5 px-1 lg:grid-cols-[minmax(0,1fr)_264px] lg:items-center">
           <div className="min-w-0">
             <h2 className="font-serif text-3xl leading-tight sm:text-4xl">
               {categoryLabel(activeCategory.mainCategory).toLowerCase()}
@@ -184,12 +184,11 @@ export default function SkillsPage() {
           </div>
 
           {categoryImages?.length ? (
-            <div className="mx-auto h-[165px] w-[220px] lg:mx-0 lg:justify-self-end">
+            <div className="mx-auto w-fit lg:mx-0 lg:justify-self-end">
               <SwipeCards
                 images={categoryImages}
                 baselineWidth={4}
                 baselineHeight={3}
-                className="h-full w-full"
               />
             </div>
           ) : (

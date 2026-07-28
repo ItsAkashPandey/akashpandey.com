@@ -293,7 +293,12 @@ export default function StackedImageDeck({
     <div
       data-stacked-deck
       data-deck-index={frontIndex}
-      className={cn("relative grid touch-pan-y place-items-center", className)}
+      // shrink-0 keeps the shared size intact inside flex and grid parents,
+      // which were otherwise squeezing individual decks a few pixels narrower.
+      className={cn(
+        "relative grid shrink-0 touch-pan-y place-items-center",
+        className,
+      )}
       role="region"
       aria-label={`${alt} gallery, drag to browse`}
       tabIndex={0}
