@@ -26,7 +26,7 @@ export function ProjectCard({ project }: Props) {
     <Card className="flex flex-col">
       {allImages.length > 0 && (
         <div className="flex justify-center py-4">
-          <SwipeCards images={allImages} className="w-full max-w-[280px]" />
+          <SwipeCards images={allImages} />
         </div>
       )}
       <CardContent className="flex flex-col gap-2">

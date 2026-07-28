@@ -212,11 +212,7 @@ export function ActivityCard({
 
           {/* Swipe Cards */}
           {allImages.length > 0 && (
-            <ActivitySwipeCards
-              images={allImages}
-              priority={priorityImage}
-              className="w-full max-w-[280px] sm:max-w-[300px]"
-            />
+            <ActivitySwipeCards images={allImages} priority={priorityImage} />
           )}
         </div>
 
