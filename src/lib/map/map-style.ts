@@ -16,8 +16,10 @@ const IMAGERY_TILES = [
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
 ];
 
+// OpenFreeMap only ships Regular, Bold and Italic glyph stacks. Asking for a
+// weight it does not serve leaves the labels unrendered.
 const TEXT_FONT = ["Noto Sans Regular"];
-const TEXT_FONT_MEDIUM = ["Noto Sans Medium"];
+const TEXT_FONT_STRONG = ["Noto Sans Bold"];
 
 /**
  * Two instruments, one chassis. Dark is the operations console: near-black
@@ -271,7 +273,7 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         ],
         layout: {
           "text-field": ["get", "name"],
-          "text-font": TEXT_FONT_MEDIUM,
+          "text-font": TEXT_FONT_STRONG,
           "text-size": [
             "interpolate",
             ["linear"],
