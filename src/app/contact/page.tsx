@@ -18,7 +18,9 @@ export default function ContactPage() {
         </p>
       </header>
 
-      {/* Same surface and padding as the form below, so the map's edges line
+      <ContactForm />
+
+      {/* Same surface and padding as the form above, so the map's edges line
           up with the form fields instead of running 28px wider than them. */}
       <section className="contact-surface record-surface flex flex-col gap-3">
         <div className="map-frame">
@@ -29,8 +31,6 @@ export default function ContactPage() {
           great circle between us and measures it.
         </p>
       </section>
-
-      <ContactForm />
     </article>
   );
 }
