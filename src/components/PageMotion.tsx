@@ -28,6 +28,13 @@ const CLIPS: Record<string, { src: string; description: string }> = {
     src: "/motion/contact.mp4",
     description: "Landsat 8 and 9 orbital coverage",
   },
+  // No dedicated NASA sequence exists for this page. Home's global data feed
+  // is the closest fit — a page about how data is handled sits behind
+  // footage of a planet's worth of it moving.
+  privacy: {
+    src: "/motion/home.mp4",
+    description: "Twenty years of global biosphere data on a spinning Earth",
+  },
 };
 
 export default function PageMotion() {

@@ -2,7 +2,14 @@
 
 import { preloadBrowserImage } from "@/lib/browser-image-cache";
 import { cn } from "@/lib/utils";
-import { animate, motion, useMotionValue, useTransform } from "framer-motion";
+import {
+  animate,
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useTransform,
+} from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -26,7 +33,9 @@ interface StackedImageDeckProps {
 }
 
 /** Past this many pixels of horizontal travel the card leaves the stack. */
-const THROW_THRESHOLD = 100;
+const THROW_THRESHOLD = 90;
+/** Movement under this counts as a tap, so the lightbox still opens. */
+const TAP_SLOP = 6;
 
 /**
  * One optical size for every deck on the site. Orientation changes, area does
@@ -43,129 +52,47 @@ export function wrapDeckIndex(index: number, total: number) {
   return ((index % total) + total) % total;
 }
 
-type CardProps = {
+type CardChrome = {
   source: string;
   alt: string;
   label?: string;
   counter?: string;
-  depth: number;
-  isFront: boolean;
-  tiltSeed: number;
   fit: "cover" | "contain";
   imageWidth: number;
   imageHeight: number;
   sizes: string;
   quality: number;
+  eager: boolean;
   priority: boolean;
-  cardClassName?: string;
   imageClassName?: string;
-  /** False for single-image decks, which must never be thrown off screen. */
-  canThrow: boolean;
-  onThrow: (direction: -1 | 1) => void;
-  onOpen: () => void;
 };
 
-function DeckCard({
+function CardFace({
   source,
   alt,
   label,
   counter,
-  depth,
-  isFront,
-  tiltSeed,
   fit,
   imageWidth,
   imageHeight,
   sizes,
   quality,
+  eager,
   priority,
-  cardClassName,
   imageClassName,
-  canThrow,
-  onThrow,
-  onOpen,
-}: CardProps) {
-  const x = useMotionValue(0);
-  const rotateRaw = useTransform(x, [-150, 150], [-18, 18]);
-  const opacity = useTransform(x, [-160, 0, 160], [0, 1, 0]);
-  const draggedRef = useRef(false);
-
-  // Cards behind the front one keep a fixed tilt so the stack reads as paper.
-  const rotate = useTransform(() => {
-    const offset = isFront ? 0 : tiltSeed % 2 ? 6 : -6;
-    return `${rotateRaw.get() + offset}deg`;
-  });
-
-  // A card that gets recycled to the back must not carry its thrown offset.
-  useEffect(() => {
-    if (!isFront) x.set(0);
-  }, [isFront, x]);
-
-  const handleDragEnd = (
-    _event: unknown,
-    info: { offset: { x: number }; velocity: { x: number } },
-  ) => {
-    const thrown =
-      canThrow &&
-      (Math.abs(info.offset.x) > THROW_THRESHOLD ||
-        Math.abs(info.velocity.x) > 500);
-
-    if (!thrown) {
-      animate(x, 0, { type: "spring", stiffness: 400, damping: 40 });
-      return;
-    }
-
-    // Reorder on release rather than after an exit tween. Waiting for the
-    // throw to finish added ~400ms of dead time before the next card became
-    // draggable, which is what made the deck feel jerky.
-    onThrow(info.offset.x < 0 ? -1 : 1);
-  };
-
+}: CardChrome) {
   return (
-    <motion.div
-      className={cn(
-        "absolute inset-0 origin-bottom overflow-hidden rounded-lg",
-        isFront && "cursor-grab active:cursor-grabbing",
-        cardClassName,
-      )}
-      style={{
-        gridRow: 1,
-        gridColumn: 1,
-        x,
-        opacity,
-        rotate,
-        zIndex: 100 - depth,
-        boxShadow: isFront
-          ? "0 14px 26px -8px rgb(12 35 36 / 0.42), 0 4px 8px -4px rgb(12 35 36 / 0.3)"
-          : "0 8px 18px -10px rgb(12 35 36 / 0.3)",
-      }}
-      animate={{ scale: isFront ? 1 : Math.max(0.85, 0.94 - depth * 0.04) }}
-      transition={{ type: "spring", stiffness: 320, damping: 34 }}
-      drag={isFront ? "x" : false}
-      dragConstraints={{ left: -160, right: 160, top: 0, bottom: 0 }}
-      dragElastic={0.7}
-      onDragStart={() => {
-        draggedRef.current = true;
-      }}
-      onDragEnd={handleDragEnd}
-      onPointerUp={() => {
-        // A throw and a tap share the same pointer sequence; only the tap opens.
-        if (!draggedRef.current && isFront) onOpen();
-        window.setTimeout(() => {
-          draggedRef.current = false;
-        }, 0);
-      }}
-    >
+    <>
       <Image
         src={source}
-        alt={isFront ? alt : ""}
+        alt={alt}
         width={imageWidth}
         height={imageHeight}
         sizes={sizes}
         quality={quality}
-        priority={priority && isFront}
-        loading={priority && depth < 2 ? "eager" : "lazy"}
-        fetchPriority={isFront ? "high" : "low"}
+        priority={priority}
+        loading={eager ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "low"}
         decoding="async"
         draggable={false}
         className={cn(
@@ -175,25 +102,142 @@ function DeckCard({
         )}
       />
 
-      {(label || counter) && (
+      {counter && (
+        <span className="deck-count pointer-events-none absolute top-2.5 right-2.5">
+          {counter}
+        </span>
+      )}
+
+      {label && (
         <>
           <span className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/55 to-transparent" />
-          <span className="pointer-events-none absolute right-2.5 bottom-2.5 left-2.5 flex items-end justify-between gap-2">
-            {label ? (
-              <span className="min-w-0 truncate rounded-[4px] bg-black/55 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
-                {label}
-              </span>
-            ) : (
-              <span />
-            )}
-            {counter && (
-              <span className="shrink-0 rounded-[4px] bg-black/55 px-2 py-1 text-[10px] font-semibold text-white tabular-nums backdrop-blur-sm">
-                {counter}
-              </span>
-            )}
+          <span className="pointer-events-none absolute bottom-2.5 left-2.5 max-w-[calc(100%-5.5rem)] truncate rounded-[4px] bg-black/45 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
+            {label}
           </span>
         </>
       )}
+    </>
+  );
+}
+
+const CARD_BASE =
+  "absolute inset-0 origin-bottom overflow-hidden rounded-lg [grid-area:1/1]";
+
+/**
+ * The card behind the front one. Static, never grabbable, and unaware of any
+ * gesture — it exists to give the stack its depth and paper edges.
+ */
+function BackCard({
+  depth,
+  tiltSeed,
+  cardClassName,
+  ...chrome
+}: CardChrome & { depth: number; tiltSeed: number; cardClassName?: string }) {
+  return (
+    <motion.div
+      className={cn(CARD_BASE, "pointer-events-none", cardClassName)}
+      style={{
+        zIndex: 100 - depth,
+        boxShadow: "0 8px 18px -10px rgb(12 35 36 / 0.3)",
+      }}
+      // A card that has just been thrown rejoins the stack here while its
+      // thrown copy is still flying off. Fading in turns what would read as a
+      // duplicate into a crossfade.
+      initial={{ opacity: 0 }}
+      animate={{
+        opacity: 1,
+        scale: Math.max(0.85, 0.94 - (depth - 1) * 0.04),
+        rotate: tiltSeed % 2 ? 6 : -6,
+      }}
+      transition={{ type: "spring", stiffness: 320, damping: 34 }}
+    >
+      <CardFace {...chrome} />
+    </motion.div>
+  );
+}
+
+/**
+ * The only draggable card. It is remounted on every throw (its key carries a
+ * throw counter), which is the whole point: Framer Motion does not reliably
+ * rebuild a drag gesture on a node that stays mounted while its role in the
+ * stack changes, and that stale recogniser is what left the deck frozen after
+ * one or two swipes. A card that never changes role cannot go stale.
+ */
+function FrontCard({
+  canThrow,
+  onThrow,
+  onOpen,
+  cardClassName,
+  ...chrome
+}: CardChrome & {
+  canThrow: boolean;
+  onThrow: (direction: -1 | 1) => void;
+  onOpen: () => void;
+  cardClassName?: string;
+}) {
+  const x = useMotionValue(0);
+  const rotate = useTransform(x, [-180, 180], [-18, 18]);
+  const pressRef = useRef<{ x: number; y: number } | null>(null);
+
+  return (
+    <motion.div
+      className={cn(
+        CARD_BASE,
+        "cursor-grab touch-pan-y active:cursor-grabbing",
+        cardClassName,
+      )}
+      style={{
+        x,
+        rotate,
+        zIndex: 100,
+        boxShadow:
+          "0 14px 26px -8px rgb(12 35 36 / 0.42), 0 4px 8px -4px rgb(12 35 36 / 0.3)",
+      }}
+      initial={{ scale: 0.94 }}
+      animate={{ scale: 1 }}
+      // The direction has to arrive through AnimatePresence's `custom`, which
+      // is read when the exit starts. An inline `exit` object would be frozen
+      // at the values of the last render, i.e. before the drag happened.
+      variants={{
+        exit: (direction: -1 | 1) => ({
+          x: direction * 460,
+          opacity: 0,
+          transition: { duration: 0.26, ease: [0.22, 0.8, 0.24, 1] },
+        }),
+      }}
+      exit="exit"
+      transition={{ type: "spring", stiffness: 340, damping: 32 }}
+      drag={canThrow ? "x" : false}
+      dragElastic={0.85}
+      // Momentum kept the card coasting past the release point, so the throw
+      // resolved late and the deck felt unresponsive.
+      dragMomentum={false}
+      onPointerDown={(event) => {
+        pressRef.current = { x: event.clientX, y: event.clientY };
+      }}
+      onPointerUp={(event) => {
+        const press = pressRef.current;
+        pressRef.current = null;
+        if (!press) return;
+        const travelled =
+          Math.abs(event.clientX - press.x) + Math.abs(event.clientY - press.y);
+        if (travelled < TAP_SLOP) onOpen();
+      }}
+      onDragEnd={(_event, info) => {
+        const thrown =
+          canThrow &&
+          (Math.abs(info.offset.x) > THROW_THRESHOLD ||
+            Math.abs(info.velocity.x) > 450);
+        if (thrown) {
+          onThrow(info.offset.x < 0 ? -1 : 1);
+          return;
+        }
+        // Spring back by hand rather than with dragSnapToOrigin, which would
+        // race the exit animation on the throws that do land.
+        animate(x, 0, { type: "spring", stiffness: 420, damping: 38 });
+      }}
+    >
+      <CardFace {...chrome} />
     </motion.div>
   );
 }
@@ -215,15 +259,19 @@ export default function StackedImageDeck({
   stackSize = 4,
   onImageClick,
 }: StackedImageDeckProps) {
-  const imageSetKey = images.join("");
+  const imageSetKey = images.join("");
 
   // The last entry is the front card, matching the visual stacking order.
   const [order, setOrder] = useState<number[]>(() =>
     images.map((_, index) => index).reverse(),
   );
+  // Bumped on every advance so the front card is guaranteed a fresh mount.
+  const [generation, setGeneration] = useState(0);
+  const [exitDirection, setExitDirection] = useState<-1 | 1>(-1);
 
   useEffect(() => {
     setOrder(images.map((_, index) => index).reverse());
+    setGeneration(0);
   }, [imageSetKey, images]);
 
   const frontIndex = order[order.length - 1] ?? 0;
@@ -234,6 +282,7 @@ export default function StackedImageDeck({
    * the deck never dead-ends.
    */
   const recycle = useCallback((direction: -1 | 1) => {
+    setExitDirection(direction);
     setOrder((previous) => {
       if (previous.length < 2) return previous;
       const next = previous.slice();
@@ -244,6 +293,7 @@ export default function StackedImageDeck({
       }
       return next;
     });
+    setGeneration((current) => current + 1);
   }, []);
 
   useEffect(() => {
@@ -274,9 +324,10 @@ export default function StackedImageDeck({
     };
   }, [imageSetKey, images, priority]);
 
-  const visible = useMemo(() => {
+  /** Everything behind the front card, back-most first. */
+  const behind = useMemo(() => {
     const depth = Math.min(stackSize, order.length);
-    return order.slice(order.length - depth);
+    return order.slice(order.length - depth, order.length - 1);
   }, [order, stackSize]);
 
   if (!images.length) {
@@ -288,6 +339,11 @@ export default function StackedImageDeck({
       </div>
     );
   }
+
+  const counterFor = (index: number) =>
+    showCounter || images.length > 1
+      ? `${index + 1}/${images.length}`
+      : undefined;
 
   return (
     <div
@@ -315,56 +371,69 @@ export default function StackedImageDeck({
         }
       }}
     >
-      {visible.map((index, position) => {
-        const depth = visible.length - 1 - position;
-        return (
-          <DeckCard
-            key={`${index}-${images[index]}`}
-            source={images[index]}
-            alt={alt}
-            label={labels?.[index]}
-            counter={
-              showCounter || images.length > 1
-                ? `${index + 1}/${images.length}`
-                : undefined
-            }
-            depth={depth}
-            isFront={depth === 0}
-            tiltSeed={index}
-            fit={fit}
-            imageWidth={imageWidth}
-            imageHeight={imageHeight}
-            sizes={sizes}
-            quality={quality}
-            priority={priority}
-            cardClassName={cardClassName}
-            imageClassName={imageClassName}
-            canThrow={images.length > 1}
-            onThrow={recycle}
-            onOpen={() => onImageClick?.(index)}
-          />
-        );
-      })}
+      {behind.map((index, position) => (
+        <BackCard
+          key={`back-${images[index]}`}
+          depth={behind.length - position}
+          tiltSeed={index}
+          cardClassName={cardClassName}
+          source={images[index]}
+          alt=""
+          counter={counterFor(index)}
+          label={labels?.[index]}
+          fit={fit}
+          imageWidth={imageWidth}
+          imageHeight={imageHeight}
+          sizes={sizes}
+          quality={quality}
+          eager={priority}
+          priority={false}
+          imageClassName={imageClassName}
+        />
+      ))}
+
+      <AnimatePresence initial={false} custom={exitDirection}>
+        <FrontCard
+          key={`front-${frontIndex}-${generation}`}
+          canThrow={images.length > 1}
+          onThrow={recycle}
+          onOpen={() => onImageClick?.(frontIndex)}
+          cardClassName={cardClassName}
+          source={images[frontIndex]}
+          alt={alt}
+          counter={counterFor(frontIndex)}
+          label={labels?.[frontIndex]}
+          fit={fit}
+          imageWidth={imageWidth}
+          imageHeight={imageHeight}
+          sizes={sizes}
+          quality={quality}
+          eager={priority}
+          priority={priority}
+          imageClassName={imageClassName}
+        />
+      </AnimatePresence>
 
       {images.length > 1 && (
-        <>
+        <div className="deck-nav absolute bottom-2.5 left-1/2 z-[200] -translate-x-1/2">
           <button
             type="button"
+            className="deck-nav__btn"
             aria-label="Previous image"
             onClick={() => recycle(1)}
-            className="text-foreground/45 hover:text-foreground absolute top-1/2 -left-7 z-[200] hidden -translate-y-1/2 text-[10px] font-medium tracking-wide transition-colors sm:block"
           >
-            prev
+            <ChevronLeft className="size-3.5" strokeWidth={2.5} />
           </button>
+          <span className="deck-nav__rule" aria-hidden />
           <button
             type="button"
+            className="deck-nav__btn"
             aria-label="Next image"
             onClick={() => recycle(-1)}
-            className="text-foreground/45 hover:text-foreground absolute top-1/2 -right-7 z-[200] hidden -translate-y-1/2 text-[10px] font-medium tracking-wide transition-colors sm:block"
           >
-            next
+            <ChevronRight className="size-3.5" strokeWidth={2.5} />
           </button>
-        </>
+        </div>
       )}
     </div>
   );

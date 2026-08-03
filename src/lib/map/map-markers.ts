@@ -1,3 +1,7 @@
+/**
+ * Two ink families run through the whole plate: ochre for people and places,
+ * teal for anything orbital. The markers are the ochre end of that pairing.
+ */
 export function createLocationMarkerElement(kind: "akash" | "visitor") {
   const element = document.createElement("button");
   element.type = "button";
@@ -12,19 +16,19 @@ export function createLocationMarkerElement(kind: "akash" | "visitor") {
   const ring = document.createElement("span");
   ring.className =
     kind === "akash"
-      ? "absolute size-5 rounded-full border border-orange-700/45 bg-orange-500/12 dark:border-orange-300/50"
-      : "absolute size-5 rounded-full border border-sky-700/45 bg-sky-500/12 dark:border-sky-300/50";
+      ? "absolute size-5 rounded-full border border-[#9c5b23]/50 bg-[#c98a3e]/15 dark:border-[#e6b678]/55"
+      : "absolute size-5 rounded-full border border-[#1f5457]/50 bg-[#2c6a6d]/15 dark:border-[#9adcd5]/55";
 
   const dot = document.createElement("span");
   dot.className =
     kind === "akash"
-      ? "relative size-2.5 rounded-full border-2 border-white bg-orange-700 shadow-md dark:border-zinc-800 dark:bg-orange-300"
-      : "relative size-2.5 rounded-full border-2 border-white bg-sky-700 shadow-md dark:border-zinc-800 dark:bg-sky-300";
+      ? "relative size-2.5 rounded-full border-2 border-[#f4f1e8] bg-[#9c5b23] shadow-md dark:border-[#1b2429] dark:bg-[#e6b678]"
+      : "relative size-2.5 rounded-full border-2 border-[#f4f1e8] bg-[#1f5457] shadow-md dark:border-[#1b2429] dark:bg-[#9adcd5]";
 
   const label = document.createElement("span");
   label.textContent = kind === "akash" ? "Akash" : "You";
   label.className =
-    "pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 bg-zinc-950/88 px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap text-white opacity-0 shadow-sm transition-opacity group-hover/location:opacity-100 group-focus-visible/location:opacity-100";
+    "pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 rounded-[3px] bg-[#1b2429]/90 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide whitespace-nowrap text-[#f4f1e8] opacity-0 shadow-sm transition-opacity group-hover/location:opacity-100 group-focus-visible/location:opacity-100";
 
   element.append(ring, dot, label);
   return element;

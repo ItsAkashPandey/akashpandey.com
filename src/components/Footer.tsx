@@ -18,7 +18,7 @@ export default function Footer() {
               privacy?
             </Link>
           </p>
-          <p className="text-muted-foreground/70 mt-1 text-[10px]">
+          <p className="text-muted-foreground mt-1 text-[11px]">
             Updated{" "}
             {new Intl.DateTimeFormat("en", {
               day: "numeric",
@@ -27,7 +27,7 @@ export default function Footer() {
               timeZone: "UTC",
             }).format(new Date(`${siteData.lastUpdated}T00:00:00.000Z`))}
           </p>
-          <p className="text-muted-foreground/60 mt-1.5 text-[10px]">
+          <p className="text-muted-foreground mt-1.5 text-[11px]">
             <Link
               className="link"
               href="https://github.com/ItsAkashPandey"

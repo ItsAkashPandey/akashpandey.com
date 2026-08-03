@@ -261,7 +261,7 @@ export function ActivityCard({
                         <Users className="size-3" />
                         <span>With</span>
                       </div>
-                      <span className="text-muted-foreground/90 min-w-0 text-xs font-medium">
+                      <span className="text-muted-foreground min-w-0 text-xs font-medium">
                         <CollaboratorLinks
                           text={collaborators}
                           query={searchQuery}
