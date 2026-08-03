@@ -91,36 +91,36 @@ const typeStyles = {
     label: "Journal",
     Icon: FileText,
     rail: "bg-emerald-500",
-    chip: "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-200",
-    soft: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    chip: "border-emerald-600/35 text-emerald-800 dark:border-emerald-400/30 dark:text-emerald-200",
+    ink: "text-emerald-700 dark:text-emerald-300",
   },
   Conference: {
     label: "Conference",
     Icon: Presentation,
     rail: "bg-sky-500",
-    chip: "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-500/25 dark:bg-sky-500/10 dark:text-sky-200",
-    soft: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+    chip: "border-sky-600/35 text-sky-800 dark:border-sky-400/30 dark:text-sky-200",
+    ink: "text-sky-700 dark:text-sky-300",
   },
   Book: {
     label: "Book",
     Icon: BookOpen,
     rail: "bg-amber-500",
-    chip: "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200",
-    soft: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
+    chip: "border-amber-700/35 text-amber-900 dark:border-amber-400/30 dark:text-amber-200",
+    ink: "text-amber-700 dark:text-amber-300",
   },
   "Book Chapter": {
     label: "Book Chapter",
     Icon: BookMarked,
     rail: "bg-orange-500",
-    chip: "border-orange-200 bg-orange-50 text-orange-900 dark:border-orange-500/25 dark:bg-orange-500/10 dark:text-orange-200",
-    soft: "bg-orange-500/10 text-orange-700 dark:text-orange-300",
+    chip: "border-orange-700/35 text-orange-900 dark:border-orange-400/30 dark:text-orange-200",
+    ink: "text-orange-700 dark:text-orange-300",
   },
   Manuscript: {
     label: "Manuscript",
     Icon: ClipboardList,
     rail: "bg-violet-500",
-    chip: "border-violet-200 bg-violet-50 text-violet-900 dark:border-violet-500/25 dark:bg-violet-500/10 dark:text-violet-200",
-    soft: "bg-violet-500/10 text-violet-700 dark:text-violet-300",
+    chip: "border-violet-700/35 text-violet-900 dark:border-violet-400/30 dark:text-violet-200",
+    ink: "text-violet-700 dark:text-violet-300",
   },
 } satisfies Record<
   Publication["type"],
@@ -129,7 +129,7 @@ const typeStyles = {
     Icon: typeof FileText;
     rail: string;
     chip: string;
-    soft: string;
+    ink: string;
   }
 >;
 
@@ -347,8 +347,8 @@ export default function PublicationsWithSearch({ publications }: Props) {
                   >
                     <span
                       className={cn(
-                        "flex size-8 shrink-0 items-center justify-center rounded-md",
-                        config.soft,
+                        "flex size-8 shrink-0 items-center justify-center",
+                        config.ink,
                       )}
                     >
                       <Icon className="size-4" />
@@ -516,8 +516,8 @@ function PublicationCard({
               ) : (
                 <span
                   className={cn(
-                    "flex size-9 shrink-0 items-center justify-center rounded-sm",
-                    typeConfig.soft,
+                    "flex size-9 shrink-0 items-center justify-center",
+                    typeConfig.ink,
                   )}
                 >
                   <GraduationCap className="size-4" />

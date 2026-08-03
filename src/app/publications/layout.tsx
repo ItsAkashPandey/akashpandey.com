@@ -1,3 +1,5 @@
+import publicationsData from "@/data/publications.json";
+import { jsonLdProps, publicationsSchema } from "@/lib/structured-data";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,5 +12,14 @@ export const metadata: Metadata = {
 export default function PublicationsLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return children;
+  return (
+    <>
+      {/* The papers are the strongest thing on this domain. Marked up, each one
+          is indexable in its own right rather than being anonymous body copy. */}
+      <script
+        {...jsonLdProps(publicationsSchema(publicationsData.publications))}
+      />
+      {children}
+    </>
+  );
 }

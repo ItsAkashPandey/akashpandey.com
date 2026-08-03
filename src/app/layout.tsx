@@ -3,6 +3,12 @@ import Header from "@/components/Header";
 import Providers from "@/components/Providers";
 import PageMotion from "@/components/PageMotion";
 import siteData from "@/data/site.json";
+import {
+  jsonLdProps,
+  personSchema,
+  profilePageSchema,
+  websiteSchema,
+} from "@/lib/structured-data";
 import { cn } from "@/lib/utils";
 import type { Metadata, Viewport } from "next";
 import {
@@ -166,6 +172,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* The site had no structured data at all, so nothing tied the domain
+            to the person, the affiliation or the profiles that already rank
+            for the name. */}
+        <script {...jsonLdProps(personSchema)} />
+        <script {...jsonLdProps(websiteSchema)} />
+        <script {...jsonLdProps(profilePageSchema)} />
+      </head>
       <body
         className={cn(
           "bg-background min-h-screen font-sans antialiased",

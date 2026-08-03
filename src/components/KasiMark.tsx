@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import { useId } from "react";
 
 type KasiMarkProps = {
   active?: boolean;
@@ -13,95 +12,62 @@ const sizeClasses = {
   lg: "size-11",
 };
 
+/**
+ * A survey station drawn the way a topographic sheet draws one: two contour
+ * rings closing on a levelled point, with the tick marks that fix it.
+ *
+ * The mark this replaces was a blue gradient speech bubble with an AI sparkle
+ * on it — the stock chatbot badge, in a blue the rest of the site does not
+ * use. This says the same thing the page says: someone who maps ground.
+ */
 export default function KasiMark({
   active = true,
   className,
   size = "md",
 }: KasiMarkProps) {
-  const gradientId = useId().replace(/:/g, "");
-
   return (
     <span
       aria-hidden
       data-active={active ? "true" : "false"}
       className={cn(
-        "relative grid shrink-0 place-items-center transition-transform duration-300",
+        "relative grid shrink-0 place-items-center transition-colors duration-300",
         sizeClasses[size],
-        active && "drop-shadow-[0_8px_12px_rgba(30,64,175,.22)]",
+        active
+          ? "text-[hsl(var(--accent-ink))]"
+          : "text-muted-foreground opacity-70",
         className,
       )}
     >
       <svg
         viewBox="0 0 48 48"
         fill="none"
-        className="size-[94%] overflow-visible"
+        className="size-full"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       >
-        <defs>
-          <linearGradient
-            id={gradientId}
-            x1="9"
-            y1="7"
-            x2="39"
-            y2="42"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="#1E3A8A" />
-            <stop offset=".53" stopColor="#2563EB" />
-            <stop offset="1" stopColor="#0F766E" />
-          </linearGradient>
-        </defs>
-
+        {/* Outer contour — deliberately not a circle, the way a real one is
+            never a circle. */}
         <path
-          d="M12.4 6.5h23.2c4.3 0 7.9 3.6 7.9 7.9v15.2c0 4.3-3.6 7.9-7.9 7.9H24.1l-8.8 5.1c-1.5.9-3.4-.2-3.3-2l.2-3.4a8 8 0 0 1-7.7-7.9V14.4c0-4.3 3.6-7.9 7.9-7.9Z"
-          fill={active ? `url(#${gradientId})` : undefined}
-          className={cn(
-            "transition-colors duration-300",
-            !active &&
-              "fill-slate-100 stroke-slate-400 dark:fill-zinc-800 dark:stroke-zinc-500",
-          )}
-          strokeWidth={active ? 0 : 1.25}
+          d="M24 5.4c7.1-.4 13.6 4.3 16.2 10.6 2.6 6.4 1.2 14.2-4 18.9-5.2 4.7-13.6 5.9-19.9 3.1C10 35.2 5.6 28.4 6.1 21.5 6.6 14.2 13 6.9 19.8 5.8c1.4-.25 2.8-.34 4.2-.4Z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          opacity="0.55"
         />
-
-        <g
-          stroke={active ? "rgba(255,255,255,.88)" : "currentColor"}
-          className={cn(
-            "transition-colors duration-300",
-            active ? "text-white" : "text-slate-600 dark:text-zinc-300",
-          )}
-          strokeWidth="1.65"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M15 27.2c2.1 0 2.7-2.2 4.7-2.2s2.5 2.2 4.7 2.2c2.1 0 2.7-2.2 4.7-2.2" />
-          <path d="M17.2 18.7h8.4" opacity=".72" />
-          <circle
-            cx="14.7"
-            cy="18.7"
-            r="1.55"
-            fill="currentColor"
-            stroke="none"
-          />
-          <circle
-            cx="31.4"
-            cy="25"
-            r="1.55"
-            fill="currentColor"
-            stroke="none"
-          />
-          <circle
-            cx="22.1"
-            cy="27.2"
-            r="1.55"
-            fill="currentColor"
-            stroke="none"
-          />
+        {/* Inner contour */}
+        <path
+          d="M24 13.2c4.2-.3 8.1 2.4 9.6 6.1 1.5 3.8.5 8.5-2.6 11.1-3.1 2.6-8.1 3.2-11.7 1.4-3.6-1.8-6-5.8-5.6-9.7.4-4 4-8.3 8-8.8.8-.1 1.5-.1 2.3-.1Z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          opacity="0.85"
+        />
+        {/* The levelled point, and the ticks that fix it. */}
+        <circle cx="24" cy="23" r="2.6" fill="currentColor" />
+        <g stroke="currentColor" strokeWidth="1.5" opacity="0.9">
+          <path d="M24 2.8v4.2" />
+          <path d="M24 39v4.2" />
+          <path d="M2.6 23h4.2" />
+          <path d="M41.2 23h4.2" />
         </g>
-
-        <path
-          d="M34.3 12.1c.45 2.2 1.8 3.55 4 4-2.2.45-3.55 1.8-4 4-.45-2.2-1.8-3.55-4-4 2.2-.45 3.55-1.8 4-4Z"
-          fill={active ? "#BAE6FD" : "currentColor"}
-          className={!active ? "text-slate-500 dark:text-zinc-400" : undefined}
-        />
       </svg>
     </span>
   );
