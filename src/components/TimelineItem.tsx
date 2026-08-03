@@ -48,7 +48,7 @@ export default function TimelineItem({ experience }: Props) {
                 <p className="text-muted-foreground min-w-0 text-sm leading-tight font-semibold">
                   {position.title}
                 </p>
-                <time className="text-muted-foreground/80 text-[11px] tabular-nums">
+                <time className="text-muted-foreground text-[11px] tabular-nums">
                   <span>{position.start}</span>
                   <span>{" - "}</span>
                   <span>{position.end ?? "Present"}</span>

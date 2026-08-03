@@ -1,12 +1,10 @@
 import {
-  Box,
   Compass,
   LoaderCircle,
   Map as MapIcon,
   Maximize2,
   Minimize2,
   Satellite,
-  Square,
   Waypoints,
 } from "lucide-react";
 
@@ -17,12 +15,10 @@ type MapControlsProps = {
   imagery: boolean;
   locateDisabled: boolean;
   locating: boolean;
-  threeD: boolean;
   onFullscreen: () => void;
   onLocate: () => void;
   onResetNorth: () => void;
   onToggleImagery: () => void;
-  onToggleThreeD: () => void;
 };
 
 const buttonClass =
@@ -35,12 +31,10 @@ export default function MapControls({
   imagery,
   locateDisabled,
   locating,
-  threeD,
   onFullscreen,
   onLocate,
   onResetNorth,
   onToggleImagery,
-  onToggleThreeD,
 }: MapControlsProps) {
   return (
     <div
@@ -70,9 +64,9 @@ export default function MapControls({
         className={buttonClass}
       >
         {locating ? (
-          <LoaderCircle className="size-4 animate-spin text-sky-700 dark:text-sky-300" />
+          <LoaderCircle className="size-4 animate-spin text-[#1f5457] dark:text-[#9adcd5]" />
         ) : (
-          <Waypoints className="size-4 text-sky-700 dark:text-sky-300" />
+          <Waypoints className="size-4 text-[#1f5457] dark:text-[#9adcd5]" />
         )}
       </button>
       <button
@@ -90,21 +84,6 @@ export default function MapControls({
           <MapIcon className="size-4" />
         ) : (
           <Satellite className="size-4" />
-        )}
-      </button>
-      <button
-        type="button"
-        title={threeD ? "Switch to flat view" : "Switch to 3D view"}
-        aria-label={threeD ? "Switch to flat view" : "Switch to 3D view"}
-        aria-pressed={threeD}
-        disabled={disabled}
-        onClick={onToggleThreeD}
-        className={buttonClass}
-      >
-        {threeD ? (
-          <Square className="size-4" />
-        ) : (
-          <Box className="size-4" />
         )}
       </button>
       <button

@@ -1,8 +1,0 @@
-Map and orbit credits
-
-OpenFreeMap: https://openfreemap.org/
-OpenMapTiles: https://openmaptiles.org/
-OpenStreetMap contributors: https://www.openstreetmap.org/copyright
-CelesTrak orbital elements: https://celestrak.org/
-MapLibre GL JS: https://maplibre.org/
-Satellite.js: https://github.com/shashwatak/satellite-js

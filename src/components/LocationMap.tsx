@@ -1,9 +1,6 @@
 "use client";
 
 import MapControls from "@/components/map/MapControls";
-import SatellitePopup from "@/components/map/SatellitePopup";
-import SatelliteScene from "@/components/map/SatelliteScene";
-import { createFallbackSatelliteFeed } from "@/data/satellite-fallback";
 import {
   distanceKm,
   formatDistance,
@@ -11,31 +8,18 @@ import {
 } from "@/lib/map/map-geometry";
 import {
   ensureResearchLayers,
-  updateSelectedOrbit,
   updateVisitorConnection,
 } from "@/lib/map/map-layers";
 import { createLocationMarkerElement } from "@/lib/map/map-markers";
 import {
   applyMapTheme,
   createMapStyle,
-  disableThreeDimensions,
-  enableThreeDimensions,
   setImageryVisible,
   type MapTheme,
 } from "@/lib/map/map-style";
-import {
-  createTrackedSatellites,
-  satelliteGroundTrack,
-  satelliteSnapshot,
-  type SatelliteTrack,
-} from "@/lib/map/satellite-orbits";
-import type {
-  SatelliteFeed,
-  SatelliteSnapshot,
-} from "@/lib/map/satellite-types";
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const AKASH_LOCATION: [longitude: number, latitude: number] = [
   77.900244, 29.862397,
@@ -78,21 +62,13 @@ export default function LocationMap() {
   const akashMarkerRef = useRef<Marker | null>(null);
   const visitorMarkerRef = useRef<Marker | null>(null);
   const visitorLocationRef = useRef<[number, number] | null>(null);
-  const orbitTrackRef = useRef<SatelliteTrack | null>(null);
-  const selectedSnapshotRef = useRef<SatelliteSnapshot | null>(null);
   const mapThemeRef = useRef<MapTheme>("light");
   const mapReadyRef = useRef(false);
 
   const [isClient, setIsClient] = useState(false);
-  const [mapInstance, setMapInstance] = useState<MapLibreMap | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
-  const [feed, setFeed] = useState<SatelliteFeed | null>(null);
-  const [snapshots, setSnapshots] = useState<SatelliteSnapshot[]>([]);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [bearing, setBearing] = useState(0);
-  const [pitch, setPitch] = useState(0);
-  const [threeD, setThreeD] = useState(false);
   const [imagery, setImagery] = useState(false);
   const [visitorLocation, setVisitorLocation] = useState<
     [number, number] | null
@@ -107,82 +83,16 @@ export default function LocationMap() {
   const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
   const { resolvedTheme } = useTheme();
 
-  const trackedSatellites = useMemo(
-    () => createTrackedSatellites(feed?.records ?? []),
-    [feed],
-  );
-  const selectedTracked = trackedSatellites.find(
-    (tracked) => Number(tracked.record.NORAD_CAT_ID) === selectedId,
-  );
-  const selectedSnapshot =
-    snapshots.find((snapshot) => snapshot.noradId === selectedId) ?? null;
   const visitorDistance = visitorLocation
     ? distanceKm(AKASH_LOCATION, visitorLocation)
     : null;
   const fullscreen = nativeFullscreen || pseudoFullscreen;
-  const showCoverage = pitch > 8 || Math.abs(bearing) > 4;
-  const showCoverageRef = useRef(showCoverage);
-
-  useEffect(() => {
-    showCoverageRef.current = showCoverage;
-  }, [showCoverage]);
 
   useEffect(() => setIsClient(true), []);
 
   useEffect(() => {
     visitorLocationRef.current = visitorLocation;
   }, [visitorLocation]);
-
-  useEffect(() => {
-    selectedSnapshotRef.current = selectedSnapshot;
-  }, [selectedSnapshot]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const loadSatellites = async () => {
-      try {
-        const response = await fetch("/api/map/satellites", {
-          signal: controller.signal,
-        });
-        if (!response.ok) {
-          throw new Error(`Satellite feed returned ${response.status}`);
-        }
-        const nextFeed = (await response.json()) as SatelliteFeed;
-        if (!Array.isArray(nextFeed.records) || !nextFeed.records.length) {
-          throw new Error("Satellite feed was empty");
-        }
-        setFeed(nextFeed);
-      } catch {
-        if (!controller.signal.aborted) setFeed(createFallbackSatelliteFeed());
-      }
-    };
-
-    void loadSatellites();
-    return () => controller.abort();
-  }, []);
-
-  useEffect(() => {
-    if (!trackedSatellites.length) return;
-
-    const update = () => {
-      if (document.visibilityState === "hidden") return;
-      const now = new Date();
-      setSnapshots(
-        trackedSatellites.flatMap((tracked) => {
-          const snapshot = satelliteSnapshot(tracked, now);
-          return snapshot ? [snapshot] : [];
-        }),
-      );
-    };
-
-    update();
-    const timer = window.setInterval(update, 1_000);
-    return () => window.clearInterval(timer);
-  }, [trackedSatellites]);
-
-  // No satellite is selected until the visitor clicks one, so the map stays
-  // clean and the detail panel is never open uninvited.
 
   useEffect(() => {
     if (!isClient || !mapContainerRef.current || mapRef.current) return;
@@ -207,9 +117,7 @@ export default function LocationMap() {
         zoom: 13.2,
         minZoom: 1,
         maxZoom: 22,
-        // Flat by default; the 3D control opts into pitch, terrain and buildings.
         pitch: 0,
-        maxPitch: 80,
         bearing: 0,
         dragPan: true,
         dragRotate: true,
@@ -235,24 +143,19 @@ export default function LocationMap() {
         window.clearTimeout(loadTimer);
         applyMapTheme(map, mapThemeRef.current);
         ensureResearchLayers(map, mapThemeRef.current);
-        setMapInstance(map);
         setMapLoaded(true);
         setMapUnavailable(false);
         document.documentElement.dataset.heroMapReady = "true";
         window.dispatchEvent(new Event("hero-map-ready"));
       };
-      const handleMove = () => {
-        setBearing(map.getBearing());
-        const nextPitch = map.getPitch();
-        setPitch(nextPitch);
-        // Tilting is the gesture that asks for the 3D scene, so honour it
-        // without making the visitor find the control first.
-        if (nextPitch > 15) setThreeD(true);
-      };
 
+      // MapLibre swallows style, source and glyph failures unless something
+      // listens, which is what made a blank map impossible to diagnose.
+      map.on("error", (event) => {
+        console.error("[map]", event.error?.message ?? event);
+      });
       map.on("load", handleLoad);
-      map.on("rotate", handleMove);
-      map.on("pitch", handleMove);
+      map.on("rotate", () => setBearing(map.getBearing()));
       loadTimer = window.setTimeout(() => {
         if (!mapReadyRef.current) setMapUnavailable(true);
       }, 8_000);
@@ -280,21 +183,6 @@ export default function LocationMap() {
     applyMapTheme(map, theme);
     ensureResearchLayers(map, theme);
   }, [mapLoaded, resolvedTheme]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded) return;
-
-    if (threeD) {
-      enableThreeDimensions(map, mapThemeRef.current);
-      if (map.getPitch() < 15) {
-        map.easeTo({ pitch: 62, duration: 700, essential: true });
-      }
-    } else {
-      disableThreeDimensions(map);
-      map.easeTo({ pitch: 0, bearing: 0, duration: 700, essential: true });
-    }
-  }, [mapLoaded, threeD]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -378,38 +266,6 @@ export default function LocationMap() {
       map.off("move", updateLabelPosition);
     };
   }, [mapLoaded, visitorLocation, resolvedTheme]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded) return;
-    ensureResearchLayers(map, mapThemeRef.current);
-
-    const updateTrack = () => {
-      orbitTrackRef.current = selectedTracked
-        ? satelliteGroundTrack(selectedTracked, new Date())
-        : null;
-      updateSelectedOrbit(
-        map,
-        orbitTrackRef.current,
-        selectedSnapshotRef.current,
-        showCoverageRef.current,
-      );
-    };
-    updateTrack();
-    const timer = window.setInterval(updateTrack, 15_000);
-    return () => window.clearInterval(timer);
-  }, [mapLoaded, selectedTracked, selectedId, resolvedTheme]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded) return;
-    updateSelectedOrbit(
-      map,
-      orbitTrackRef.current,
-      selectedSnapshot,
-      showCoverage,
-    );
-  }, [mapLoaded, selectedSnapshot, showCoverage]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -497,13 +353,9 @@ export default function LocationMap() {
     setPseudoFullscreen(true);
   };
 
-  const selectSatellite = useCallback((noradId: number) => {
-    setSelectedId(noradId);
-  }, []);
-
   if (!isClient) {
     return (
-      <div className="h-64 animate-pulse overflow-hidden rounded-t-md bg-[#dce5e2] dark:bg-[#172127]" />
+      <div className="h-72 animate-pulse overflow-hidden rounded-md bg-[#f1ede2] sm:h-[26rem] dark:bg-[#1b2429]" />
     );
   }
 
@@ -511,8 +363,8 @@ export default function LocationMap() {
     <div
       ref={rootRef}
       className={[
-        "group relative isolate overflow-hidden bg-[#dce5e2] dark:bg-[#172127]",
-        fullscreen ? "h-screen rounded-none" : "h-64 rounded-t-md",
+        "group relative isolate overflow-hidden bg-[#f1ede2] dark:bg-[#1b2429]",
+        fullscreen ? "h-screen rounded-none" : "h-72 rounded-md sm:h-[26rem]",
         pseudoFullscreen ? "fixed inset-3 z-[100] h-auto rounded-md" : "",
       ].join(" ")}
     >
@@ -522,15 +374,6 @@ export default function LocationMap() {
         style={{ position: "absolute" }}
       />
 
-      {mapInstance && snapshots.length > 0 && (
-        <SatelliteScene
-          map={mapInstance}
-          snapshots={snapshots}
-          selectedId={selectedId}
-          onSelect={selectSatellite}
-        />
-      )}
-
       <MapControls
         bearing={bearing}
         disabled={!mapLoaded}
@@ -539,16 +382,13 @@ export default function LocationMap() {
           typeof navigator !== "undefined" && !("geolocation" in navigator)
         }
         locating={locating}
-        threeD={threeD}
         imagery={imagery}
         onFullscreen={() => void toggleFullscreen()}
         onLocate={locateVisitor}
         onToggleImagery={() => setImagery((current) => !current)}
-        onToggleThreeD={() => setThreeD((current) => !current)}
         onResetNorth={() =>
           mapRef.current?.easeTo({
             bearing: 0,
-            pitch: threeD ? 62 : 0,
             duration: 420,
             essential: true,
           })
@@ -595,26 +435,8 @@ export default function LocationMap() {
           role="status"
           className="bg-background/92 text-muted-foreground absolute inset-0 z-20 flex items-center justify-center px-6 text-center text-sm backdrop-blur-sm"
         >
-          Satellite imagery is temporarily unavailable. Orbital data will retry
-          automatically.
+          The map is temporarily unavailable. It will retry automatically.
         </div>
-      )}
-
-      {feed && selectedTracked && selectedSnapshot && (
-        <SatellitePopup
-          feed={feed}
-          record={selectedTracked.record}
-          snapshot={selectedSnapshot}
-          onCenter={() =>
-            mapRef.current?.easeTo({
-              center: [selectedSnapshot.longitude, selectedSnapshot.latitude],
-            zoom: Math.max(mapRef.current.getZoom(), 6),
-              duration: 850,
-              essential: true,
-            })
-          }
-          onClose={() => setSelectedId(null)}
-        />
       )}
     </div>
   );
