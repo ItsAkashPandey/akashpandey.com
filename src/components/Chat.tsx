@@ -115,7 +115,7 @@ export default function Chat() {
         <AccordionItem
           ref={chatRootRef}
           value="item-1"
-          className={`kasi-glass fixed right-4 bottom-[4.75rem] overflow-hidden border transition-all duration-300 ease-out sm:right-8 sm:bottom-8 ${
+          className={`kasi-glass fixed right-4 bottom-[4.75rem] overflow-hidden border transition-[width,border-radius] duration-300 ease-out sm:right-8 sm:bottom-8 ${
             isExpanded
               ? "left-4 w-auto rounded-md sm:left-auto sm:w-[420px]"
               : "block w-[52px] rounded-md sm:w-[172px]"
