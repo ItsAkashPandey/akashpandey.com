@@ -4,15 +4,16 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbo -H 0.0.0.0 -p 3001",
+    "dev": "node scripts/dev.mjs",
     "build": "next build",
-    "start": "next start -p 3001",
+    "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write .",
     "generate-profile": "ts-node scripts/generate-profile.ts",
     "extract": "ts-node scripts/extract-content.ts",
     "colorize-skills": "node scripts/colorize-skill-icons.mjs",
-    "push": "ts-node scripts/push-content.ts"
+    "push": "ts-node scripts/push-content.ts",
+    "dev:lan": "node scripts/dev.mjs --lan"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.63",
