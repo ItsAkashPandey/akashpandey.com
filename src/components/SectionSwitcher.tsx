@@ -14,11 +14,16 @@ export const sectionSwitcherListClass =
 export const sectionSwitcherTriggerClass =
   "group relative flex h-auto min-w-0 items-center justify-start gap-2 rounded-none border-0 bg-transparent px-1 pt-2 pb-3 text-left text-sm shadow-none transition-colors sm:gap-3 sm:px-2 after:absolute after:inset-x-0 after:-bottom-px after:h-[2px] after:origin-left after:scale-x-0 after:bg-[hsl(var(--accent-ink))] after:transition-transform after:duration-200 data-[state=active]:after:scale-x-100 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground";
 
+/**
+ * Ink only. A pastel rounded square behind a line icon is the most generic
+ * thing an interface can do, and it was on every switcher, filter and card on
+ * the site. The colour coding survives — it just lives in the stroke now.
+ */
 const toneClasses = {
-  sky: "bg-sky-500/11 text-sky-700 dark:text-sky-300",
-  emerald: "bg-emerald-500/11 text-emerald-700 dark:text-emerald-300",
-  rose: "bg-rose-500/11 text-rose-700 dark:text-rose-300",
-  ocean: "bg-cyan-500/11 text-cyan-800 dark:text-cyan-300",
+  sky: "text-sky-700 dark:text-sky-300",
+  emerald: "text-emerald-700 dark:text-emerald-300",
+  rose: "text-rose-700 dark:text-rose-300",
+  ocean: "text-cyan-800 dark:text-cyan-300",
 };
 
 export function SectionSwitcherVisual({
@@ -38,11 +43,11 @@ export function SectionSwitcherVisual({
     <>
       <span
         className={cn(
-          "grid size-7 shrink-0 place-items-center rounded-full transition-opacity group-data-[state=inactive]:opacity-55 sm:size-8",
+          "grid shrink-0 place-items-center transition-opacity group-data-[state=inactive]:opacity-45",
           toneClasses[tone],
         )}
       >
-        <Icon className="size-3.5 sm:size-4" strokeWidth={1.8} />
+        <Icon className="size-[1.15rem] sm:size-5" strokeWidth={1.45} />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex min-w-0 items-center gap-2">
