@@ -2,11 +2,19 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import Providers from "@/components/Providers";
 import PageMotion from "@/components/PageMotion";
-import ResearchEdges from "@/components/ResearchEdges";
 import siteData from "@/data/site.json";
 import { cn } from "@/lib/utils";
 import type { Metadata, Viewport } from "next";
-import { Calistoga, Inter } from "next/font/google";
+import {
+  Calistoga,
+  Inter,
+  Noto_Sans_Arabic,
+  Noto_Sans_Bengali,
+  Noto_Sans_Devanagari,
+  Noto_Sans_Gurmukhi,
+  Noto_Sans_Hebrew,
+  Noto_Sans_Tamil,
+} from "next/font/google";
 import "yet-another-react-lightbox/styles.css";
 import "./globals.css";
 
@@ -20,6 +28,58 @@ const calistoga = Calistoga({
   variable: "--font-serif",
   weight: ["400"],
 });
+
+/**
+ * The intro greets in each language's own script. Inter carries none of these,
+ * and the system fonts that do (Nirmala UI, Kohinoor, Noto) are per-platform
+ * gambles — on a machine without them the greeting renders as empty boxes.
+ * Only Devanagari is preloaded: it is the greeting the loader holds on.
+ * CJK is left to the system, since those families are tens of megabytes.
+ */
+const notoDevanagari = Noto_Sans_Devanagari({
+  subsets: ["devanagari"],
+  weight: ["500", "600"],
+  variable: "--font-devanagari",
+});
+const notoBengali = Noto_Sans_Bengali({
+  subsets: ["bengali"],
+  weight: ["500", "600"],
+  variable: "--font-bengali",
+  preload: false,
+});
+const notoTamil = Noto_Sans_Tamil({
+  subsets: ["tamil"],
+  weight: ["500", "600"],
+  variable: "--font-tamil",
+  preload: false,
+});
+const notoGurmukhi = Noto_Sans_Gurmukhi({
+  subsets: ["gurmukhi"],
+  weight: ["500", "600"],
+  variable: "--font-gurmukhi",
+  preload: false,
+});
+const notoArabic = Noto_Sans_Arabic({
+  subsets: ["arabic"],
+  weight: ["500", "600"],
+  variable: "--font-arabic",
+  preload: false,
+});
+const notoHebrew = Noto_Sans_Hebrew({
+  subsets: ["hebrew"],
+  weight: ["500", "600"],
+  variable: "--font-hebrew",
+  preload: false,
+});
+
+const scriptFontVariables = [
+  notoDevanagari.variable,
+  notoBengali.variable,
+  notoTamil.variable,
+  notoGurmukhi.variable,
+  notoArabic.variable,
+  notoHebrew.variable,
+];
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteData.url),
@@ -111,12 +171,12 @@ export default function RootLayout({
           "bg-background min-h-screen font-sans antialiased",
           inter.variable,
           calistoga.variable,
+          ...scriptFontVariables,
         )}
         suppressHydrationWarning
       >
         <Providers>
           <PageMotion />
-          <ResearchEdges />
           <Header />
           <div className="site-shell relative z-10 flex flex-col">
             <main className="grow">{children}</main>

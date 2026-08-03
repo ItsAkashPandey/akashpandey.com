@@ -15,12 +15,6 @@ import LazySection from "@/components/LazySection";
 import SkillLogoTile from "@/components/SkillLogoTile";
 import SectionHeading from "@/components/SectionHeading";
 
-const LocationMap = dynamic(() => import("@/components/LocationMap"), {
-  loading: () => (
-    <div className="bg-muted/55 h-64 w-full animate-pulse rounded-t-md" />
-  ),
-});
-
 const SwipeCards = dynamic(() => import("@/components/SwipeCards"), {
   loading: () => (
     <div className="bg-muted/55 h-[233px] w-[175px] animate-pulse rounded-lg" />
@@ -85,11 +79,7 @@ export default function Home() {
   return (
     <article className="mx-auto -mt-2 flex w-full max-w-6xl flex-col gap-10 pb-16 sm:gap-12">
       <section className="record-surface relative flex flex-col gap-1 overflow-hidden rounded-lg p-3 sm:p-5">
-        <div className="hero-map-frame">
-          <LocationMap />
-        </div>
-
-        <div className="mt-6 flex flex-col gap-6 px-2 pb-2 sm:mt-[22px] sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-10 sm:px-4 sm:pb-4">
+        <div className="flex flex-col gap-6 px-2 py-2 sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-10 sm:px-4 sm:py-4">
           <SwipeCards className="mx-auto shrink-0 sm:mx-0" />
 
           <div className="flex min-w-0 flex-1 flex-col items-center text-center sm:max-w-3xl sm:items-start sm:text-left">
@@ -100,11 +90,14 @@ export default function Home() {
               </span>
             </h1>
 
-            <p className="mt-2 text-sm font-medium sm:text-base">
+            {/* Title, then one line at lede size, then the detail. The two
+                lines used to be the same size, which left a cliff from the
+                display type straight down to body copy. */}
+            <p className="mt-3 max-w-xl text-lg leading-snug font-medium text-balance sm:text-xl">
               I work in the geospatial domain.
             </p>
 
-            <p className="mx-auto mt-4 max-w-2xl text-sm text-balance sm:mx-0 sm:text-base">
+            <p className="text-muted-foreground mx-auto mt-3 max-w-2xl text-sm text-balance sm:mx-0 sm:text-base">
               focused on vegetation phenology using PhenoCam, UAV and Satellite
               data.
             </p>
@@ -264,7 +257,7 @@ export default function Home() {
                       href={pub.doi}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-primary hover:text-primary/80 inline-flex w-fit items-center gap-2 text-sm font-medium transition-colors"
+                      className="link-ink inline-flex w-fit items-center gap-2 text-sm font-medium underline-offset-4 transition-colors hover:underline"
                     >
                       <span>View Publication</span>
                       <ExternalLink className="size-3.5" />

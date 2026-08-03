@@ -3,7 +3,7 @@ import { test, expect, devices } from '@playwright/test';
 test.use(devices['iPhone 12']);
 
 test('mobile layouts apply correctly', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('http://localhost:3001');
 
     // Basic screenshot captures to debug visual regressions
     await page.screenshot({ path: 'mobile_intro.png', clip: { x: 0, y: 0, width: 390, height: 400 } });

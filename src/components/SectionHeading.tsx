@@ -11,8 +11,8 @@ export default function SectionHeading({
 }) {
   return (
     <div className="section-heading">
-      <div className="flex min-w-0 items-center gap-3">
-        <h2 className="title text-2xl sm:text-3xl">{title}</h2>
+      <div className="flex min-w-0 items-baseline gap-3">
+        <h2 className="section-title">{title}</h2>
         {detail}
       </div>
       {action}

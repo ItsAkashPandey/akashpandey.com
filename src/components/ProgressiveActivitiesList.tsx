@@ -508,7 +508,7 @@ export default function ProgressiveActivitiesList({
           ) : filteredActivities.length > 0 ? (
             <div className="flex flex-col items-center gap-3 py-8">
               <div className="from-primary/20 h-12 w-px bg-gradient-to-b to-transparent" />
-              <p className="text-muted-foreground/60 text-xs font-medium tracking-widest uppercase">
+              <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase">
                 You&apos;ve reached the beginning
               </p>
             </div>

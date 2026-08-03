@@ -22,48 +22,46 @@ const TEXT_FONT = ["Noto Sans Regular"];
 const TEXT_FONT_STRONG = ["Noto Sans Bold"];
 
 /**
- * Two instruments, one chassis. Dark is the operations console: near-black
- * ground, desaturated structure, and a single cyan carrying every live signal.
- * Light is the printed sheet the same data gets read from at a desk.
+ * Two instruments, one chassis. Light is paper on a desk — warm stock, muted
+ * ink, water like a pale wash. Dark is the same plate under a lamp: the ink
+ * inverts, the hierarchy does not. Plain single-line roads and sentence-case
+ * labels throughout — the plainer read wears better than a stylised one.
  */
 const palette = {
   dark: {
-    // Land is lifted off the ocean far enough that coastlines read at globe
-    // zoom, where these two were previously within a few points of each other
-    // and the whole planet rendered as one black disc.
-    ground: "#182126",
-    water: "#060b0f",
-    green: "#1b2723",
-    builtUp: "#141b20",
-    building: "#1c262d",
-    buildingTop: "#26333c",
-    roadMinor: "#1d262c",
-    roadMajor: "#2a3841",
-    roadTrunk: "#3a4c58",
-    boundary: "#31424c",
+    ground: "#1b2429",
+    water: "#0a1319",
+    green: "#1e2b26",
+    builtUp: "#212b31",
+    building: "#28333a",
+    buildingTop: "#33424b",
+    roadMinor: "#2b363d",
+    roadMajor: "#3a4952",
+    roadTrunk: "#5d5138",
+    boundary: "#3c4c55",
     label: "#93a7b3",
-    labelHalo: "#070c0f",
+    labelHalo: "#0a1114",
     placeLabel: "#c6d5de",
-    // Imagery is now a deliberate choice, so it is shown close to true tone
-    // rather than dimmed to sit under the dark vector paint.
+    // Imagery is a deliberate choice, so it is shown close to true tone rather
+    // than dimmed to sit under the dark vector paint.
     imageryOpacity: 1,
     imagerySaturation: -0.12,
     imageryBrightnessMax: 0.94,
   },
   light: {
-    ground: "#eaece6",
-    water: "#b9cbd5",
-    green: "#dde5d8",
-    builtUp: "#e5e6e1",
-    building: "#d8dcd8",
-    buildingTop: "#e6eae6",
-    roadMinor: "#f6f7f4",
+    ground: "#f1ede2",
+    water: "#c6d7dd",
+    green: "#e1e7d4",
+    builtUp: "#e9e3d5",
+    building: "#ded8c9",
+    buildingTop: "#efeade",
+    roadMinor: "#fdfcf8",
     roadMajor: "#ffffff",
-    roadTrunk: "#fdf6e4",
-    boundary: "#b3bdc2",
-    label: "#5b6a72",
-    labelHalo: "#f3f5f1",
-    placeLabel: "#2c3940",
+    roadTrunk: "#f2dfae",
+    boundary: "#b3bdac",
+    label: "#5b6a5e",
+    labelHalo: "#f4f1e8",
+    placeLabel: "#2c3930",
     imageryOpacity: 1,
     imagerySaturation: -0.06,
     imageryBrightnessMax: 1,
@@ -75,7 +73,7 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
 
   return {
     version: 8,
-    name: "Research console",
+    name: "Paper map",
     glyphs: GLYPHS,
     // A globe until the visitor drops toward street level, where MapLibre
     // hands over to mercator on its own.
@@ -326,7 +324,6 @@ export function applyMapTheme(map: MapLibreMap, theme: MapTheme) {
   set("imagery", "raster-opacity", c.imageryOpacity);
   set("imagery", "raster-saturation", c.imagerySaturation);
   set("imagery", "raster-brightness-max", c.imageryBrightnessMax);
-  set("buildings-3d", "fill-extrusion-color", c.building);
 }
 
 /** Opaque vector paint that would otherwise bury the imagery underneath it. */
@@ -355,66 +352,5 @@ export function setImageryVisible(map: MapLibreMap, visible: boolean) {
     if (map.getLayer(layer)) {
       map.setPaintProperty(layer, "line-opacity", visible ? 0.28 : 1);
     }
-  }
-}
-
-/**
- * Extruded footprints with a vertical gradient and a height-driven tint, so a
- * dense block reads as massing rather than a field of white boxes.
- */
-export function enableThreeDimensions(map: MapLibreMap, theme: MapTheme) {
-  if (!map.isStyleLoaded()) return;
-  const c = palette[theme];
-
-  if (!map.getLayer("buildings-3d")) {
-    map.addLayer({
-      id: "buildings-3d",
-      type: "fill-extrusion",
-      source: "basemap",
-      "source-layer": "building",
-      minzoom: 14,
-      paint: {
-        "fill-extrusion-color": [
-          "interpolate",
-          ["linear"],
-          ["coalesce", ["get", "render_height"], 6],
-          0,
-          c.building,
-          40,
-          c.buildingTop,
-          140,
-          c.roadTrunk,
-        ],
-        "fill-extrusion-height": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          14,
-          0,
-          15.5,
-          ["coalesce", ["get", "render_height"], 6],
-        ],
-        "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
-        "fill-extrusion-opacity": 0.94,
-        "fill-extrusion-vertical-gradient": true,
-      },
-    });
-  }
-
-  if (map.getLayer("building")) {
-    map.setLayoutProperty("building", "visibility", "none");
-  }
-}
-
-export function disableThreeDimensions(map: MapLibreMap) {
-  if (!map.isStyleLoaded()) return;
-  if (map.getLayer("buildings-3d")) map.removeLayer("buildings-3d");
-
-  // Only hand the flat footprints back if imagery is not the active base.
-  const imageryOn =
-    map.getLayer("imagery") &&
-    map.getLayoutProperty("imagery", "visibility") === "visible";
-  if (map.getLayer("building") && !imageryOn) {
-    map.setLayoutProperty("building", "visibility", "visible");
   }
 }
