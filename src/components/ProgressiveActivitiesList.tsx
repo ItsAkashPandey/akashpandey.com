@@ -58,24 +58,24 @@ const activityTypeStyles = {
   all: {
     label: "All activities",
     Icon: Layers2,
-    soft: "bg-slate-500/10 text-slate-700 dark:text-slate-300",
+    ink: "text-slate-700 dark:text-slate-300",
   },
   academics: {
     label: "Academics",
     Icon: GraduationCap,
-    soft: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+    ink: "text-emerald-700 dark:text-emerald-300",
   },
   startups: {
     label: "Startups",
     Icon: Rocket,
-    soft: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+    ink: "text-sky-700 dark:text-sky-300",
   },
 } satisfies Record<
   ActivityTypeFilter,
   {
     label: string;
     Icon: typeof Layers2;
-    soft: string;
+    ink: string;
   }
 >;
 
@@ -386,11 +386,11 @@ export default function ProgressiveActivitiesList({
                     >
                       <span
                         className={cn(
-                          "flex size-8 shrink-0 items-center justify-center rounded-md",
-                          config.soft,
+                          "flex size-8 shrink-0 items-center justify-center",
+                          config.ink,
                         )}
                       >
-                        <Icon className="size-4" />
+                        <Icon className="size-[1.15rem]" strokeWidth={1.5} />
                       </span>
                       <span className="hidden min-w-0 lg:block">
                         <span className="block truncate text-xs font-semibold">
