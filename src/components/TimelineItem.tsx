@@ -13,8 +13,8 @@ export default function TimelineItem({ experience }: Props) {
   const logoArray = logos || (logo ? [logo] : []);
 
   return (
-    <li className="relative ml-4 py-3 sm:ml-5 sm:py-3.5">
-      <div className="absolute top-3 -left-[2.35rem] flex flex-col sm:-left-[2.7rem]">
+    <li className="timeline-entry relative ml-4 py-5 sm:ml-5 sm:py-6">
+      <div className="absolute top-5 -left-[2.35rem] flex flex-col sm:top-6 sm:-left-[2.7rem]">
         {logoArray.map((logoSrc, idx) => {
           return (
             <Link
@@ -22,7 +22,7 @@ export default function TimelineItem({ experience }: Props) {
               href={href}
               target="_blank"
               rel="noreferrer"
-              className="flex size-9 items-center justify-center overflow-hidden rounded-full transition-transform duration-200 hover:scale-[1.04] sm:size-10"
+              className="timeline-mark flex size-9 items-center justify-center overflow-hidden rounded-full transition-transform duration-200 hover:scale-[1.04] sm:size-10"
             >
               <Image
                 src={logoSrc}

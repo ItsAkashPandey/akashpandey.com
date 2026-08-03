@@ -576,7 +576,11 @@ function PublicationCard({
         </div>
 
         {hasMedia && publication.media && (
-          <div className="border-border/55 min-w-0 border-t pt-4 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-4">
+          // In one column this is the last grid cell, which stranded the figure
+          // at the very bottom of the card, a full screen below the paper it
+          // belongs to. Below the three-column breakpoint it moves up under the
+          // title instead, where a figure belongs.
+          <div className="border-border/55 order-first flex min-w-0 justify-center border-b pb-4 lg:order-none lg:block lg:border-t-0 lg:border-b-0 lg:border-l lg:pt-0 lg:pl-4">
             <PublicationMediaPreview media={publication.media} />
           </div>
         )}

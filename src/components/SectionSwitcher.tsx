@@ -1,11 +1,18 @@
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
+/**
+ * A bordered box holding bordered buttons drew two hard rectangles around the
+ * same control. One hairline runs under the whole rail instead, and the active
+ * tab claims a segment of it in the accent ink — the same rule the section
+ * headings use, so the switcher reads as part of the page rather than as a
+ * widget dropped onto it.
+ */
 export const sectionSwitcherListClass =
-  "border-border/65 bg-card/58 grid h-auto w-full grid-cols-2 gap-1 rounded-md border p-1 shadow-sm";
+  "border-border/60 grid h-auto w-full grid-cols-2 gap-0 rounded-none border-0 border-b bg-transparent p-0 shadow-none";
 
 export const sectionSwitcherTriggerClass =
-  "group relative flex h-auto min-w-0 items-center justify-start gap-2 rounded-sm border border-transparent bg-transparent px-2 py-2 text-left text-sm shadow-none transition-colors sm:gap-2.5 sm:px-3 data-[state=active]:border-border/70 data-[state=active]:bg-background/82 data-[state=active]:text-foreground data-[state=active]:shadow-sm";
+  "group relative flex h-auto min-w-0 items-center justify-start gap-2 rounded-none border-0 bg-transparent px-1 pt-2 pb-3 text-left text-sm shadow-none transition-colors sm:gap-3 sm:px-2 after:absolute after:inset-x-0 after:-bottom-px after:h-[2px] after:origin-left after:scale-x-0 after:bg-[hsl(var(--accent-ink))] after:transition-transform after:duration-200 data-[state=active]:after:scale-x-100 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground";
 
 const toneClasses = {
   sky: "bg-sky-500/11 text-sky-700 dark:text-sky-300",
@@ -31,7 +38,7 @@ export function SectionSwitcherVisual({
     <>
       <span
         className={cn(
-          "grid size-7 shrink-0 place-items-center rounded-sm sm:size-8",
+          "grid size-7 shrink-0 place-items-center rounded-full transition-opacity group-data-[state=inactive]:opacity-55 sm:size-8",
           toneClasses[tone],
         )}
       >

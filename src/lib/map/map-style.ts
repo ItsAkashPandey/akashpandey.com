@@ -33,8 +33,6 @@ const palette = {
     water: "#0a1319",
     green: "#1e2b26",
     builtUp: "#212b31",
-    building: "#28333a",
-    buildingTop: "#33424b",
     roadMinor: "#2b363d",
     roadMajor: "#3a4952",
     roadTrunk: "#5d5138",
@@ -53,8 +51,6 @@ const palette = {
     water: "#c6d7dd",
     green: "#e1e7d4",
     builtUp: "#e9e3d5",
-    building: "#ded8c9",
-    buildingTop: "#efeade",
     roadMinor: "#fdfcf8",
     roadMajor: "#ffffff",
     roadTrunk: "#f2dfae",
@@ -153,18 +149,6 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         paint: {
           "line-color": c.water,
           "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.6, 16, 3],
-        },
-      },
-      {
-        id: "building",
-        type: "fill",
-        source: "basemap",
-        "source-layer": "building",
-        minzoom: 13,
-        paint: {
-          "fill-color": c.building,
-          "fill-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 15, 0.9],
-          "fill-outline-color": c.buildingTop,
         },
       },
       {
@@ -311,8 +295,6 @@ export function applyMapTheme(map: MapLibreMap, theme: MapTheme) {
   set("waterway", "line-color", c.water);
   set("landcover-green", "fill-color", c.green);
   set("landuse-builtup", "fill-color", c.builtUp);
-  set("building", "fill-color", c.building);
-  set("building", "fill-outline-color", c.buildingTop);
   set("road-minor", "line-color", c.roadMinor);
   set("road-major", "line-color", c.roadMajor);
   set("road-trunk", "line-color", c.roadTrunk);
@@ -332,7 +314,6 @@ const GROUND_COVER_LAYERS = [
   "landuse-builtup",
   "water",
   "waterway",
-  "building",
 ];
 
 export function setImageryVisible(map: MapLibreMap, visible: boolean) {

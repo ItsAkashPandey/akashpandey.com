@@ -115,14 +115,14 @@ export default function Chat() {
         <AccordionItem
           ref={chatRootRef}
           value="item-1"
-          className={`fixed right-4 bottom-[4.75rem] overflow-hidden border border-white/60 bg-white/72 shadow-[0_24px_70px_rgba(15,23,42,0.16)] backdrop-blur-3xl transition-all duration-300 ease-out sm:right-8 sm:bottom-8 dark:border-white/10 dark:bg-zinc-900/88 dark:shadow-[0_24px_80px_rgba(0,0,0,0.36)] ${
+          className={`kasi-glass fixed right-4 bottom-[4.75rem] overflow-hidden border transition-all duration-300 ease-out sm:right-8 sm:bottom-8 ${
             isExpanded
               ? "left-4 w-auto rounded-md sm:left-auto sm:w-[420px]"
               : "block w-[52px] rounded-md sm:w-[172px]"
           }`}
         >
           <AccordionTrigger
-            className={`border-white/20 transition-colors hover:bg-white/24 hover:no-underline dark:border-white/10 dark:hover:bg-white/5 [&>svg:last-child]:hidden ${
+            className={`kasi-divider transition-colors hover:no-underline [&>svg:last-child]:hidden ${
               isExpanded
                 ? "border-b px-5 py-3.5"
                 : "h-[52px] px-2 py-2 sm:h-[64px] sm:px-3"
