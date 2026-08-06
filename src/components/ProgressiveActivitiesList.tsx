@@ -5,18 +5,20 @@ import {
   createSearchDocument,
   normalizeSearchText,
   scoreSearchDocument,
-} from "@/lib/search";
+  } from "@/lib/search";
 import { cn } from "@/lib/utils";
 import {
   ArrowUpDown,
   CalendarDays,
-  GraduationCap,
-  Layers2,
   RotateCcw,
-  Rocket,
   Search,
   SlidersHorizontal,
 } from "lucide-react";
+import {
+  LegendIcon,
+  PlateIcon,
+  ShootIcon,
+} from "./icons/FieldIcons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import LazyActivity from "./LazyActivity";
 import TimelineBar from "./TimelineBar";
@@ -57,24 +59,24 @@ const STARTUP_KEYWORDS = [
 const activityTypeStyles = {
   all: {
     label: "All activities",
-    Icon: Layers2,
+    Icon: LegendIcon,
     ink: "text-slate-700 dark:text-slate-300",
   },
   academics: {
     label: "Academics",
-    Icon: GraduationCap,
+    Icon: PlateIcon,
     ink: "text-emerald-700 dark:text-emerald-300",
   },
   startups: {
     label: "Startups",
-    Icon: Rocket,
+    Icon: ShootIcon,
     ink: "text-sky-700 dark:text-sky-300",
   },
 } satisfies Record<
   ActivityTypeFilter,
   {
     label: string;
-    Icon: typeof Layers2;
+    Icon: typeof LegendIcon;
     ink: string;
   }
 >;

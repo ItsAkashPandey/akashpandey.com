@@ -30,13 +30,28 @@ const greetings: { text: string; rtl?: boolean }[] = [
   { text: "नमस्ते" },
 ];
 
-// Slower than a flicker and long enough to overlap, so one greeting dissolves
-// into the next instead of blinking out before the next blinks in.
-const GREETING_STEP_MS = 88;
-const GREETING_SPAN_MS = 240;
-const FINAL_GREETING_DELAY_MS = (greetings.length - 1) * GREETING_STEP_MS;
-const FINAL_GREETING_HOLD_MS = 940;
-const SEQUENCE_MS = FINAL_GREETING_DELAY_MS + FINAL_GREETING_HOLD_MS;
+// Two different words fading through each other at the same spot overprint at
+// the halfway mark no matter how the easing is tuned — both are legible at 50%
+// and the frame reads as one garbled word. The greetings roll through a clipped
+// slot instead, so only one is ever in view and they cannot share pixels.
+/** Line box for one greeting, shared by the slot, the lines and the roll. */
+const LINE_EM = 1.45;
+const GREETING_STEP_MS = 125;
+const ROLL_MS = (greetings.length - 1) * GREETING_STEP_MS;
+const FINAL_GREETING_HOLD_MS = 900;
+const SEQUENCE_MS = ROLL_MS + FINAL_GREETING_HOLD_MS;
+
+/** Hold each greeting still, then flick to the next in the last third of its step. */
+const rollKeyframes = greetings
+  .map((_, index) => {
+    const span = 100 / (greetings.length - 1);
+    const start = index * span;
+    const hold = index === greetings.length - 1 ? 100 : start + span * 0.66;
+    // In `em`, not `%`: a percentage on the track resolves against the whole
+    // stack of greetings, so one step would scroll past all of them at once.
+    return `${start.toFixed(3)}%,${hold.toFixed(3)}% { transform: translate3d(0, -${(index * LINE_EM).toFixed(2)}em, 0); }`;
+  })
+  .join("\n          ");
 /** How long to wait on a slow connection before starting without the photo. */
 const PHOTO_GRACE_MS = 900;
 
@@ -111,7 +126,7 @@ export default function IntroLoader() {
           opacity: 0;
           transform: scale(1.05);
           transition:
-            opacity 900ms cubic-bezier(.22,.8,.24,1),
+            opacity 420ms cubic-bezier(.4,0,.2,1),
             transform 4200ms cubic-bezier(.16,.7,.24,1);
           filter: brightness(0.86) contrast(1.05) saturate(0.94);
         }
@@ -125,10 +140,10 @@ export default function IntroLoader() {
         .intro-loader__ink {
           background: linear-gradient(
             180deg,
-            rgba(18,14,11,.20) 0%,
-            rgba(18,14,11,.12) 34%,
-            rgba(18,14,11,.26) 70%,
-            rgba(18,14,11,.50) 100%
+            rgba(18,14,11,.26) 0%,
+            rgba(18,14,11,.24) 38%,
+            rgba(18,14,11,.32) 72%,
+            rgba(18,14,11,.52) 100%
           );
         }
         .intro-loader__grain {
@@ -137,20 +152,23 @@ export default function IntroLoader() {
           opacity: 0.5;
           mix-blend-mode: multiply;
         }
-        .intro-loader__word, .intro-loader__final {
-          position: absolute;
+        .intro-loader__slot {
+          overflow: hidden;
+          height: ${LINE_EM}em;
+          width: 100%;
+          mask-image: linear-gradient(180deg, transparent, black 18%, black 82%, transparent);
+        }
+        .intro-loader__track {
+          animation: introRoll ${ROLL_MS}ms cubic-bezier(.62,0,.2,1) forwards;
+          will-change: transform;
+        }
+        .intro-loader__line {
           display: flex;
           align-items: center;
           justify-content: center;
-          min-height: 2.45em;
-          opacity: 0;
+          height: ${LINE_EM}em;
           white-space: nowrap;
-          line-height: 1.18;
-          padding: .34em .26em .48em;
-          overflow: visible;
-          text-shadow:
-            0 1px 3px rgba(0,0,0,.55),
-            0 3px 18px rgba(0,0,0,.45);
+          line-height: 1;
           /* The site's own display serif leads, so the first thing a visitor
              sees is the face the page titles are set in. The browser walks the
              list per character, so the scripts Calistoga does not cover fall
@@ -162,31 +180,12 @@ export default function IntroLoader() {
             "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Noto Sans KR",
             "Malgun Gothic", "Nirmala UI", serif;
           letter-spacing: -0.015em;
-          will-change: opacity, transform, filter;
-        }
-        .intro-loader__word {
-          animation: introWord ${GREETING_SPAN_MS}ms cubic-bezier(.33,0,.2,1) both;
-        }
-        .intro-loader__final {
-          min-height: 2.65em;
-          padding-block: .5em .72em;
-          animation: introFinal 620ms cubic-bezier(.16,.8,.24,1) both;
         }
         .intro-loader__rule {
           animation: introRule ${SEQUENCE_MS}ms cubic-bezier(.35,0,.15,1) forwards;
         }
-        /* Each greeting rises through focus and leaves through it again. The
-           blur is what turns a hard cut into a dissolve at this speed. */
-        @keyframes introWord {
-          0%   { opacity: 0; transform: translateY(14px) scale(.97); filter: blur(7px); }
-          32%  { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-          62%  { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-          100% { opacity: 0; transform: translateY(-11px) scale(1.02); filter: blur(6px); }
-        }
-        @keyframes introFinal {
-          0%   { opacity: 0; transform: translateY(18px) scale(.95); filter: blur(9px); letter-spacing: .04em; }
-          60%  { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-          100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); letter-spacing: -.015em; }
+        @keyframes introRoll {
+          ${rollKeyframes}
         }
         @keyframes introOverlayExit {
           from { visibility: visible; opacity: 1; transform: scale(1); }
@@ -199,8 +198,7 @@ export default function IntroLoader() {
         }
         @media (prefers-reduced-motion: reduce) {
           .intro-loader__image { transition: opacity 200ms linear; transform: none; }
-          .intro-loader__word { display: none; }
-          .intro-loader__final { animation: none; opacity: 1; }
+          .intro-loader__track { animation: none; transform: translate3d(0, -${((greetings.length - 1) * LINE_EM).toFixed(2)}em, 0); }
           .intro-loader__rule { animation: none; transform: scaleX(1); }
         }
       `}</style>
@@ -226,24 +224,24 @@ export default function IntroLoader() {
         <span className="intro-loader__grain pointer-events-none absolute inset-0" />
 
         <div
-          className="relative flex h-64 w-full items-center justify-center overflow-visible px-5 sm:h-72"
+          className="relative flex h-64 w-full items-center justify-center px-5 sm:h-72"
           aria-hidden="true"
         >
-          {started &&
-            greetings.map((greeting, index) => (
-              <span
-                key={greeting.text}
-                dir={greeting.rtl ? "rtl" : undefined}
-                className={`text-3xl font-normal sm:text-5xl lg:text-6xl ${
-                  index === greetings.length - 1
-                    ? "intro-loader__final"
-                    : "intro-loader__word"
-                }`}
-                style={{ animationDelay: `${index * GREETING_STEP_MS}ms` }}
-              >
-                {greeting.text}
-              </span>
-            ))}
+          {started && (
+            <div className="intro-loader__slot text-3xl font-normal sm:text-5xl lg:text-6xl">
+              <div className="intro-loader__track">
+                {greetings.map((greeting) => (
+                  <div
+                    key={greeting.text}
+                    dir={greeting.rtl ? "rtl" : undefined}
+                    className="intro-loader__line"
+                  >
+                    {greeting.text}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <span className="absolute right-6 bottom-7 left-6 h-px overflow-hidden bg-white/20 sm:right-10 sm:left-10">

@@ -2,7 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs";
 import careerData from "@/data/career.json";
 import educationData from "@/data/education.json";
 import { careerSchema, educationSchema } from "@/lib/schemas";
-import { BriefcaseBusiness, GraduationCap } from "lucide-react";
+import { FieldCaseIcon, OpenLeavesIcon } from "./icons/FieldIcons";
 import {
   SectionSwitcherVisual,
   sectionSwitcherListClass,
@@ -19,7 +19,7 @@ export default function Experience() {
       <TabsList className={`${sectionSwitcherListClass} mb-3`}>
         <TabsTrigger value="education" className={sectionSwitcherTriggerClass}>
           <SectionSwitcherVisual
-            Icon={GraduationCap}
+            Icon={OpenLeavesIcon}
             title="Education"
             count={education.length}
             tone="sky"
@@ -27,7 +27,7 @@ export default function Experience() {
         </TabsTrigger>
         <TabsTrigger value="work" className={sectionSwitcherTriggerClass}>
           <SectionSwitcherVisual
-            Icon={BriefcaseBusiness}
+            Icon={FieldCaseIcon}
             title="Experience"
             count={career.length}
             tone="emerald"
