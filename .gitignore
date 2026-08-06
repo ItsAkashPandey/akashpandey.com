@@ -41,8 +41,5 @@ output/
 # local logs
 logs/
 
-# local editor/agent config
-.claude/
-
 # large public image/event directories (host these on a CDN)
 .vercel
