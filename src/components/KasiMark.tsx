@@ -13,12 +13,14 @@ const sizeClasses = {
 };
 
 /**
- * A survey station drawn the way a topographic sheet draws one: two contour
- * rings closing on a levelled point, with the tick marks that fix it.
+ * A PhenoCam framing a shoot: camera registration corners closing on a leaf.
  *
- * The mark this replaces was a blue gradient speech bubble with an AI sparkle
- * on it — the stock chatbot badge, in a blue the rest of the site does not
- * use. This says the same thing the page says: someone who maps ground.
+ * Two marks came before this. A blue gradient speech bubble with an AI sparkle
+ * on it — the stock chatbot badge, in a blue the site uses nowhere else — and
+ * then a pair of contour rings, which was on-theme but read as abstract
+ * decoration rather than as a thing. This one is literally the work: a camera
+ * pointed at a growing plant, which is what the whole site is about, and it is
+ * legible at 20px.
  */
 export default function KasiMark({
   active = true,
@@ -39,35 +41,32 @@ export default function KasiMark({
       )}
     >
       <svg
-        viewBox="0 0 48 48"
+        viewBox="0 0 32 32"
         fill="none"
-        className="size-full"
+        stroke="currentColor"
+        strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="size-full"
       >
-        {/* Outer contour — deliberately not a circle, the way a real one is
-            never a circle. */}
+        {/* Registration corners — the frame the camera holds on the canopy. */}
+        <path d="M4 10.6V6.4A2.4 2.4 0 0 1 6.4 4h4.2" />
+        <path d="M21.4 4h4.2A2.4 2.4 0 0 1 28 6.4v4.2" />
+        <path d="M28 21.4v4.2a2.4 2.4 0 0 1-2.4 2.4h-4.2" />
+        <path d="M10.6 28H6.4A2.4 2.4 0 0 1 4 25.6v-4.2" />
+
+        {/* The shoot it is watching. */}
+        <path d="M16 23.4v-8" />
         <path
-          d="M24 5.4c7.1-.4 13.6 4.3 16.2 10.6 2.6 6.4 1.2 14.2-4 18.9-5.2 4.7-13.6 5.9-19.9 3.1C10 35.2 5.6 28.4 6.1 21.5 6.6 14.2 13 6.9 19.8 5.8c1.4-.25 2.8-.34 4.2-.4Z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          opacity="0.55"
+          d="M16 16.2c-.5-2.9-2.4-4.5-5.3-4.8-.2 3 1.6 5.1 5.3 4.8Z"
+          fill="currentColor"
+          fillOpacity=".14"
         />
-        {/* Inner contour */}
         <path
-          d="M24 13.2c4.2-.3 8.1 2.4 9.6 6.1 1.5 3.8.5 8.5-2.6 11.1-3.1 2.6-8.1 3.2-11.7 1.4-3.6-1.8-6-5.8-5.6-9.7.4-4 4-8.3 8-8.8.8-.1 1.5-.1 2.3-.1Z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          opacity="0.85"
+          d="M16 14.6c.5-3.2 2.6-5 5.9-5.4.2 3.3-1.8 5.7-5.9 5.4Z"
+          fill="currentColor"
+          fillOpacity=".14"
         />
-        {/* The levelled point, and the ticks that fix it. */}
-        <circle cx="24" cy="23" r="2.6" fill="currentColor" />
-        <g stroke="currentColor" strokeWidth="1.5" opacity="0.9">
-          <path d="M24 2.8v4.2" />
-          <path d="M24 39v4.2" />
-          <path d="M2.6 23h4.2" />
-          <path d="M41.2 23h4.2" />
-        </g>
       </svg>
     </span>
   );

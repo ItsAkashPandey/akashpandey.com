@@ -10,6 +10,7 @@
 // keeps the port flexible: PORT wins if set, otherwise the first free port at
 // or above 3000. Pass --lan to also bind the wildcard for phone testing.
 import { spawn } from "node:child_process";
+import { createRequire } from "node:module";
 import net from "node:net";
 
 const lan = process.argv.includes("--lan");
@@ -23,12 +24,15 @@ function isFree(port, host) {
   });
 }
 
-// Both stacks have to be clear, otherwise the half we did not test is exactly
-// the one another process is sitting on.
+// Every address a server might be holding has to be clear, otherwise the one
+// we did not test is exactly the one another process is sitting on. Next binds
+// dual-stack, so `::` matters as much as the v4 pair.
+const PROBE_HOSTS = ["127.0.0.1", "0.0.0.0", "::"];
+
 async function findPort(start) {
   for (let port = start; port < start + 40; port += 1) {
     const free = await Promise.all(
-      ["127.0.0.1", "0.0.0.0"].map((host) => isFree(port, host)),
+      PROBE_HOSTS.map((host) => isFree(port, host)),
     );
     if (free.every(Boolean)) return port;
   }
@@ -45,5 +49,13 @@ if (lan) args.push("-H", "0.0.0.0");
 
 console.log(`next dev on port ${port}${lan ? " (bound for LAN)" : ""}`);
 
-const child = spawn("next", args, { stdio: "inherit", shell: true });
+// Run Next's own entry point on this Node rather than through a shell.
+// `shell: true` concatenates arguments instead of escaping them, which Node
+// warns about, and resolving the bin script keeps the command identical on
+// Windows and POSIX without needing the .cmd shim.
+const child = spawn(
+  process.execPath,
+  [createRequire(import.meta.url).resolve("next/dist/bin/next"), ...args],
+  { stdio: "inherit" },
+);
 child.on("exit", (code) => process.exit(code ?? 0));

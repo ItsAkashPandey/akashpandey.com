@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import type { LucideIcon } from "lucide-react";
+import type { ComponentType, SVGProps } from "react";
 
 /**
  * A bordered box holding bordered buttons drew two hard rectangles around the
@@ -33,7 +33,7 @@ export function SectionSwitcherVisual({
   count,
   tone,
 }: {
-  Icon: LucideIcon;
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
   title: string;
   description?: string;
   count?: number;
