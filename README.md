@@ -1,122 +1,117 @@
 # akashpandey.com
 
-This is my personal website for my research, field work, publications, skills,
-and contact details.
+My personal site — research, field work, publications, skills, contact.
 
-Live site: [www.akashpandey.com](https://www.akashpandey.com/)
+Live at [www.akashpandey.com](https://www.akashpandey.com/)
 
 ![Screenshot of the website](public/img/akashpandey.com_screenshot.webp)
 
-## A small note
+## How it's built
 
-This is not a vibe-coded website. I made it for myself and still change it when
-I learn something new. I deliberately keep the content in JSON and Markdown,
-store the photos and CV as normal files, and use static pages where possible.
-It is a little old-fashioned, but it is quick for me to edit and easy to host.
-I took some help from ChatGPT when I got stuck.
+Next.js (App Router), React, Tailwind, TypeScript. Deployed on Vercel.
 
-The photo stack on the home page is inspired by the clean stacked-card feeling
-on [tedawf.com](https://tedawf.com). Thank you for the design inspiration.
+Almost all the content sits in `src/data` as JSON or Markdown, and the photos
+and CV are plain files in `public`. That way I can add a paper or a field trip
+without opening a component. It's a bit old-fashioned compared to running a CMS,
+but I edit this thing at odd hours and I'd rather not manage a database for
+twenty JSON records.
 
-## How I made it
+A few pieces that aren't obvious from the file tree:
 
-The site uses Next.js, React, Tailwind CSS, and a few small local components.
-Most content lives in `src/data` as JSON or Markdown. Photos and documents live
-in `public`, so I can update the site without touching too much code.
+- The map on the contact page is MapLibre with OpenFreeMap vector tiles, plus an
+  Esri imagery layer behind the satellite toggle.
+- Kasi, the chat thing in the corner, answers from `src/data/profile.md` and
+  falls back to OpenRouter for anything it can't cover locally.
+- The contact form goes out through Resend.
+- The skill logos are generated. `scripts/colorize-skill-icons.mjs` builds a
+  brand-coloured duotone of each one so a photo of a total station and a flat
+  vector logo end up looking like they belong on the same page.
 
-MapLibre renders the map. NASA GIBS is used for the low-zoom satellite view,
-Esri imagery helps at high zoom, CelesTrak supplies public orbital records, and
-satellite.js calculates the ground positions and tracks. KASI answers common
-questions from local site knowledge and can use OpenRouter when needed. The
-contact form sends email through Resend.
+## Running it
 
-## Run it locally
+Node and npm, then:
 
-You need a recent Node.js version and npm.
-
-```powershell
+```bash
 git clone https://github.com/ItsAkashPandey/akashpandey.com.git
 cd akashpandey.com
 npm install
-Copy-Item .env.example .env.local
+cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+`npm run dev` picks the first free port from 3000 up and prints it — I had
+something else squatting on 3000 for months and got tired of the collision. Set
+`PORT` if you want a specific one, or `npm run dev:lan` to reach it from your
+phone.
 
-The normal pages work from local files. KASI, contact mail, optional chat
-logging, and live satellite refresh need the matching values from `.env.example`.
+The pages all work with no keys at all. Kasi, the contact form and chat logging
+need the values listed in `.env.example`.
 
-Before pushing a change, I normally run:
+Before I push:
 
 ```bash
 npm run lint
 npm run build
 ```
 
-## Editing the content
+## Making it yours
 
-- `src/data/activities.json` has activities and links.
-- `src/data/publications.json` has papers, DOI links, and publication images.
-- `src/data/skills.json` has tools, instruments, and skill photos.
-- `src/data/career.json` and `src/data/education.json` have the timeline.
-- `src/data/profile.md` has the facts used by KASI.
-- `src/data/privacy.md` is the privacy page text.
-- `public/resume.pdf` is the CV linked from the home page.
+Fork it, then swap out:
 
-Activity photos go in a folder under `public`. This command rebuilds the
-`resolvedImages` lists from the real files:
+| What | Where |
+| --- | --- |
+| Papers, DOIs, figures | `src/data/publications.json` |
+| Talks, trips, workshops | `src/data/activities.json` |
+| Tools and instruments | `src/data/skills.json` |
+| Timeline | `src/data/career.json`, `src/data/education.json` |
+| What Kasi knows about you | `src/data/profile.md` |
+| Privacy page | `src/data/privacy.md` |
+| CV | `public/resume.pdf` |
+| Colours, type, paper texture | `src/app/globals.css` |
 
-```bash
-npx ts-node scripts/resolve-activity-images.ts
-```
-
-New photos are large, so I shrink them before committing:
+Activity photos go in a folder under `public/`, then:
 
 ```bash
-node scripts/optimize-images.mjs
+npx ts-node scripts/resolve-activity-images.ts   # rebuild the image lists
+node scripts/optimize-images.mjs                 # shrink them before committing
 ```
 
-I keep external links in the same JSON record as the related activity or
-publication. I check a link before adding it instead of guessing a post URL.
+Add a new skill logo to `public/skills/`, give it a `gradient` in
+`skills.json`, and run `npm run colorize-skills`.
 
-## Useful links
+The site colours are HSL variables at the top of `globals.css`. Changing
+`--background`, `--foreground` and the four `--surface-*` values re-themes the
+whole thing.
 
-- [Website](https://www.akashpandey.com/)
-- [LinkedIn](https://www.linkedin.com/in/iamakashpandey/)
-- [GitHub profile](https://github.com/ItsAkashPandey)
-- [ORCID](https://orcid.org/0009-0009-0757-6276)
+## Deploying
 
-## Deployment
+Push to `main` and Vercel builds it. Set the environment variables there first.
 
-The `main` branch is connected to Vercel. Add the required environment variables
-in Vercel, push to `main`, and Vercel builds the site.
+The admin page reads `ADMIN_USERNAME`, `ADMIN_PASSWORD` and
+`ADMIN_SESSION_SECRET`. No defaults — leave them unset and every login is
+refused, which is the behaviour I wanted.
 
-Admin sign-in reads `ADMIN_USERNAME`, `ADMIN_PASSWORD` and `ADMIN_SESSION_SECRET`
-from the environment. There is no default, so if those are missing the admin page
-simply refuses every login.
+Chat logging needs a database or a Google Sheet; both are written up in
+[docs/chat-logging.md](docs/chat-logging.md).
 
-Saving the KASI chat messages needs a database or a Google Sheet. The setup for
-both is written down in [docs/chat-logging.md](docs/chat-logging.md).
-
-Do not commit `.env.local`. It contains private keys.
-
-## Credits for the 3D models and background clips
-
-The satellites on the map are the real NASA models from
-[NASA 3D Resources](https://github.com/nasa/NASA-3D-Resources). The short
-background clips behind each page come from the
-[NASA Scientific Visualization Studio](https://svs.gsfc.nasa.gov/). Both are
-public domain. I trimmed and re-encoded the clips so they are small enough to
-serve; the full list with links is in `public/motion/attribution.txt`.
+Don't commit `.env.local`.
 
 ## Thanks
 
-Thanks to [tedawf.com](https://tedawf.com/) for the original inspiration,
-especially the way photographs and research work are presented. The open-source
-[WorldWideView](https://github.com/silvertakana/worldwideview) project was also
-useful while I was learning how orbit tracks can be presented.
+[tedawf.com](https://tedawf.com/) — the whole shape of this site started there,
+especially the stacked photo cards and the way the work is laid out. Thanks Ted.
+
+[WorldWideView](https://github.com/silvertakana/worldwideview) helped when I was
+working out how to draw orbit tracks on a map.
+
+## Elsewhere
+
+[LinkedIn](https://www.linkedin.com/in/iamakashpandey/) ·
+[GitHub](https://github.com/ItsAkashPandey) ·
+[ORCID](https://orcid.org/0009-0009-0757-6276) ·
+[Scholar](https://scholar.google.com/citations?user=wg6rG0cAAAAJ&hl=en)
 
 ## License
 
-The code is available under the [MIT License](LICENSE.txt).
+Code is [MIT](LICENSE.txt). The photos, CV and writing are mine — please don't
+reuse those.
