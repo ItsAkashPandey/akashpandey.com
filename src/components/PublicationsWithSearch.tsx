@@ -513,6 +513,7 @@ function PublicationCard({
                   alt={venue}
                   width={36}
                   height={36}
+                  loading="eager"
                   className="bg-card size-9 shrink-0 rounded-sm object-contain p-1"
                 />
               ) : (

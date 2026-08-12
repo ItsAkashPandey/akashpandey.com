@@ -26,6 +26,7 @@ export default function SkillLogoTile({
         width={128}
         height={96}
         sizes="96px"
+        loading="eager"
         containerClassName="h-full w-full"
         skeletonClassName="bg-muted/55"
         className={cn(
