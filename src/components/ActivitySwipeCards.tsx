@@ -14,6 +14,7 @@ interface ActivitySwipeCardsProps {
 export default function ActivitySwipeCards({
   className,
   images,
+  priority = false,
 }: ActivitySwipeCardsProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -34,6 +35,7 @@ export default function ActivitySwipeCards({
         imageHeight={198}
         sizes="264px"
         quality={82}
+        priority={priority}
         showCounter
         className={cn(DECK_SIZE.landscape, "rounded-lg", className)}
         onImageClick={openLightbox}

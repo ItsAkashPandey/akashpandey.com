@@ -378,13 +378,11 @@
   }
 
   .skill-logo-color {
-    opacity: 0.88;
-    filter: saturate(0.85) contrast(0.98) brightness(0.98);
+    opacity: 1;
   }
 
   .dark .skill-logo-color {
-    opacity: 0.96;
-    filter: saturate(0.92) contrast(1.05) brightness(1.2);
+    opacity: 1;
   }
 
   /* A sheet laid on the desk: a hairline edge, a tight contact shadow where it

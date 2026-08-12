@@ -62,7 +62,6 @@ type CardChrome = {
   imageHeight: number;
   sizes: string;
   quality: number;
-  eager: boolean;
   priority: boolean;
   imageClassName?: string;
 };
@@ -77,7 +76,6 @@ function CardFace({
   imageHeight,
   sizes,
   quality,
-  eager,
   priority,
   imageClassName,
 }: CardChrome) {
@@ -91,7 +89,15 @@ function CardFace({
         sizes={sizes}
         quality={quality}
         priority={priority}
-        loading={eager ? "eager" : "lazy"}
+        // Deck cards live inside an animated (transform: x/rotate/scale)
+        // ancestor at all times. Chromium never fires the lazy-load
+        // intersection check for an <img> whose ancestor has a transform, so
+        // `loading="lazy"` here just means "never loads" — the image quietly
+        // disappears instead of paining the frame. Mounting is already
+        // gated upstream (only a handful of cards exist in the DOM per deck,
+        // and decks only mount once their section is visible), so eager is
+        // safe and is what actually gets pixels on screen.
+        loading="eager"
         fetchPriority={priority ? "high" : "low"}
         decoding="async"
         draggable={false}
@@ -386,7 +392,6 @@ export default function StackedImageDeck({
           imageHeight={imageHeight}
           sizes={sizes}
           quality={quality}
-          eager={priority}
           priority={false}
           imageClassName={imageClassName}
         />
@@ -408,7 +413,6 @@ export default function StackedImageDeck({
           imageHeight={imageHeight}
           sizes={sizes}
           quality={quality}
-          eager={priority}
           priority={priority}
           imageClassName={imageClassName}
         />
