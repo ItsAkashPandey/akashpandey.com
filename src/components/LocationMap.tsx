@@ -200,7 +200,9 @@ export default function LocationMap() {
       }, 8_000);
     };
 
-    void initialise();
+    void initialise().catch((error) => {
+      console.error("[map] initialise failed", error);
+    });
     return () => {
       cancelled = true;
       window.clearTimeout(loadTimer);
