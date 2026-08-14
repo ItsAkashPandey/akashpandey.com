@@ -3,11 +3,11 @@
     {
       "name": "Bhoomicam Pvt Ltd",
       "href": "https://www.bhoomicam.com/",
-      "logo": "/img/bhoomicam.webp",
+      "logo": "/img/bhoomicam-mark.webp",
       "positions": [
         {
           "title": "Co-Director",
-          "start": "Jun 2023",
+          "start": "Apr 2025",
           "end": "Present",
           "description": [
             "Handling operations and B2B partnerships for geospatial agritech startup focused on precision agriculture."
@@ -15,8 +15,8 @@
         },
         {
           "title": "Chief Remote Sensing Scientist",
-          "start": "Apr 2025",
-          "end": "Present",
+          "start": "Jun 2023",
+          "end": "Apr 2025",
           "description": [
             "Led the technical team in building geospatial solutions for crop monitoring using satellite and drone-based remote sensing technologies."
           ]
@@ -29,9 +29,17 @@
       "logo": "/img/iitr.webp",
       "positions": [
         {
+          "title": "Project Fellow (post-doc)",
+          "start": "Jul 2026",
+          "end": "Present",
+          "description": [
+            "Project: \"AI based Geo-enabled crop insurance farm equipment renting solutions\" under Bhoomicam Pvt. Ltd., sponsored by IIT Bhilai Innovation and Technology Foundation, Raipur, Chhattisgarh."
+          ]
+        },
+        {
           "title": "Senior Research Fellow",
           "start": "May 2025",
-          "end": "Present",
+          "end": "Jul 2026",
           "description": [
             "Advanced research in geospatial analysis and remote sensing applications for agricultural monitoring and phenological studies."
           ]
@@ -53,8 +61,8 @@
       "positions": [
         {
           "title": "Civil Site Engineer",
-          "start": "2018",
-          "end": "2019",
+          "start": "Dec 2018",
+          "end": "Sep 2019",
           "description": [
             "Supervised construction activities, executed quality control and designs with on-site teams in power plant projects."
           ]

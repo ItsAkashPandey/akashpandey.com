@@ -114,6 +114,7 @@ export default function Chat() {
       >
         <AccordionItem
           ref={chatRootRef}
+          data-kasi-window
           value="item-1"
           className={`kasi-glass fixed right-4 bottom-[4.75rem] overflow-hidden border transition-[width,border-radius] duration-300 ease-out sm:right-8 sm:bottom-8 ${
             isExpanded

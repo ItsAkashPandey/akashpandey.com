@@ -52,6 +52,7 @@ const verifiedLinkedInProfiles: Record<string, string> = {
   "neeraj pant": "https://www.linkedin.com/in/neeraj-pant-2508322b4/",
   "shivani noolu": "https://www.linkedin.com/in/shivani-noolu-647a79214/",
   shivani: "https://www.linkedin.com/in/shivani-noolu-647a79214/",
+  "madhulika singh": "https://www.linkedin.com/in/madhulika-singh-0721141aa/",
 };
 
 const collaboratorsWithoutLinkedIn = new Set([

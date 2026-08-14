@@ -10,11 +10,14 @@ import {
   ensureResearchLayers,
   updateVisitorConnection,
 } from "@/lib/map/map-layers";
-import { createLocationMarkerElement } from "@/lib/map/map-markers";
+import {
+  createActivityMarkerElement,
+  createLocationMarkerElement,
+} from "@/lib/map/map-markers";
+import { buildActivityPoints } from "@/lib/map/activity-points";
 import {
   applyMapTheme,
   createMapStyle,
-  setImageryVisible,
   type MapTheme,
 } from "@/lib/map/map-style";
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
@@ -24,6 +27,12 @@ import { useEffect, useRef, useState } from "react";
 const AKASH_LOCATION: [longitude: number, latitude: number] = [
   77.900244, 29.862397,
 ];
+
+/** Anything past this radius (Vienna, chiefly) is still pinned on the map,
+ * it just doesn't drag the opening view out to a mostly-ocean world shot. */
+const HOME_CLUSTER_RADIUS_KM = 2000;
+
+const ACTIVITY_POINTS = buildActivityPoints();
 
 function fitLocations(
   map: MapLibreMap,
@@ -55,12 +64,45 @@ function fitLocations(
   );
 }
 
+/** Opens on the spread of activity pins near home instead of a street-level
+ * zoom on one address, so the map reads as "everywhere I've worked" first. */
+function fitHomeCluster(map: MapLibreMap) {
+  const nearby = ACTIVITY_POINTS.filter(
+    (point) => distanceKm(AKASH_LOCATION, point.coordinates) <= HOME_CLUSTER_RADIUS_KM,
+  );
+  if (nearby.length === 0) return;
+
+  let minLng = AKASH_LOCATION[0];
+  let maxLng = AKASH_LOCATION[0];
+  let minLat = AKASH_LOCATION[1];
+  let maxLat = AKASH_LOCATION[1];
+  for (const point of nearby) {
+    minLng = Math.min(minLng, point.coordinates[0]);
+    maxLng = Math.max(maxLng, point.coordinates[0]);
+    minLat = Math.min(minLat, point.coordinates[1]);
+    maxLat = Math.max(maxLat, point.coordinates[1]);
+  }
+
+  map.fitBounds(
+    [
+      [minLng, minLat],
+      [maxLng, maxLat],
+    ],
+    {
+      padding: { top: 36, right: 36, bottom: 36, left: 36 },
+      maxZoom: 7,
+      duration: 0,
+    },
+  );
+}
+
 export default function LocationMap() {
   const rootRef = useRef<HTMLDivElement>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const akashMarkerRef = useRef<Marker | null>(null);
   const visitorMarkerRef = useRef<Marker | null>(null);
+  const activityMarkersRef = useRef<Marker[]>([]);
   const visitorLocationRef = useRef<[number, number] | null>(null);
   const mapThemeRef = useRef<MapTheme>("light");
   const mapReadyRef = useRef(false);
@@ -68,8 +110,6 @@ export default function LocationMap() {
   const [isClient, setIsClient] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
-  const [bearing, setBearing] = useState(0);
-  const [imagery, setImagery] = useState(false);
   const [visitorLocation, setVisitorLocation] = useState<
     [number, number] | null
   >(null);
@@ -79,14 +119,11 @@ export default function LocationMap() {
   });
   const [locating, setLocating] = useState(false);
   const [locationMessage, setLocationMessage] = useState("");
-  const [nativeFullscreen, setNativeFullscreen] = useState(false);
-  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
   const { resolvedTheme } = useTheme();
 
   const visitorDistance = visitorLocation
     ? distanceKm(AKASH_LOCATION, visitorLocation)
     : null;
-  const fullscreen = nativeFullscreen || pseudoFullscreen;
 
   useEffect(() => setIsClient(true), []);
 
@@ -114,13 +151,13 @@ export default function LocationMap() {
         container: mapContainerRef.current,
         style: createMapStyle(theme),
         center: AKASH_LOCATION,
-        zoom: 13.2,
+        zoom: 4,
         minZoom: 1,
         maxZoom: 22,
         pitch: 0,
         bearing: 0,
         dragPan: true,
-        dragRotate: true,
+        dragRotate: false,
         scrollZoom: true,
         // Shift-drag box zoom fights the drag-to-pan people actually expect.
         boxZoom: false,
@@ -135,7 +172,9 @@ export default function LocationMap() {
         cancelPendingTileRequestsWhileZooming: false,
         maxTileCacheZoomLevels: 8,
       });
-      map.touchZoomRotate.enable();
+      // Pinch-to-zoom stays; pinch-to-rotate does not — a quiet distance
+      // widget has no use for a control that then needs its own reset button.
+      map.touchZoomRotate.disableRotation();
       mapRef.current = map;
 
       const handleLoad = () => {
@@ -143,6 +182,7 @@ export default function LocationMap() {
         window.clearTimeout(loadTimer);
         applyMapTheme(map, mapThemeRef.current);
         ensureResearchLayers(map, mapThemeRef.current);
+        fitHomeCluster(map);
         setMapLoaded(true);
         setMapUnavailable(false);
         document.documentElement.dataset.heroMapReady = "true";
@@ -155,7 +195,6 @@ export default function LocationMap() {
         console.error("[map]", event.error?.message ?? event);
       });
       map.on("load", handleLoad);
-      map.on("rotate", () => setBearing(map.getBearing()));
       loadTimer = window.setTimeout(() => {
         if (!mapReadyRef.current) setMapUnavailable(true);
       }, 8_000);
@@ -168,6 +207,8 @@ export default function LocationMap() {
       mapReadyRef.current = false;
       akashMarkerRef.current?.remove();
       visitorMarkerRef.current?.remove();
+      for (const marker of activityMarkersRef.current) marker.remove();
+      activityMarkersRef.current = [];
       mapRef.current?.remove();
       akashMarkerRef.current = null;
       visitorMarkerRef.current = null;
@@ -183,12 +224,6 @@ export default function LocationMap() {
     applyMapTheme(map, theme);
     ensureResearchLayers(map, theme);
   }, [mapLoaded, resolvedTheme]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded) return;
-    setImageryVisible(map, imagery);
-  }, [mapLoaded, imagery]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -220,6 +255,54 @@ export default function LocationMap() {
     };
 
     void addMarker();
+    return () => {
+      active = false;
+    };
+  }, [mapLoaded]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || activityMarkersRef.current.length > 0) return;
+    let active = true;
+
+    const addMarkers = async () => {
+      const maplibregl = (await import("maplibre-gl")).default;
+      if (!active) return;
+
+      activityMarkersRef.current = ACTIVITY_POINTS.map((point) => {
+        const element = createActivityMarkerElement(point.activities.length);
+        const list = point.activities
+          .slice(0, 4)
+          .map(
+            (activity) =>
+              `<li>${activity.name} <span class="opacity-60">· ${new Date(
+                `${activity.date}T12:00:00`,
+              ).toLocaleDateString(undefined, {
+                month: "short",
+                year: "numeric",
+              })}</span></li>`,
+          )
+          .join("");
+        const more =
+          point.activities.length > 4
+            ? `<li class="opacity-60">+${point.activities.length - 4} more</li>`
+            : "";
+        const popup = new maplibregl.Popup({
+          offset: 12,
+          maxWidth: "220px",
+          closeButton: false,
+        }).setHTML(
+          `<ul class="m-0 list-none space-y-0.5 p-0 text-[11px] leading-snug">${list}${more}</ul>`,
+        );
+
+        return new maplibregl.Marker({ element, anchor: "center" })
+          .setLngLat(point.coordinates)
+          .setPopup(popup)
+          .addTo(map);
+      });
+    };
+
+    void addMarkers();
     return () => {
       active = false;
     };
@@ -268,27 +351,6 @@ export default function LocationMap() {
   }, [mapLoaded, visitorLocation, resolvedTheme]);
 
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      setNativeFullscreen(document.fullscreenElement === rootRef.current);
-      window.setTimeout(() => mapRef.current?.resize(), 0);
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setPseudoFullscreen(false);
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
-  useEffect(() => {
-    window.setTimeout(() => mapRef.current?.resize(), 0);
-  }, [fullscreen]);
-
-  useEffect(() => {
     if (!locationMessage) return;
     const timer = window.setTimeout(() => setLocationMessage(""), 3_200);
     return () => window.clearTimeout(timer);
@@ -330,29 +392,6 @@ export default function LocationMap() {
     );
   };
 
-  const toggleFullscreen = async () => {
-    const root = rootRef.current;
-    if (!root) return;
-    if (pseudoFullscreen) {
-      setPseudoFullscreen(false);
-      return;
-    }
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-      return;
-    }
-    if (root.requestFullscreen) {
-      try {
-        await root.requestFullscreen();
-        return;
-      } catch {
-        setPseudoFullscreen(true);
-        return;
-      }
-    }
-    setPseudoFullscreen(true);
-  };
-
   if (!isClient) {
     return (
       <div className="h-72 animate-pulse overflow-hidden rounded-md bg-[#f1ede2] sm:h-[26rem] dark:bg-[#1b2429]" />
@@ -362,11 +401,7 @@ export default function LocationMap() {
   return (
     <div
       ref={rootRef}
-      className={[
-        "group relative isolate overflow-hidden bg-[#f1ede2] dark:bg-[#1b2429]",
-        fullscreen ? "h-screen rounded-none" : "h-72 rounded-md sm:h-[26rem]",
-        pseudoFullscreen ? "fixed inset-3 z-[100] h-auto rounded-md" : "",
-      ].join(" ")}
+      className="group relative isolate h-72 overflow-hidden rounded-md bg-[#f1ede2] sm:h-[26rem] dark:bg-[#1b2429]"
     >
       <div
         ref={mapContainerRef}
@@ -375,24 +410,12 @@ export default function LocationMap() {
       />
 
       <MapControls
-        bearing={bearing}
         disabled={!mapLoaded}
-        fullscreen={fullscreen}
         locateDisabled={
           typeof navigator !== "undefined" && !("geolocation" in navigator)
         }
         locating={locating}
-        imagery={imagery}
-        onFullscreen={() => void toggleFullscreen()}
         onLocate={locateVisitor}
-        onToggleImagery={() => setImagery((current) => !current)}
-        onResetNorth={() =>
-          mapRef.current?.easeTo({
-            bearing: 0,
-            duration: 420,
-            essential: true,
-          })
-        }
       />
 
       {visitorDistance !== null && (

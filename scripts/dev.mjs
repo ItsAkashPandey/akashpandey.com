@@ -56,6 +56,12 @@ console.log(`next dev on port ${port}${lan ? " (bound for LAN)" : ""}`);
 const child = spawn(
   process.execPath,
   [createRequire(import.meta.url).resolve("next/dist/bin/next"), ...args],
-  { stdio: "inherit" },
+  {
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      NODE_OPTIONS: `${process.env.NODE_OPTIONS || ""} --no-deprecation`.trim(),
+    },
+  },
 );
 child.on("exit", (code) => process.exit(code ?? 0));

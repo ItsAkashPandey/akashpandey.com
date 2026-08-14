@@ -19,13 +19,32 @@ twenty JSON records.
 A few pieces that aren't obvious from the file tree:
 
 - The map on the contact page is MapLibre with OpenFreeMap vector tiles, plus an
-  Esri imagery layer behind the satellite toggle.
+  Esri imagery layer behind the satellite toggle. The line it draws between you
+  and me is a great circle, not a route.
 - Kasi, the chat thing in the corner, answers from `src/data/profile.md` and
   falls back to OpenRouter for anything it can't cover locally.
 - The contact form goes out through Resend.
 - The skill logos are generated. `scripts/colorize-skill-icons.mjs` builds a
   brand-coloured duotone of each one so a photo of a total station and a flat
   vector logo end up looking like they belong on the same page.
+
+## The dog
+
+There is a shiba standing on the Kasi window. It watches the cursor, perks up
+when you hover it, hops if you click it, and you can pick it up and put it
+anywhere. Let go and it falls until it lands on something — a heading, the rim
+of a photo card, a table, the chat window — and then rides that thing as the
+page scrolls. `src/lib/puppy/perch.ts` decides what counts as a surface; give
+any element `data-puppy-perch` to add it.
+
+The model is Quaternius's rigged shiba, CC0, via
+[Poly Pizza](https://poly.pizza/m/y4wdQpg767). `npm run fetch-puppy` pulls it
+and quantizes it down to 454KB. Quantization rather than Draco on purpose:
+Draco lands at 361KB but wants a 245KB decoder next to it, so it is worse on
+the only load that matters. Three.js reads quantized meshes with nothing extra.
+
+Under `prefers-reduced-motion` the dog holds still — no idle loop, no wag, no
+fall — but it will still turn its head to the cursor and can still be moved.
 
 ## Running it
 
@@ -58,16 +77,16 @@ npm run build
 
 Fork it, then swap out:
 
-| What | Where |
-| --- | --- |
-| Papers, DOIs, figures | `src/data/publications.json` |
-| Talks, trips, workshops | `src/data/activities.json` |
-| Tools and instruments | `src/data/skills.json` |
-| Timeline | `src/data/career.json`, `src/data/education.json` |
-| What Kasi knows about you | `src/data/profile.md` |
-| Privacy page | `src/data/privacy.md` |
-| CV | `public/resume.pdf` |
-| Colours, type, paper texture | `src/app/globals.css` |
+| What                         | Where                                             |
+| ---------------------------- | ------------------------------------------------- |
+| Papers, DOIs, figures        | `src/data/publications.json`                      |
+| Talks, trips, workshops      | `src/data/activities.json`                        |
+| Tools and instruments        | `src/data/skills.json`                            |
+| Timeline                     | `src/data/career.json`, `src/data/education.json` |
+| What Kasi knows about you    | `src/data/profile.md`                             |
+| Privacy page                 | `src/data/privacy.md`                             |
+| CV                           | `public/resume.pdf`                               |
+| Colours, type, paper texture | `src/app/globals.css`                             |
 
 Activity photos go in a folder under `public/`, then:
 
@@ -101,8 +120,8 @@ Don't commit `.env.local`.
 [tedawf.com](https://tedawf.com/) — the whole shape of this site started there,
 especially the stacked photo cards and the way the work is laid out. Thanks Ted.
 
-[WorldWideView](https://github.com/silvertakana/worldwideview) helped when I was
-working out how to draw orbit tracks on a map.
+[Quaternius](https://quaternius.com/) for the shiba, and for putting it in the
+public domain. Details in `public/models/credits.json`.
 
 ## Elsewhere
 

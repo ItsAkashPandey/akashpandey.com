@@ -5,9 +5,9 @@ import dynamic from "next/dynamic";
 import { ThemeProvider, useTheme } from "next-themes";
 import React, { useEffect } from "react";
 import { Toaster } from "sonner";
-import IntroLoader from "./IntroLoader";
 
 const Chat = dynamic(() => import("./Chat"), { ssr: false });
+const Puppy = dynamic(() => import("./puppy/Puppy"), { ssr: false });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -17,11 +17,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       defaultTheme="system"
       disableTransitionOnChange
     >
-      <IntroLoader />
       <ThemeColorUpdater />
       <ChatProvider>
         {children}
         <Chat />
+        <Puppy />
       </ChatProvider>
       <ToastProvider />
     </ThemeProvider>

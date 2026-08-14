@@ -41,5 +41,11 @@ output/
 # local logs
 logs/
 
+# staging area for the Poly Haven downloads; only the packed .glb is committed
+.cache/
+
 # large public image/event directories (host these on a CDN)
 .vercel
+
+# local Serena MCP project index/cache
+.serena/
