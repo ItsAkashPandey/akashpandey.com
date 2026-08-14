@@ -7,7 +7,6 @@ import React, { useEffect } from "react";
 import { Toaster } from "sonner";
 
 const Chat = dynamic(() => import("./Chat"), { ssr: false });
-const Puppy = dynamic(() => import("./puppy/Puppy"), { ssr: false });
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -21,7 +20,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <ChatProvider>
         {children}
         <Chat />
-        <Puppy />
       </ChatProvider>
       <ToastProvider />
     </ThemeProvider>
