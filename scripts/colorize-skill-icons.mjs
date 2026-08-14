@@ -41,9 +41,19 @@ function mix(colour, towards, amount) {
   );
 }
 
-/** Target luminance for each end of the ramp, whatever the brand colour is. */
-const SHADOW_LUMINANCE = 0.14;
-const HIGHLIGHT_LUMINANCE = 0.87;
+/**
+ * Target luminance for each end of the ramp, whatever the brand colour is.
+ * Pulled in from the earlier 0.14-0.87 spread: that range hit near-white on
+ * the highlight end, which read as a glossy sticker next to the site's paper
+ * surfaces. Landing short of both extremes keeps the shape legible while the
+ * tone stays matte.
+ */
+const SHADOW_LUMINANCE = 0.2;
+const HIGHLIGHT_LUMINANCE = 0.74;
+/** The site's own paper tone (`--background`, light mode) instead of pure
+ * white, so the highlight end sits on the same warm-cream family as the page
+ * around it rather than jumping to a colder, brighter white. */
+const HIGHLIGHT_TOWARDS = { r: 248, g: 247, b: 244 };
 
 /**
  * The two ends of the duotone ramp, both pinned to a fixed luminance so every
@@ -61,11 +71,11 @@ function duotoneRamp(brand) {
     channels.map((key) => [key, Math.min(255, Math.round(brand[key] * factor))]),
   );
 
-  const towardsWhite = Math.min(
+  const towardsPaper = Math.min(
     1,
     Math.max(0, (HIGHLIGHT_LUMINANCE - light) / (1 - light)),
   );
-  const highlight = mix(brand, { r: 255, g: 255, b: 255 }, towardsWhite);
+  const highlight = mix(brand, HIGHLIGHT_TOWARDS, towardsPaper);
 
   return { shadow, highlight };
 }

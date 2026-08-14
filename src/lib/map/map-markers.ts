@@ -33,3 +33,26 @@ export function createLocationMarkerElement(kind: "akash" | "visitor") {
   element.append(ring, dot, label);
   return element;
 }
+
+/**
+ * A third, quieter mark for everywhere a talk, camera install or startup
+ * showcase happened — small enough not to compete with the Akash/visitor
+ * pair, one shared slate tone rather than the ochre/teal pairing above.
+ */
+export function createActivityMarkerElement(count: number) {
+  const element = document.createElement("button");
+  element.type = "button";
+  const title =
+    count > 1 ? `${count} activities here` : "1 activity here";
+  element.title = title;
+  element.setAttribute("aria-label", title);
+  element.className =
+    "group/activity relative flex size-5 items-center justify-center border-0 bg-transparent p-0";
+
+  const dot = document.createElement("span");
+  dot.className =
+    "relative size-1.5 rounded-full border border-[#f4f1e8] bg-[#5b6a5e] shadow-sm transition-transform group-hover/activity:scale-125 dark:border-[#1b2429] dark:bg-[#93a7b3]";
+
+  element.append(dot);
+  return element;
+}

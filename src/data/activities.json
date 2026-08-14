@@ -1,6 +1,31 @@
 {
   "activities": [
     {
+      "name": "PhD Viva-Voce — Successfully Defended",
+      "description": "Successfully defended my PhD thesis, \"Multi-scale Analysis of Crop Phenology using PhenoCam and Satellite Data,\" at the Department of Civil Engineering, IIT Roorkee.\n\nThanks to Prof. S. K. Katiyar (external examiner, MANIT Bhopal) and Prof. Narendra Kumar Samadhiya (HoD, CED) for their time and feedback.\n\nWith: my supervisor - Prof. Siddhartha Khare, Madhulika Singh, and Geospatial Engineering Group, IITR",
+      "date": "2026-07-16",
+      "location": "Civil Engineering Department, IIT Roorkee",
+      "imageFolder": "PhD_Viva_Voce",
+      "links": [
+        {
+          "name": "LinkedIn Post",
+          "href": "https://www.linkedin.com/posts/phd-iitroorkee-civilengineering-ugcPost-7491892509464256513-lIS8/?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
+          "icon": "linkedin"
+        }
+      ],
+      "resolvedImages": [
+        "/PhD_Viva_Voce/01-presenting-scales-of-phenology.webp",
+        "/PhD_Viva_Voce/02-lecture-hall-wide.webp",
+        "/PhD_Viva_Voce/03-acknowledgements-slide.webp",
+        "/PhD_Viva_Voce/04-signing-thesis-certificate.webp",
+        "/PhD_Viva_Voce/05-thesis-handover-close.webp",
+        "/PhD_Viva_Voce/06-thesis-handover-group.webp",
+        "/PhD_Viva_Voce/07-mr-dr-akash.webp",
+        "/PhD_Viva_Voce/08-cake-with-supervisor.webp",
+        "/PhD_Viva_Voce/09-group-with-flowers.webp"
+      ]
+    },
+    {
       "name": "KrishiTech Synapse 2026 — Third-Round Expert Evaluation",
       "description": "I participated in the third round of KrishiTech Synapse 2026, an IHFC–IIT Delhi programme designed to accelerate deep-tech agricultural innovations from prototype to real-world deployment.\n\nAt the prototype showcase we presented the CropLizer GeoAI Suite, which pairs CropLizer's agronomic models with Bhoomicam's satellite, UAV and IoT infrastructure for season-long crop decisions.\n\nWith: Prof. Idhayachandhiran Ilampooranan and Mukund Narayanan",
       "date": "2026-07-02",
