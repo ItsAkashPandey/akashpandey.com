@@ -1,10 +1,12 @@
-import { LoaderCircle, Waypoints } from "lucide-react";
+import { LoaderCircle, Map as MapIcon, Satellite, Waypoints } from "lucide-react";
 
 type MapControlsProps = {
   disabled: boolean;
+  imagery: boolean;
   locateDisabled: boolean;
   locating: boolean;
   onLocate: () => void;
+  onToggleImagery: () => void;
 };
 
 const buttonClass =
@@ -12,15 +14,17 @@ const buttonClass =
 
 export default function MapControls({
   disabled,
+  imagery,
   locateDisabled,
   locating,
   onLocate,
+  onToggleImagery,
 }: MapControlsProps) {
   return (
     <div
       role="group"
       aria-label="Map controls"
-      className="bg-background/90 border-border/70 absolute top-3 left-3 z-30 flex flex-col overflow-hidden rounded-lg border shadow-[0_8px_24px_rgba(15,23,42,0.14)] backdrop-blur-md"
+      className="bg-background/90 border-border/70 divide-border/65 absolute top-3 left-3 z-30 flex flex-col divide-y overflow-hidden rounded-lg border shadow-[0_8px_24px_rgba(15,23,42,0.14)] backdrop-blur-md"
     >
       <button
         type="button"
@@ -34,6 +38,23 @@ export default function MapControls({
           <LoaderCircle className="size-4 animate-spin text-[#1f5457] dark:text-[#9adcd5]" />
         ) : (
           <Waypoints className="size-4 text-[#1f5457] dark:text-[#9adcd5]" />
+        )}
+      </button>
+      <button
+        type="button"
+        title={imagery ? "Switch to the vector map" : "Switch to satellite imagery"}
+        aria-label={
+          imagery ? "Switch to the vector map" : "Switch to satellite imagery"
+        }
+        aria-pressed={imagery}
+        disabled={disabled}
+        onClick={onToggleImagery}
+        className={buttonClass}
+      >
+        {imagery ? (
+          <MapIcon className="size-4" />
+        ) : (
+          <Satellite className="size-4" />
         )}
       </button>
     </div>

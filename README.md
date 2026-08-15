@@ -18,9 +18,10 @@ twenty JSON records.
 
 A few pieces that aren't obvious from the file tree:
 
-- The map on the contact page is MapLibre with OpenFreeMap vector tiles. It
-  pins every activity location alongside home, and the line it draws between
-  you and me is a great circle, not a route.
+- The map on the contact page is MapLibre with OpenFreeMap vector tiles, plus
+  an Esri imagery layer behind the satellite toggle. It pins every activity,
+  school and job location alongside home, and the line it draws between you
+  and me is a great circle, not a route.
 - Kasi, the chat thing in the corner, answers from `src/data/profile.md` and
   falls back to OpenRouter for anything it can't cover locally.
 - The contact form goes out through Resend.
