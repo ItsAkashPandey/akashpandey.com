@@ -34,30 +34,49 @@ export function createLocationMarkerElement(kind: "akash" | "visitor") {
   return element;
 }
 
+export type MarkerCategory = "activity" | "education" | "experience";
+
+const CATEGORY_ACCENT_VAR: Record<MarkerCategory, string> = {
+  activity: "--activity-accent",
+  education: "--education-accent",
+  experience: "--experience-accent",
+};
+
 /**
- * The third mark: everywhere a talk, camera install or startup showcase
- * happened. It needs to read as "there's something here" at a glance
- * against the quiet paper basemap, so it gets a held pulse and its own
- * ink (`--activity-accent`) rather than the muted tone a footnote marker
- * would normally get.
+ * The three "somewhere on the map" categories — activities, schools, jobs —
+ * share one pin design so a visitor learns the shape once, then tells them
+ * apart purely by ink: activity is the berry, education is green, experience
+ * is violet. Each gets a held pulse ring so it reads as "there's something
+ * here" against the quiet paper basemap instead of blending in the way the
+ * very first pass at this marker did.
+ *
+ * The accent colour is set via inline style rather than a Tailwind
+ * arbitrary-value class: `bg-[hsl(var(--x))]` only reaches the stylesheet
+ * when that exact string is scanned from source, and here `--x` is only
+ * known at runtime.
  */
-export function createActivityMarkerElement(count: number, label: string) {
+export function createCategoryMarkerElement(
+  category: MarkerCategory,
+  count: number,
+  tooltip: string,
+) {
+  const accent = `hsl(var(${CATEGORY_ACCENT_VAR[category]}))`;
   const element = document.createElement("button");
   element.type = "button";
-  const title =
-    count > 1 ? `${count} activities near ${label}` : `1 activity near ${label}`;
-  element.title = title;
-  element.setAttribute("aria-label", title);
+  element.title = tooltip;
+  element.setAttribute("aria-label", tooltip);
   element.className =
-    "group/activity relative flex size-7 items-center justify-center border-0 bg-transparent p-0";
+    "group/pin relative flex size-7 items-center justify-center border-0 bg-transparent p-0";
 
   const pulse = document.createElement("span");
-  pulse.className =
-    "activity-marker-pulse absolute size-4 rounded-full bg-[hsl(var(--activity-accent))]/35";
+  pulse.className = "marker-pulse absolute size-4 rounded-full";
+  pulse.style.backgroundColor = accent;
+  pulse.style.opacity = "0.35";
 
   const dot = document.createElement("span");
   dot.className =
-    "relative size-3 rounded-full border-2 border-[#f4f1e8] bg-[hsl(var(--activity-accent))] shadow-[0_1px_4px_rgba(0,0,0,0.35)] transition-transform duration-150 group-hover/activity:scale-125 dark:border-[#1b2429]";
+    "relative size-3 rounded-full border-2 border-[#f4f1e8] shadow-[0_1px_4px_rgba(0,0,0,0.35)] transition-transform duration-150 group-hover/pin:scale-125 dark:border-[#1b2429]";
+  dot.style.backgroundColor = accent;
 
   element.append(pulse, dot);
 
@@ -69,11 +88,11 @@ export function createActivityMarkerElement(count: number, label: string) {
     element.append(badge);
   }
 
-  const tooltip = document.createElement("span");
-  tooltip.textContent = label;
-  tooltip.className =
-    "pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 rounded-[3px] bg-[#1b2429]/90 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide whitespace-nowrap text-[#f4f1e8] opacity-0 shadow-sm transition-opacity group-hover/activity:opacity-100 group-focus-visible/activity:opacity-100";
-  element.append(tooltip);
+  const label = document.createElement("span");
+  label.textContent = tooltip;
+  label.className =
+    "pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 rounded-[3px] bg-[#1b2429]/90 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide whitespace-nowrap text-[#f4f1e8] opacity-0 shadow-sm transition-opacity group-hover/pin:opacity-100 group-focus-visible/pin:opacity-100";
+  element.append(label);
 
   return element;
 }
