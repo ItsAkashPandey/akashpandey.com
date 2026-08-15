@@ -207,7 +207,7 @@ export default function LocationMap() {
   const [isClient, setIsClient] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
-  const [imagery, setImagery] = useState(false);
+  const [imagery, setImagery] = useState(true);
   const [visitorLocation, setVisitorLocation] = useState<
     [number, number] | null
   >(null);
@@ -281,6 +281,9 @@ export default function LocationMap() {
         applyMapTheme(map, mapThemeRef.current);
         ensureResearchLayers(map, mapThemeRef.current);
         fitHomeCluster(map);
+        // Style always loads with imagery hidden (`visibility: "none"`) —
+        // turn it on to match the default-on toggle state.
+        setImageryVisible(map, true);
         setMapLoaded(true);
         setMapUnavailable(false);
         document.documentElement.dataset.heroMapReady = "true";
