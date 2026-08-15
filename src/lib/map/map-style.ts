@@ -15,6 +15,15 @@ export type MapTheme = "light" | "dark";
 const VECTOR_SOURCE_URL = "https://tiles.openfreemap.org/planet";
 const GLYPHS = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf";
 
+/** Optional imagery underlay, used only by the satellite view toggle. */
+const IMAGERY_TILES = [
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+];
+/** Esri's real tile coverage stops here over most of the plotted locations;
+ * beyond it MapLibre upscales this last real tile instead of requesting a
+ * zoom level Esri doesn't have — soft, but never a blank "no data" tile. */
+const IMAGERY_MAX_SOURCE_ZOOM = 18;
+
 // OpenFreeMap only ships Regular, Bold and Italic glyph stacks. Asking for a
 // weight it does not serve leaves the labels unrendered.
 const TEXT_FONT = ["Noto Sans Regular"];
@@ -54,6 +63,11 @@ const palette = {
     labelHalo: "#0a1114",
     placeLabel: "#c6d5de",
     placeLabelMajor: "#e7eef1",
+    // Imagery is a deliberate choice, so it is shown close to true tone
+    // rather than dimmed to sit under the dark vector paint.
+    imageryOpacity: 1,
+    imagerySaturation: -0.12,
+    imageryBrightnessMax: 0.94,
   },
   light: {
     ground: "#f1ede2",
@@ -68,8 +82,21 @@ const palette = {
     labelHalo: "#f4f1e8",
     placeLabel: "#2c3930",
     placeLabelMajor: "#1b2921",
+    imageryOpacity: 1,
+    imagerySaturation: -0.06,
+    imageryBrightnessMax: 1,
   },
 } as const;
+
+/** The three road layers dim under imagery so a photo reads clearly, then
+ * restore to their real (not flat) paint when the vector map comes back —
+ * road-trunk in particular fades in by zoom rather than a flat "on". */
+const ROAD_NORMAL_OPACITY = {
+  "road-minor": 0.85,
+  "road-major": 1,
+  "road-trunk": ["interpolate", ["linear"], ["zoom"], 7, 0, 8, 1],
+} as const;
+const ROAD_IMAGERY_OPACITY = 0.28;
 
 export function createMapStyle(theme: MapTheme): StyleSpecification {
   const c = palette[theme];
@@ -84,12 +111,33 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         url: VECTOR_SOURCE_URL,
         attribution: "© OpenStreetMap contributors",
       },
+      imagery: {
+        type: "raster",
+        tiles: IMAGERY_TILES,
+        tileSize: 256,
+        minzoom: 0,
+        maxzoom: IMAGERY_MAX_SOURCE_ZOOM,
+        attribution: "Imagery © Esri, Maxar, Earthstar Geographics",
+      },
     },
     layers: [
       {
         id: "ground",
         type: "background",
         paint: { "background-color": c.ground },
+      },
+      {
+        id: "imagery",
+        type: "raster",
+        source: "imagery",
+        layout: { visibility: "none" },
+        paint: {
+          "raster-opacity": c.imageryOpacity,
+          "raster-saturation": c.imagerySaturation,
+          "raster-brightness-max": c.imageryBrightnessMax,
+          "raster-fade-duration": 0,
+          "raster-resampling": "linear",
+        },
       },
       {
         id: "landcover-green",
@@ -314,4 +362,37 @@ export function applyMapTheme(map: MapLibreMap, theme: MapTheme) {
   set("place-label-major", "text-halo-color", c.labelHalo);
   set("place-label-minor", "text-color", c.placeLabel);
   set("place-label-minor", "text-halo-color", c.labelHalo);
+  set("imagery", "raster-opacity", c.imageryOpacity);
+  set("imagery", "raster-saturation", c.imagerySaturation);
+  set("imagery", "raster-brightness-max", c.imageryBrightnessMax);
+}
+
+/** Opaque vector paint that would otherwise bury the imagery underneath it. */
+const GROUND_COVER_LAYERS = ["landcover-green", "landuse-builtup", "water", "waterway"];
+
+export function setImageryVisible(map: MapLibreMap, visible: boolean) {
+  if (!map.isStyleLoaded() || !map.getLayer("imagery")) return;
+  map.setLayoutProperty("imagery", "visibility", visible ? "visible" : "none");
+
+  // The imagery sits at the bottom of the stack, so the vector fills have to
+  // step aside or the visitor just sees the dark basemap again.
+  for (const layer of GROUND_COVER_LAYERS) {
+    if (map.getLayer(layer)) {
+      map.setLayoutProperty(layer, "visibility", visible ? "none" : "visible");
+    }
+  }
+
+  // Roads and labels stay, but they dim flat under imagery instead of using
+  // their normal (sometimes zoom-interpolated) opacity.
+  for (const layer of Object.keys(ROAD_NORMAL_OPACITY) as (keyof typeof ROAD_NORMAL_OPACITY)[]) {
+    if (map.getLayer(layer)) {
+      map.setPaintProperty(
+        layer,
+        "line-opacity",
+        visible
+          ? ROAD_IMAGERY_OPACITY
+          : (ROAD_NORMAL_OPACITY[layer] as never),
+      );
+    }
+  }
 }

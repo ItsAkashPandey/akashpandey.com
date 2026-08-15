@@ -20,6 +20,7 @@ import { buildEducationPoints, buildExperiencePoints } from "@/lib/map/org-point
 import {
   applyMapTheme,
   createMapStyle,
+  setImageryVisible,
   type MapTheme,
 } from "@/lib/map/map-style";
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
@@ -206,6 +207,7 @@ export default function LocationMap() {
   const [isClient, setIsClient] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
+  const [imagery, setImagery] = useState(false);
   const [visitorLocation, setVisitorLocation] = useState<
     [number, number] | null
   >(null);
@@ -513,6 +515,14 @@ export default function LocationMap() {
     );
   };
 
+  const toggleImagery = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    const next = !imagery;
+    setImagery(next);
+    setImageryVisible(map, next);
+  };
+
   if (!isClient) {
     return (
       <div className="h-72 animate-pulse overflow-hidden rounded-md bg-[#f1ede2] sm:h-[26rem] dark:bg-[#1b2429]" />
@@ -532,11 +542,13 @@ export default function LocationMap() {
 
       <MapControls
         disabled={!mapLoaded}
+        imagery={imagery}
         locateDisabled={
           typeof navigator !== "undefined" && !("geolocation" in navigator)
         }
         locating={locating}
         onLocate={locateVisitor}
+        onToggleImagery={toggleImagery}
       />
 
       {visitorDistance !== null && (
