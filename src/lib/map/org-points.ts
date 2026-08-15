@@ -18,10 +18,16 @@ type LocationMap = Record<string, [number, number]>;
  * per employer or school, each with its own positions — so this only needs
  * a name-to-coordinates lookup, no grouping. An org with no entry here
  * (unknown site, e.g. DK Architects) is silently skipped rather than
- * guessed at. Education and experience each get their own lookup, even
- * though IIT Roorkee appears in both, so the PhD pin and the job pin land
- * a short distance apart on campus instead of stacking exactly on top of
- * each other. */
+ * guessed at.
+ *
+ * Education and experience each get their own lookup file. For IIT Roorkee
+ * both resolve to the same real campus centroid — there's no separately
+ * published coordinate for "the PhD office" vs "the JRF desk" — so each
+ * file nudges that shared point ~50m apart (and education's MANIT Bhopal
+ * point nudges away from the activity pin for the same campus). That's a
+ * display fix, not a location claim: it keeps pins from stacking exactly on
+ * top of each other, which would make the lower one unclickable, while
+ * staying well inside the same building/campus. */
 function toPoints(
   orgs: {
     name: string;
