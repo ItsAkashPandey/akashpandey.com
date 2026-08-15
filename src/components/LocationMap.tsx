@@ -34,6 +34,21 @@ const HOME_CLUSTER_RADIUS_KM = 2000;
 
 const ACTIVITY_POINTS = buildActivityPoints();
 
+const HTML_ESCAPES: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+/** Popup content is built as an HTML string (MapLibre's `setHTML`), so
+ * activity names and hrefs — free text from `activities.json` — go through
+ * this before they touch the template. */
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char]);
+}
+
 function fitLocations(
   map: MapLibreMap,
   visitor: [longitude: number, latitude: number],
@@ -272,29 +287,40 @@ export default function LocationMap() {
       if (!active) return;
 
       activityMarkersRef.current = ACTIVITY_POINTS.map((point) => {
-        const element = createActivityMarkerElement(point.activities.length);
-        const list = point.activities
-          .slice(0, 4)
+        const element = createActivityMarkerElement(
+          point.activities.length,
+          point.label,
+        );
+        const rows = point.activities
           .map(
-            (activity) =>
-              `<li>${activity.name} <span class="opacity-60">· ${new Date(
-                `${activity.date}T12:00:00`,
-              ).toLocaleDateString(undefined, {
-                month: "short",
-                year: "numeric",
-              })}</span></li>`,
+            (activity) => `<li><a href="${escapeHtml(activity.href)}">
+              <span class="activity-popup-text">
+                <span class="activity-popup-name">${escapeHtml(activity.name)}</span>
+                <span class="activity-popup-date">${escapeHtml(
+                  new Date(`${activity.date}T12:00:00`).toLocaleDateString(
+                    undefined,
+                    { month: "short", year: "numeric" },
+                  ),
+                )}</span>
+              </span>
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a></li>`,
           )
           .join("");
-        const more =
-          point.activities.length > 4
-            ? `<li class="opacity-60">+${point.activities.length - 4} more</li>`
-            : "";
         const popup = new maplibregl.Popup({
-          offset: 12,
-          maxWidth: "220px",
-          closeButton: false,
+          offset: 14,
+          closeButton: true,
+          className: "activity-popup",
         }).setHTML(
-          `<ul class="m-0 list-none space-y-0.5 p-0 text-[11px] leading-snug">${list}${more}</ul>`,
+          `<div class="activity-popup-card">
+            <header class="activity-popup-head">
+              <span class="activity-popup-place">${escapeHtml(point.label)}</span>
+              <span class="activity-popup-count">${point.activities.length} ${
+                point.activities.length === 1 ? "visit" : "visits"
+              }</span>
+            </header>
+            <ul class="activity-popup-list">${rows}</ul>
+          </div>`,
         );
 
         return new maplibregl.Marker({ element, anchor: "center" })

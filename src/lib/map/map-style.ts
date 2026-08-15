@@ -1,4 +1,8 @@
-import type { Map as MapLibreMap, StyleSpecification } from "maplibre-gl";
+import type {
+  ExpressionSpecification,
+  Map as MapLibreMap,
+  StyleSpecification,
+} from "maplibre-gl";
 
 export type MapTheme = "light" | "dark";
 
@@ -17,6 +21,20 @@ const TEXT_FONT = ["Noto Sans Regular"];
 const TEXT_FONT_STRONG = ["Noto Sans Bold"];
 
 /**
+ * OpenMapTiles' plain `name` is whatever OSM tagged as the *local* name —
+ * Devanagari in most of India, Cyrillic in Russia, and so on, mixed with
+ * Latin script everywhere else. A map read by an English-speaking visitor
+ * needs one consistent script; `name:en` carries that when OSM has it, and
+ * only place names that OpenStreetMap never translated fall through to the
+ * local tag.
+ */
+const LABEL_FIELD: ExpressionSpecification = [
+  "coalesce",
+  ["get", "name:en"],
+  ["get", "name"],
+];
+
+/**
  * Two instruments, one chassis. Light is paper on a desk — warm stock, muted
  * ink, water like a pale wash. Dark is the same plate under a lamp: the ink
  * inverts, the hierarchy does not. Plain single-line roads and sentence-case
@@ -25,7 +43,7 @@ const TEXT_FONT_STRONG = ["Noto Sans Bold"];
 const palette = {
   dark: {
     ground: "#1b2429",
-    water: "#0a1319",
+    water: "#0d2530",
     green: "#1e2b26",
     builtUp: "#212b31",
     roadMinor: "#2b363d",
@@ -35,10 +53,11 @@ const palette = {
     label: "#93a7b3",
     labelHalo: "#0a1114",
     placeLabel: "#c6d5de",
+    placeLabelMajor: "#e7eef1",
   },
   light: {
     ground: "#f1ede2",
-    water: "#c6d7dd",
+    water: "#aecdd4",
     green: "#e1e7d4",
     builtUp: "#e9e3d5",
     roadMinor: "#fdfcf8",
@@ -48,6 +67,7 @@ const palette = {
     label: "#5b6a5e",
     labelHalo: "#f4f1e8",
     placeLabel: "#2c3930",
+    placeLabelMajor: "#1b2921",
   },
 } as const;
 
@@ -136,7 +156,10 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         type: "line",
         source: "basemap",
         "source-layer": "transportation",
-        minzoom: 7,
+        // Raised from 7: at the country-wide view this widget opens on,
+        // z7 painted every secondary road in India at once — the exact
+        // "busy old GPS unit" clutter a quiet distance map should not have.
+        minzoom: 9,
         filter: [
           "match",
           ["get", "class"],
@@ -147,7 +170,7 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
           "line-color": c.roadMajor,
-          "line-width": ["interpolate", ["linear"], ["zoom"], 7, 0.5, 18, 9],
+          "line-width": ["interpolate", ["linear"], ["zoom"], 9, 0.5, 18, 9],
         },
       },
       {
@@ -155,7 +178,9 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         type: "line",
         source: "basemap",
         "source-layer": "transportation",
-        minzoom: 5,
+        // Same story one tier up: highways stay off until the view has
+        // already zoomed past "here's the country" into "here's the city".
+        minzoom: 7,
         filter: [
           "match",
           ["get", "class"],
@@ -166,7 +191,8 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
           "line-color": c.roadTrunk,
-          "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.6, 18, 12],
+          "line-width": ["interpolate", ["linear"], ["zoom"], 7, 0.4, 18, 12],
+          "line-opacity": ["interpolate", ["linear"], ["zoom"], 7, 0, 8, 1],
         },
       },
       {
@@ -179,7 +205,7 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
           "line-color": c.boundary,
           "line-width": ["interpolate", ["linear"], ["zoom"], 2, 0.4, 10, 1.2],
           "line-dasharray": [3, 2],
-          "line-opacity": 0.7,
+          "line-opacity": 0.55,
         },
       },
       {
@@ -189,7 +215,7 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         "source-layer": "transportation_name",
         minzoom: 14,
         layout: {
-          "text-field": ["get", "name"],
+          "text-field": LABEL_FIELD,
           "text-font": TEXT_FONT,
           "text-size": 10,
           "symbol-placement": "line",
@@ -202,38 +228,61 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         },
       },
       {
-        id: "place-label",
+        // Continent/country/state: the labels that carry the "here's
+        // roughly where this is on Earth" read at a zoomed-out view. Bolder
+        // and always on, so the map keeps its bearings before a single
+        // marker is visible.
+        id: "place-label-major",
         type: "symbol",
         source: "basemap",
         "source-layer": "place",
         filter: [
           "match",
           ["get", "class"],
-          ["continent", "country", "state", "city", "town", "village"],
+          ["continent", "country", "state"],
           true,
           false,
         ],
         layout: {
-          "text-field": ["get", "name"],
+          "text-field": LABEL_FIELD,
           "text-font": TEXT_FONT_STRONG,
-          "text-size": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            2,
-            10,
-            8,
-            13,
-            14,
-            16,
-          ],
-          "text-letter-spacing": 0.08,
+          "text-size": ["interpolate", ["linear"], ["zoom"], 2, 11, 6, 14],
+          "text-letter-spacing": 0.09,
+          "text-max-width": 8,
+        },
+        paint: {
+          "text-color": c.placeLabelMajor,
+          "text-halo-color": c.labelHalo,
+          "text-halo-width": 1.4,
+        },
+      },
+      {
+        // City/town/village only earns screen space once the view has
+        // zoomed in enough that a country-wide label sweep would otherwise
+        // paper the whole map in place names.
+        id: "place-label-minor",
+        type: "symbol",
+        source: "basemap",
+        "source-layer": "place",
+        minzoom: 5,
+        filter: [
+          "match",
+          ["get", "class"],
+          ["city", "town", "village"],
+          true,
+          false,
+        ],
+        layout: {
+          "text-field": LABEL_FIELD,
+          "text-font": TEXT_FONT_STRONG,
+          "text-size": ["interpolate", ["linear"], ["zoom"], 5, 10, 14, 16],
+          "text-letter-spacing": 0.06,
           "text-max-width": 8,
         },
         paint: {
           "text-color": c.placeLabel,
           "text-halo-color": c.labelHalo,
-          "text-halo-width": 1.4,
+          "text-halo-width": 1.3,
         },
       },
     ],
@@ -261,6 +310,8 @@ export function applyMapTheme(map: MapLibreMap, theme: MapTheme) {
   set("boundary", "line-color", c.boundary);
   set("street-label", "text-color", c.label);
   set("street-label", "text-halo-color", c.labelHalo);
-  set("place-label", "text-color", c.placeLabel);
-  set("place-label", "text-halo-color", c.labelHalo);
+  set("place-label-major", "text-color", c.placeLabelMajor);
+  set("place-label-major", "text-halo-color", c.labelHalo);
+  set("place-label-minor", "text-color", c.placeLabel);
+  set("place-label-minor", "text-halo-color", c.labelHalo);
 }
