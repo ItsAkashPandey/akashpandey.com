@@ -48,6 +48,11 @@
        toward, saturated enough to read as "highlighted" against the paper
        basemap instead of blending into it. */
     --activity-accent: 341 68% 45%;
+    /* Fourth and fifth: where each school was, where each job was. Green
+       for study, violet for work — both far enough from ochre/teal/berry
+       to stay legible in the same cluster. */
+    --education-accent: 150 45% 30%;
+    --experience-accent: 258 42% 46%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -96,6 +101,8 @@
     --map-accent: 184 42% 64%;
     --edge-accent: 188 24% 66%;
     --activity-accent: 341 74% 68%;
+    --education-accent: 150 42% 60%;
+    --experience-accent: 258 55% 74%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -465,10 +472,11 @@
     letter-spacing: 0;
   }
 
-  /* The activity popup: same frosted paper as the Kasi panel, so a card
-     floating over the map still reads as this site's, not a stock MapLibre
-     tooltip with a name pasted into it. */
-  .map-frame .maplibregl-popup.activity-popup .maplibregl-popup-content {
+  /* The map popup: same frosted paper as the Kasi panel, so a card floating
+     over the map still reads as this site's, not a stock MapLibre tooltip
+     with a name pasted into it. Shared by all three pin categories — the
+     `data-category` attribute on `.map-popup-card` is what tints it. */
+  .map-frame .maplibregl-popup.map-popup .maplibregl-popup-content {
     border-radius: 12px;
     background: hsl(var(--card) / 0.97);
     background-image: url("/img/paper-grain.png");
@@ -483,14 +491,14 @@
     max-width: 80vw;
   }
 
-  .dark .map-frame .maplibregl-popup.activity-popup .maplibregl-popup-content {
+  .dark .map-frame .maplibregl-popup.map-popup .maplibregl-popup-content {
     box-shadow:
       inset 0 1px 0 hsl(0 0% 100% / 0.06),
       0 4px 10px hsl(0 0% 0% / 0.4),
       0 24px 48px -18px hsl(0 0% 0% / 0.55);
   }
 
-  .map-frame .maplibregl-popup.activity-popup .maplibregl-popup-tip {
+  .map-frame .maplibregl-popup.map-popup .maplibregl-popup-tip {
     border-top-color: hsl(var(--card)) !important;
     border-bottom-color: hsl(var(--card)) !important;
   }
@@ -517,13 +525,24 @@
     color: hsl(var(--foreground));
   }
 
-  .activity-popup-card {
+  .map-popup-card {
     display: flex;
     flex-direction: column;
     max-height: 260px;
+    /* Falls back to the activity ink; education/experience cards set their
+       own tint below. */
+    --popup-accent: var(--activity-accent);
   }
 
-  .activity-popup-head {
+  .map-popup-card[data-category="education"] {
+    --popup-accent: var(--education-accent);
+  }
+
+  .map-popup-card[data-category="experience"] {
+    --popup-accent: var(--experience-accent);
+  }
+
+  .map-popup-head {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
@@ -532,23 +551,30 @@
     border-bottom: 1px solid hsl(var(--border) / 0.55);
   }
 
-  .activity-popup-place {
+  .map-popup-place {
     font-size: 12.5px;
     font-weight: 700;
     letter-spacing: -0.01em;
     color: hsl(var(--foreground));
+    text-decoration: none;
   }
 
-  .activity-popup-count {
+  a.map-popup-place:hover,
+  a.map-popup-place:focus-visible {
+    color: hsl(var(--popup-accent));
+    outline: none;
+  }
+
+  .map-popup-count {
     flex-shrink: 0;
     font-size: 9.5px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: hsl(var(--activity-accent));
+    color: hsl(var(--popup-accent));
   }
 
-  .activity-popup-list {
+  .map-popup-list {
     margin: 0;
     padding: 4px;
     list-style: none;
@@ -556,11 +582,11 @@
     overscroll-behavior: contain;
   }
 
-  .activity-popup-list li + li {
+  .map-popup-list li + li {
     margin-top: 1px;
   }
 
-  .activity-popup-list a {
+  .map-popup-row {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -568,16 +594,19 @@
     padding: 6px 8px;
     text-decoration: none;
     color: inherit;
+  }
+
+  a.map-popup-row {
     transition: background-color 0.12s ease;
   }
 
-  .activity-popup-list a:hover,
-  .activity-popup-list a:focus-visible {
-    background: hsl(var(--activity-accent) / 0.1);
+  a.map-popup-row:hover,
+  a.map-popup-row:focus-visible {
+    background: hsl(var(--popup-accent) / 0.1);
     outline: none;
   }
 
-  .activity-popup-text {
+  .map-popup-text {
     display: flex;
     min-width: 0;
     flex: 1;
@@ -585,7 +614,7 @@
     gap: 1px;
   }
 
-  .activity-popup-name {
+  .map-popup-name {
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -595,40 +624,40 @@
     line-height: 1.3;
   }
 
-  .activity-popup-date {
+  .map-popup-date {
     font-size: 9.5px;
     color: hsl(var(--muted-foreground));
   }
 
-  .activity-popup-list a svg {
+  .map-popup-list a svg {
     flex-shrink: 0;
     width: 12px;
     height: 12px;
-    color: hsl(var(--activity-accent));
+    color: hsl(var(--popup-accent));
     opacity: 0.7;
   }
 
-  .activity-popup-list::-webkit-scrollbar {
+  .map-popup-list::-webkit-scrollbar {
     width: 6px;
   }
 
-  .activity-popup-list::-webkit-scrollbar-thumb {
+  .map-popup-list::-webkit-scrollbar-thumb {
     background: hsl(var(--foreground) / 0.16);
     border-radius: 999px;
   }
 
-  .activity-marker-pulse {
-    animation: activityPulse 2.6s ease-out infinite;
+  .marker-pulse {
+    animation: markerPulse 2.6s ease-out infinite;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .activity-marker-pulse {
+    .marker-pulse {
       animation: none;
       opacity: 0.45;
     }
   }
 
-  @keyframes activityPulse {
+  @keyframes markerPulse {
     0% {
       transform: scale(0.9);
       opacity: 0.55;

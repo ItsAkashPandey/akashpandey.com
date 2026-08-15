@@ -11,10 +11,12 @@ import {
   updateVisitorConnection,
 } from "@/lib/map/map-layers";
 import {
-  createActivityMarkerElement,
+  createCategoryMarkerElement,
   createLocationMarkerElement,
+  type MarkerCategory,
 } from "@/lib/map/map-markers";
 import { buildActivityPoints } from "@/lib/map/activity-points";
+import { buildEducationPoints, buildExperiencePoints } from "@/lib/map/org-points";
 import {
   applyMapTheme,
   createMapStyle,
@@ -33,6 +35,8 @@ const AKASH_LOCATION: [longitude: number, latitude: number] = [
 const HOME_CLUSTER_RADIUS_KM = 2000;
 
 const ACTIVITY_POINTS = buildActivityPoints();
+const EDUCATION_POINTS = buildEducationPoints();
+const EXPERIENCE_POINTS = buildExperiencePoints();
 
 const HTML_ESCAPES: Record<string, string> = {
   "&": "&amp;",
@@ -47,6 +51,76 @@ const HTML_ESCAPES: Record<string, string> = {
  * this before they touch the template. */
 function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char]);
+}
+
+const CHEVRON_SVG =
+  '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function formatMonthYear(isoDate: string) {
+  return new Date(`${isoDate}T12:00:00`).toLocaleDateString(undefined, {
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function popupShell(category: MarkerCategory, headHtml: string, listHtml: string) {
+  return `<div class="map-popup-card" data-category="${category}">
+    <header class="map-popup-head">${headHtml}</header>
+    <ul class="map-popup-list">${listHtml}</ul>
+  </div>`;
+}
+
+function activityPopupHtml(point: {
+  label: string;
+  activities: { name: string; date: string; href: string }[];
+}) {
+  const rows = point.activities
+    .map(
+      (activity) => `<li><a class="map-popup-row" href="${escapeHtml(activity.href)}">
+        <span class="map-popup-text">
+          <span class="map-popup-name">${escapeHtml(activity.name)}</span>
+          <span class="map-popup-date">${escapeHtml(formatMonthYear(activity.date))}</span>
+        </span>
+        ${CHEVRON_SVG}
+      </a></li>`,
+    )
+    .join("");
+  const count = point.activities.length;
+  const head = `<span class="map-popup-place">${escapeHtml(point.label)}</span><span class="map-popup-count">${count} ${count === 1 ? "visit" : "visits"}</span>`;
+  return popupShell("activity", head, rows);
+}
+
+function orgPopupHtml(
+  category: "education" | "experience",
+  point: {
+    label: string;
+    href: string;
+    positions: { title: string; start: string; end?: string }[];
+  },
+) {
+  const rows = point.positions
+    .map(
+      (position) => `<li class="map-popup-row">
+        <span class="map-popup-text">
+          <span class="map-popup-name">${escapeHtml(position.title)}</span>
+          <span class="map-popup-date">${escapeHtml(position.start)}${
+            position.end ? ` – ${escapeHtml(position.end)}` : ""
+          }</span>
+        </span>
+      </li>`,
+    )
+    .join("");
+  const count = point.positions.length;
+  const noun =
+    category === "education"
+      ? count === 1
+        ? "programme"
+        : "programmes"
+      : count === 1
+        ? "role"
+        : "roles";
+  const head = `<a class="map-popup-place" href="${escapeHtml(point.href)}" target="_blank" rel="noreferrer">${escapeHtml(point.label)}</a><span class="map-popup-count">${count} ${noun}</span>`;
+  return popupShell(category, head, rows);
 }
 
 function fitLocations(
@@ -79,11 +153,18 @@ function fitLocations(
   );
 }
 
-/** Opens on the spread of activity pins near home instead of a street-level
- * zoom on one address, so the map reads as "everywhere I've worked" first. */
+/** Opens on the spread of activity/education/experience pins near home
+ * instead of a street-level zoom on one address, so the map reads as
+ * "everywhere I've studied, worked and shown up" first. */
 function fitHomeCluster(map: MapLibreMap) {
-  const nearby = ACTIVITY_POINTS.filter(
-    (point) => distanceKm(AKASH_LOCATION, point.coordinates) <= HOME_CLUSTER_RADIUS_KM,
+  const allPoints: { coordinates: [number, number] }[] = [
+    ...ACTIVITY_POINTS,
+    ...EDUCATION_POINTS,
+    ...EXPERIENCE_POINTS,
+  ];
+  const nearby = allPoints.filter(
+    (point) =>
+      distanceKm(AKASH_LOCATION, point.coordinates) <= HOME_CLUSTER_RADIUS_KM,
   );
   if (nearby.length === 0) return;
 
@@ -117,7 +198,7 @@ export default function LocationMap() {
   const mapRef = useRef<MapLibreMap | null>(null);
   const akashMarkerRef = useRef<Marker | null>(null);
   const visitorMarkerRef = useRef<Marker | null>(null);
-  const activityMarkersRef = useRef<Marker[]>([]);
+  const categoryMarkersRef = useRef<Marker[]>([]);
   const visitorLocationRef = useRef<[number, number] | null>(null);
   const mapThemeRef = useRef<MapTheme>("light");
   const mapReadyRef = useRef(false);
@@ -224,8 +305,8 @@ export default function LocationMap() {
       mapReadyRef.current = false;
       akashMarkerRef.current?.remove();
       visitorMarkerRef.current?.remove();
-      for (const marker of activityMarkersRef.current) marker.remove();
-      activityMarkersRef.current = [];
+      for (const marker of categoryMarkersRef.current) marker.remove();
+      categoryMarkersRef.current = [];
       mapRef.current?.remove();
       akashMarkerRef.current = null;
       visitorMarkerRef.current = null;
@@ -279,55 +360,67 @@ export default function LocationMap() {
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapLoaded || activityMarkersRef.current.length > 0) return;
+    if (!map || !mapLoaded || categoryMarkersRef.current.length > 0) return;
     let active = true;
 
     const addMarkers = async () => {
       const maplibregl = (await import("maplibre-gl")).default;
       if (!active) return;
 
-      activityMarkersRef.current = ACTIVITY_POINTS.map((point) => {
-        const element = createActivityMarkerElement(
-          point.activities.length,
-          point.label,
+      const activityMarkers = ACTIVITY_POINTS.map((point) => {
+        const count = point.activities.length;
+        const element = createCategoryMarkerElement(
+          "activity",
+          count,
+          `${count} ${count === 1 ? "activity" : "activities"} near ${point.label}`,
         );
-        const rows = point.activities
-          .map(
-            (activity) => `<li><a href="${escapeHtml(activity.href)}">
-              <span class="activity-popup-text">
-                <span class="activity-popup-name">${escapeHtml(activity.name)}</span>
-                <span class="activity-popup-date">${escapeHtml(
-                  new Date(`${activity.date}T12:00:00`).toLocaleDateString(
-                    undefined,
-                    { month: "short", year: "numeric" },
-                  ),
-                )}</span>
-              </span>
-              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </a></li>`,
-          )
-          .join("");
         const popup = new maplibregl.Popup({
           offset: 14,
           closeButton: true,
-          className: "activity-popup",
-        }).setHTML(
-          `<div class="activity-popup-card">
-            <header class="activity-popup-head">
-              <span class="activity-popup-place">${escapeHtml(point.label)}</span>
-              <span class="activity-popup-count">${point.activities.length} ${
-                point.activities.length === 1 ? "visit" : "visits"
-              }</span>
-            </header>
-            <ul class="activity-popup-list">${rows}</ul>
-          </div>`,
-        );
+          className: "map-popup",
+        }).setHTML(activityPopupHtml(point));
 
         return new maplibregl.Marker({ element, anchor: "center" })
           .setLngLat(point.coordinates)
           .setPopup(popup)
           .addTo(map);
       });
+
+      const orgMarkers = (
+        [
+          ["education", EDUCATION_POINTS],
+          ["experience", EXPERIENCE_POINTS],
+        ] as const
+      ).flatMap(([category, points]) =>
+        points.map((point) => {
+          const count = point.positions.length;
+          const noun =
+            category === "education"
+              ? count === 1
+                ? "programme"
+                : "programmes"
+              : count === 1
+                ? "role"
+                : "roles";
+          const element = createCategoryMarkerElement(
+            category,
+            count,
+            `${point.label} — ${count} ${noun}`,
+          );
+          const popup = new maplibregl.Popup({
+            offset: 14,
+            closeButton: true,
+            className: "map-popup",
+          }).setHTML(orgPopupHtml(category, point));
+
+          return new maplibregl.Marker({ element, anchor: "center" })
+            .setLngLat(point.coordinates)
+            .setPopup(popup)
+            .addTo(map);
+        }),
+      );
+
+      categoryMarkersRef.current = [...activityMarkers, ...orgMarkers];
     };
 
     void addMarkers();
