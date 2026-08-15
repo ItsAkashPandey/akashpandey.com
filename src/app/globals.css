@@ -43,6 +43,11 @@
     --accent-warm: 24 62% 37%;
     --map-accent: 188 46% 30%;
     --edge-accent: 190 28% 40%;
+    /* Third ink for the map: everywhere an activity happened. Ochre is
+       Akash, teal is the visitor — this needed a hue neither one leans
+       toward, saturated enough to read as "highlighted" against the paper
+       basemap instead of blending into it. */
+    --activity-accent: 341 68% 45%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -90,6 +95,7 @@
     --accent-warm: 26 62% 62%;
     --map-accent: 184 42% 64%;
     --edge-accent: 188 24% 66%;
+    --activity-accent: 341 74% 68%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -418,8 +424,17 @@
   }
 
   .map-frame {
-    @apply border-border/70 overflow-hidden rounded-lg border;
+    @apply border-border/70 overflow-hidden rounded-xl border;
     background: hsl(var(--muted));
+    box-shadow:
+      0 1px 0 hsl(0 0% 100% / 0.5) inset,
+      0 18px 44px -22px hsl(var(--foreground) / 0.32);
+  }
+
+  .dark .map-frame {
+    box-shadow:
+      0 1px 0 hsl(0 0% 100% / 0.06) inset,
+      0 18px 44px -20px hsl(0 0% 0% / 0.6);
   }
 
   .map-frame > div {
@@ -450,19 +465,182 @@
     letter-spacing: 0;
   }
 
-  .map-frame .maplibregl-popup-content {
-    border-radius: 6px;
-    background: hsl(var(--card) / 0.96);
+  /* The activity popup: same frosted paper as the Kasi panel, so a card
+     floating over the map still reads as this site's, not a stock MapLibre
+     tooltip with a name pasted into it. */
+  .map-frame .maplibregl-popup.activity-popup .maplibregl-popup-content {
+    border-radius: 12px;
+    background: hsl(var(--card) / 0.97);
+    background-image: url("/img/paper-grain.png");
+    background-size: 128px 128px;
     color: hsl(var(--foreground));
     box-shadow:
-      0 8px 20px hsl(var(--foreground) / 0.14),
-      inset 0 1px hsl(var(--foreground) / 0.05);
-    padding: 8px 10px;
+      inset 0 1px 0 hsl(0 0% 100% / 0.5),
+      0 4px 10px hsl(var(--foreground) / 0.1),
+      0 24px 48px -20px hsl(var(--foreground) / 0.32);
+    padding: 0;
+    width: 268px;
+    max-width: 80vw;
   }
 
-  .map-frame .maplibregl-popup-tip {
-    border-top-color: hsl(var(--card) / 0.96) !important;
-    border-bottom-color: hsl(var(--card) / 0.96) !important;
+  .dark .map-frame .maplibregl-popup.activity-popup .maplibregl-popup-content {
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.06),
+      0 4px 10px hsl(0 0% 0% / 0.4),
+      0 24px 48px -18px hsl(0 0% 0% / 0.55);
+  }
+
+  .map-frame .maplibregl-popup.activity-popup .maplibregl-popup-tip {
+    border-top-color: hsl(var(--card)) !important;
+    border-bottom-color: hsl(var(--card)) !important;
+  }
+
+  .map-frame .maplibregl-popup-close-button {
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: 15px;
+    line-height: 1;
+    color: hsl(var(--muted-foreground));
+    transition:
+      background-color 0.12s ease,
+      color 0.12s ease;
+  }
+
+  .map-frame .maplibregl-popup-close-button:hover {
+    background: hsl(var(--foreground) / 0.08);
+    color: hsl(var(--foreground));
+  }
+
+  .activity-popup-card {
+    display: flex;
+    flex-direction: column;
+    max-height: 260px;
+  }
+
+  .activity-popup-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 30px 8px 12px;
+    border-bottom: 1px solid hsl(var(--border) / 0.55);
+  }
+
+  .activity-popup-place {
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: hsl(var(--foreground));
+  }
+
+  .activity-popup-count {
+    flex-shrink: 0;
+    font-size: 9.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: hsl(var(--activity-accent));
+  }
+
+  .activity-popup-list {
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .activity-popup-list li + li {
+    margin-top: 1px;
+  }
+
+  .activity-popup-list a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 7px;
+    padding: 6px 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.12s ease;
+  }
+
+  .activity-popup-list a:hover,
+  .activity-popup-list a:focus-visible {
+    background: hsl(var(--activity-accent) / 0.1);
+    outline: none;
+  }
+
+  .activity-popup-text {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .activity-popup-name {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .activity-popup-date {
+    font-size: 9.5px;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .activity-popup-list a svg {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    color: hsl(var(--activity-accent));
+    opacity: 0.7;
+  }
+
+  .activity-popup-list::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .activity-popup-list::-webkit-scrollbar-thumb {
+    background: hsl(var(--foreground) / 0.16);
+    border-radius: 999px;
+  }
+
+  .activity-marker-pulse {
+    animation: activityPulse 2.6s ease-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .activity-marker-pulse {
+      animation: none;
+      opacity: 0.45;
+    }
+  }
+
+  @keyframes activityPulse {
+    0% {
+      transform: scale(0.9);
+      opacity: 0.55;
+    }
+    70% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
   }
 
   @media (max-width: 639px) {
