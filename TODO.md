@@ -46,8 +46,8 @@ phone sizes; these need eyes:
 - [x] Map deep links from the globe: `/contact?city=vienna#map`,
       `/contact?place=iit-roorkee#map` open at the right place with the popup.
 - [ ] Globe on a real phone: a sideways swipe turns it, an up/down swipe still
-      scrolls the page, tapping a dot selects that city, and it stays smooth on
-      a mid-range phone.
+      scrolls the page, two fingers pinch it in and out, tapping a dot selects
+      that city, and it stays smooth on a mid-range phone.
 - [x] Search palette on a Mac shows ⌘K; try a paper title, a tool alias
       (e.g. "UAV"), a city.
 - [ ] Kasi on a phone: keyboard doesn't cover the input, Hindi typing works,
@@ -72,8 +72,9 @@ phone sizes; these need eyes:
 - [ ] The free model list in `src/lib/chat-providers.ts` goes stale every few
       weeks. `openrouter/free` covers it, but check
       `https://openrouter.ai/api/v1/models` (price 0) now and then.
-- [ ] Globe: markers around Roorkee/Delhi overlap; maybe smaller dots or a
-      closer camera on India. The land mask stops at ±84°, so Antarctica is
+- [ ] Globe: markers around Roorkee/Delhi overlap. Zooming in (wheel or
+      pinch, up to 3×) spreads most of them, but Roorkee, Haridwar and Dehradun
+      still sit on each other. The land mask stops at ±84°, so Antarctica is
       patchy (not visible in normal use).
 - [x] View Transitions from activity cards into activity pages, once Next's
       `viewTransition` flag is stable.
@@ -114,11 +115,12 @@ phone sizes; these need eyes:
   old `#activity-N` links still work; filters live in the URL.
 - Photos: pre-sized WebP with blur previews; only the hero photo is preloaded.
 - Map: clustered pins, one popup per place, working toggles, deep links from
-  the globe, MapLibre 6, and its styles actually apply now.
+  the globe, MapLibre 6, and its styles actually apply now. The wheel zooms it
+  without Ctrl; phones still move it with two fingers.
 - Kasi: whole profile plus generated facts, streaming, free providers with
   fallback (Cerebras, Groq, Gemini, OpenRouter).
 - Home: "hi, akash here" heading, "Dr. Akash Kumar" line, 3D globe of the
-  22 cities with a step-through tour.
+  22 cities with a step-through tour, zoomed with the wheel or a pinch.
 - Search palette (`Ctrl K`, `⌘K` or `/`) over pages, activities, papers,
   tools and roles.
 - SEO: preview images, structured data, Scholar tags, RSS
@@ -127,5 +129,5 @@ phone sizes; these need eyes:
   extra headers; Speed Insights (cookieless).
 - Accessibility: axe scans clean on the main pages; focus ring, selection and
   scrollbar colours; underlined map credits.
-- Tests: 58 unit tests (`npm test`), 28 end-to-end tests on desktop and
+- Tests: 58 unit tests (`npm test`), 30 end-to-end tests on desktop and
   phone sizes (`npm run test:e2e`).
