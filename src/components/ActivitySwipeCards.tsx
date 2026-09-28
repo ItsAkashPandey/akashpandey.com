@@ -1,5 +1,6 @@
 "use client";
 
+import type { Photo } from "@/lib/photo";
 import { cn } from "@/lib/utils";
 import { useCallback, useState } from "react";
 import ImageLightbox from "./ImageLightbox";
@@ -7,13 +8,16 @@ import StackedImageDeck, { DECK_SIZE } from "./StackedImageDeck";
 
 interface ActivitySwipeCardsProps {
   className?: string;
-  images: string[];
+  photos: Photo[];
+  /** What the photos show, usually the activity name. */
+  alt: string;
   priority?: boolean;
 }
 
 export default function ActivitySwipeCards({
   className,
-  images,
+  photos,
+  alt,
   priority = false,
 }: ActivitySwipeCardsProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -29,8 +33,8 @@ export default function ActivitySwipeCards({
   return (
     <>
       <StackedImageDeck
-        images={images}
-        alt="Activity photo"
+        photos={photos}
+        alt={alt}
         imageWidth={264}
         imageHeight={198}
         sizes="264px"
@@ -43,7 +47,8 @@ export default function ActivitySwipeCards({
 
       {lightboxOpen && (
         <ImageLightbox
-          images={images}
+          photos={photos}
+          alt={alt}
           currentIndex={lightboxIndex}
           onClose={closeLightbox}
           onNavigate={setLightboxIndex}

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Photo } from "@/lib/photo";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import ImageLightbox from "./ImageLightbox";
@@ -7,42 +8,39 @@ import StackedImageDeck, { DECK_SIZE } from "./StackedImageDeck";
 
 interface SwipeCardsProps {
   className?: string;
-  images?: string[];
+  photos: Photo[];
+  /** What the photos show. */
+  alt: string;
   baselineWidth?: number;
   baselineHeight?: number;
+  priority?: boolean;
 }
-
-type Card = {
-  id: number;
-  url: string;
-};
 
 export default function SwipeCards({
   className,
-  images,
+  photos,
+  alt,
   baselineWidth = 3,
   baselineHeight = 4,
+  priority = false,
 }: SwipeCardsProps) {
-  const usesHomepageImages = !images?.length;
-  const deckImages = images?.length ? images : cardData.map((card) => card.url);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const landscape = baselineWidth > baselineHeight;
 
   return (
     <>
       <StackedImageDeck
-        images={deckImages}
-        alt="Photo of Akash"
-        imageWidth={baselineWidth}
-        imageHeight={baselineHeight}
-        sizes="(max-width: 640px) 198px, 264px"
+        photos={photos}
+        alt={alt}
+        imageWidth={landscape ? 264 : 198}
+        imageHeight={landscape ? 198 : 264}
+        sizes={landscape ? "264px" : "198px"}
         quality={82}
-        priority={usesHomepageImages}
+        priority={priority}
         fit="cover"
         stackSize={4}
         className={cn(
-          baselineWidth > baselineHeight
-            ? DECK_SIZE.landscape
-            : DECK_SIZE.portrait,
+          landscape ? DECK_SIZE.landscape : DECK_SIZE.portrait,
           "rounded-lg",
           className,
         )}
@@ -50,7 +48,8 @@ export default function SwipeCards({
       />
       {lightboxIndex !== null && (
         <ImageLightbox
-          images={deckImages}
+          photos={photos}
+          alt={alt}
           currentIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
           onNavigate={setLightboxIndex}
@@ -59,22 +58,3 @@ export default function SwipeCards({
     </>
   );
 }
-
-const cardData: Card[] = [
-  {
-    id: 1,
-    url: "/img/akash-1.webp",
-  },
-  {
-    id: 2,
-    url: "/img/akash-2.webp",
-  },
-  {
-    id: 3,
-    url: "/img/akash-3.webp",
-  },
-  {
-    id: 4,
-    url: "/img/akash-4.webp",
-  },
-];
