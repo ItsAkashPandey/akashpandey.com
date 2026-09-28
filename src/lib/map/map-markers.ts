@@ -29,11 +29,17 @@ function hoverLabel(text: string) {
   return label;
 }
 
+/**
+ * No `relative` here: MapLibre positions markers absolutely, and its
+ * stylesheet sits in the base layer (globals.css), so any Tailwind position
+ * class wins over it. With `relative`, each pin sat in the normal flow below
+ * the pins before it, up to a couple of hundred pixels off its place.
+ */
 function pinButton(ariaLabel: string, sizeClass: string) {
   const element = document.createElement("button");
   element.type = "button";
   element.setAttribute("aria-label", ariaLabel);
-  element.className = `group/pin relative flex ${sizeClass} items-center justify-center rounded-full border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[hsl(var(--ring))]`;
+  element.className = `group/pin flex ${sizeClass} items-center justify-center rounded-full border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[hsl(var(--ring))]`;
   return element;
 }
 

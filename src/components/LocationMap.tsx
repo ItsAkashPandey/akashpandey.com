@@ -122,6 +122,24 @@ function fitLocations(map: MapLibreMap, home: LngLat, visitor: LngLat) {
   );
 }
 
+/**
+ * MapLibre puts a popup above its pin when there is room and below it
+ * otherwise, even when there is no room there either (a pin in the middle of
+ * the short phone map), so a long list ran off the map and was cut off. Pan
+ * just far enough to show all of it.
+ */
+function panPopupIntoView(map: MapLibreMap, popup: Popup) {
+  const element = popup.getElement();
+  if (!element || !popup.isOpen()) return;
+  const frame = map.getContainer().getBoundingClientRect();
+  const box = element.getBoundingClientRect();
+  const margin = 12;
+  const below = box.bottom - (frame.bottom - margin);
+  const above = frame.top + margin - box.top;
+  const dy = below > 0 ? below : above > 0 ? -above : 0;
+  if (Math.abs(dy) >= 1) map.panBy([0, dy], { duration: 450 });
+}
+
 type MapState = "loading" | "ready" | "failed";
 
 export default function LocationMap({ data }: { data: MapData }) {
@@ -166,6 +184,10 @@ export default function LocationMap({ data }: { data: MapData }) {
         closeButton: true,
         className: "map-popup",
         maxWidth: "300px",
+        // Focus is moved below, without scrolling. MapLibre's own focus
+        // scrolls the page to the popup, and a deep-linked one that is still
+        // off the map (Vienna, before the fly-to) sent the page to the top.
+        focusAfterOpen: false,
       })
         .setLngLat(coordinates)
         .setHTML(html)
@@ -176,6 +198,10 @@ export default function LocationMap({ data }: { data: MapData }) {
         .getElement()
         ?.querySelector<HTMLElement>("a")
         ?.focus({ preventScroll: true });
+      // A deep link is still flying there, so wait for the camera to stop.
+      const reveal = () => panPopupIntoView(map, popup);
+      if (map.isMoving()) map.once("moveend", reveal);
+      else reveal();
     },
     [],
   );
@@ -523,10 +549,11 @@ export default function LocationMap({ data }: { data: MapData }) {
         Skip the map
       </a>
       {/* The click handler only reroutes popup links; the map and its controls
-          are keyboard operable themselves. */}
+          are keyboard operable themselves. A size container, so a popup can
+          be capped at the map's height (globals.css). */}
       <div
         onClick={onClick}
-        className="group bg-muted relative isolate h-80 overflow-hidden rounded-md sm:h-[28rem]"
+        className="group bg-muted [container-type:size] relative isolate h-80 overflow-hidden rounded-md sm:h-[28rem]"
       >
         <div
           ref={containerRef}
