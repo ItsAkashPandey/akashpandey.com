@@ -40,10 +40,10 @@ phone sizes; these need eyes:
 - [ ] Deep links: `/activities#nasa-space-apps-2024` and the old style
       `/activities#activity-12` land on the card and highlight it, including
       on a phone and with filters active.
-- [ ] Map: Tab in from the contact form: the "Skip the map" link shows up and
+- [x] Map: Tab in from the contact form: the "Skip the map" link shows up and
       jumps past the pins. Theme and imagery toggles while tiles are still
       loading. "Locate me" draws the line.
-- [ ] Map deep links from the globe: `/contact?city=vienna#map`,
+- [x] Map deep links from the globe: `/contact?city=vienna#map`,
       `/contact?place=iit-roorkee#map` open at the right place with the popup.
 - [ ] Globe on a real phone: a sideways swipe turns it, an up/down swipe still
       scrolls the page, tapping a dot selects that city, and it stays smooth on

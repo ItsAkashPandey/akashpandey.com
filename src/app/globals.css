@@ -600,6 +600,12 @@
     border-bottom-color: hsl(var(--card)) !important;
   }
 
+  /* Above the zoom and layer buttons (z-30): on a phone the card is nearly
+     as wide as the map, and its left edge sat under them. */
+  .map-frame .maplibregl-popup.map-popup {
+    z-index: 35;
+  }
+
   .map-frame .maplibregl-popup-close-button {
     top: 6px;
     right: 6px;
@@ -625,7 +631,9 @@
   .map-popup-card {
     display: flex;
     flex-direction: column;
-    max-height: 300px;
+    /* Shorter than the map itself (320px on phones), so panning can always
+       bring the whole card into view; the list scrolls inside it. */
+    max-height: min(300px, calc(100cqh - 80px));
     /* Falls back to the activity ink; education/experience cards set their
        own tint below. */
     --popup-accent: var(--activity-accent);
