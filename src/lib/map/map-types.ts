@@ -16,6 +16,8 @@ export type MapPoint = {
   category: MarkerCategory;
   /** The key in places.json. */
   place: string;
+  /** slug(place.city) — lets a ?city= deep link match without places.json. */
+  city: string;
   coordinates: LngLat;
   /** The place's short name, e.g. "KVK Dhanauri, Haridwar". */
   label: string;

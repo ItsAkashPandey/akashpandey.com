@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/Button";
 import type { GlobeData, GlobeStop } from "@/lib/globe-data";
 import { countLabel, type MarkerCategory } from "@/lib/map/map-types";
 import { cn } from "@/lib/utils";
-import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GlobeMarker, GlobeScene, GlobeTheme } from "./globe-scene";
@@ -194,6 +194,7 @@ export default function PlacesGlobe({ data }: { data: GlobeData }) {
     data.abroad.length ? ` and as far as ${data.abroad.join(", ")}` : ""
   }.`;
   const extra = stop.items.length - ITEMS_SHOWN;
+  const mapHref = `/contact?city=${stop.id}#map`;
 
   return (
     <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-12">
@@ -230,13 +231,21 @@ export default function PlacesGlobe({ data }: { data: GlobeData }) {
               </li>
             ))}
           </ul>
-          {extra > 0 && (
+          {extra > 0 ? (
             <Link
-              href="/contact#map"
+              href={mapHref}
               className="link-ink mt-3 inline-flex items-center gap-1 text-sm font-semibold"
             >
               {extra} more on the map
               <ArrowUpRight className="size-3.5" aria-hidden />
+            </Link>
+          ) : (
+            <Link
+              href={mapHref}
+              className="text-muted-foreground hover:text-ink mt-3 inline-flex items-center gap-1 text-sm font-semibold transition-colors"
+            >
+              See on the map
+              <MapPin className="size-3.5" aria-hidden />
             </Link>
           )}
         </div>

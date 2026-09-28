@@ -2,10 +2,12 @@
 
 import MapControls from "@/components/map/MapControls";
 import {
+  boundsForCoordinates,
   distanceKm,
   formatDistance,
   greatCircleMidpoint,
 } from "@/lib/map/map-geometry";
+import { focusedMapPoints } from "@/lib/map/map-focus";
 import {
   ensureResearchLayers,
   updateVisitorConnection,
@@ -44,6 +46,11 @@ const CLUSTER_RADIUS = 44;
 /** The opening view: home plus everything within this distance of it. */
 const HOME_REGION_RADIUS_KM = 600;
 const LOAD_TIMEOUT_MS = 12_000;
+/** How close a ?place=/?city= deep link zooms in on what it finds. */
+const FOCUS_ZOOM = 13;
+const FOCUS_PADDING = { top: 56, right: 60, bottom: 56, left: 60 };
+
+type MapLibreModule = Awaited<ReturnType<typeof loadMapLibre>>;
 
 type ClusterProperties = {
   cluster: true;
@@ -147,6 +154,32 @@ export default function LocationMap({ data }: { data: MapData }) {
     visitorLocationRef.current = visitorLocation;
   }, [visitorLocation]);
 
+  // Shared by marker clicks and the ?place=/?city= deep link below, so a
+  // popup always opens and focuses the same way no matter what triggered it.
+  const openPopup = useCallback(
+    (maplibregl: MapLibreModule, coordinates: LngLat, html: string) => {
+      const map = mapRef.current;
+      if (!map) return;
+      popupRef.current?.remove();
+      const popup = new maplibregl.Popup({
+        offset: 16,
+        closeButton: true,
+        className: "map-popup",
+        maxWidth: "300px",
+      })
+        .setLngLat(coordinates)
+        .setHTML(html)
+        .addTo(map);
+      popupRef.current = popup;
+      // Keyboard users land on the first entry instead of the page behind.
+      popup
+        .getElement()
+        ?.querySelector<HTMLElement>("a")
+        ?.focus({ preventScroll: true });
+    },
+    [],
+  );
+
   // Create the map. Re-runs on "Try again" (attempt) after a failed load.
   useEffect(() => {
     const container = containerRef.current;
@@ -163,26 +196,6 @@ export default function LocationMap({ data }: { data: MapData }) {
     const initialise = async () => {
       const maplibregl = await loadMapLibre();
       if (cancelled) return;
-
-      const openPopup = (coordinates: LngLat, html: string) => {
-        if (!map) return;
-        popupRef.current?.remove();
-        const popup = new maplibregl.Popup({
-          offset: 16,
-          closeButton: true,
-          className: "map-popup",
-          maxWidth: "300px",
-        })
-          .setLngLat(coordinates)
-          .setHTML(html)
-          .addTo(map);
-        popupRef.current = popup;
-        // Keyboard users land on the first entry instead of the page behind.
-        popup
-          .getElement()
-          ?.querySelector<HTMLElement>("a")
-          ?.focus({ preventScroll: true });
-      };
 
       const theme: MapTheme = document.documentElement.classList.contains("dark")
         ? "dark"
@@ -248,7 +261,7 @@ export default function LocationMap({ data }: { data: MapData }) {
               const points = leaves
                 .map((leaf) => pointsById.get(String(leaf.properties?.id)))
                 .filter((point): point is MapPoint => Boolean(point));
-              openPopup(coordinates, groupPopupHtml(points, cluster.home > 0));
+              openPopup(maplibregl, coordinates, groupPopupHtml(points, cluster.home > 0));
             });
           } else if (properties.id === HOME_ID) {
             element = createLocationMarkerElement("akash");
@@ -270,7 +283,7 @@ export default function LocationMap({ data }: { data: MapData }) {
             element = createPointMarker(point);
             element.addEventListener("click", (event) => {
               event.stopPropagation();
-              openPopup(point.coordinates, pointPopupHtml(point));
+              openPopup(maplibregl, point.coordinates, pointPopupHtml(point));
             });
           }
 
@@ -338,7 +351,7 @@ export default function LocationMap({ data }: { data: MapData }) {
       map?.remove();
       mapRef.current = null;
     };
-  }, [attempt, bounds, data, home, pointsById]);
+  }, [attempt, bounds, data, home, openPopup, pointsById]);
 
   // Theme and imagery are applied from React state on every change, so the
   // buttons and the map can no longer drift apart.
@@ -356,6 +369,52 @@ export default function LocationMap({ data }: { data: MapData }) {
     if (!map || !mapLoaded) return;
     setImageryVisible(map, imagery);
   }, [mapLoaded, imagery]);
+
+  // Opens the map at a specific place or city when linked to from elsewhere
+  // on the site (the globe's "more on the map" links, so far). Read once
+  // the map is ready, so the deep link wins over the opening view.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded) return;
+    const points = focusedMapPoints(data.points, window.location.search);
+    if (!points.length) return;
+
+    let active = true;
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    void loadMapLibre().then((maplibregl) => {
+      if (!active) return;
+
+      if (points.length === 1) {
+        const [point] = points;
+        if (reducedMotion) {
+          map.jumpTo({ center: point.coordinates, zoom: FOCUS_ZOOM });
+        } else {
+          map.flyTo({ center: point.coordinates, zoom: FOCUS_ZOOM });
+        }
+        openPopup(maplibregl, point.coordinates, pointPopupHtml(point));
+        return;
+      }
+
+      const focusBounds = boundsForCoordinates(points.map((point) => point.coordinates));
+      map.fitBounds(focusBounds, {
+        padding: FOCUS_PADDING,
+        maxZoom: FOCUS_ZOOM,
+        duration: reducedMotion ? 0 : 900,
+      });
+      const [[minLng, minLat], [maxLng, maxLat]] = focusBounds;
+      const center: LngLat = [(minLng + maxLng) / 2, (minLat + maxLat) / 2];
+      // These points only ever come from `data.points` — Akash's own pin
+      // isn't one of them, so a deep-linked group is never "home".
+      openPopup(maplibregl, center, groupPopupHtml(points, false));
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [mapLoaded, data.points, openPopup]);
 
   useEffect(() => {
     const map = mapRef.current;

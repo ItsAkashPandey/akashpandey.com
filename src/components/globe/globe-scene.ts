@@ -227,8 +227,10 @@ export function createGlobeScene(options: Options): GlobeScene | null {
       varying float vFacing;
       void main() {
         vec3 n = normalize(normalMatrix * normalize(position));
-        vFacing = smoothstep(-0.05, 0.4, n.z);
-        gl_PointSize = uSize * uPixelRatio * (0.6 + 0.4 * vFacing);
+        // Dots bunch up towards the rim; fading them early keeps the edge
+        // from reading as a heavy outline.
+        vFacing = smoothstep(0.06, 0.5, n.z);
+        gl_PointSize = uSize * uPixelRatio * (0.45 + 0.55 * vFacing);
         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
       }
     `,
@@ -575,7 +577,9 @@ export function createGlobeScene(options: Options): GlobeScene | null {
 
     let drawing = false;
     if (drawStartedAt !== null) {
-      const elapsed = clock - drawStartedAt;
+      // Real time, not the capped frame clock, so a slow device still sees
+      // the arcs drawn in about two seconds.
+      const elapsed = (now - drawStartedAt) / 1000;
       for (const arc of arcs) {
         arc.draw.value = easeOut((elapsed - arc.delay) / 0.9);
         if (arc.draw.value < 1) drawing = true;
@@ -609,7 +613,9 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     if (next === active) return;
     active = next;
     if (active) {
-      if (drawStartedAt === null) drawStartedAt = reducedMotion ? -10 : clock + 0.15;
+      if (drawStartedAt === null) {
+        drawStartedAt = reducedMotion ? -Infinity : performance.now() + 150;
+      }
       previous = 0;
       requestRender();
     } else if (frame) {
