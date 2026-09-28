@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, sitePath } from "@/lib/utils";
 import type { ChatAction, ChatMessageShape } from "@/lib/chat-types";
 import { ArrowUpRight, LoaderCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -103,8 +103,10 @@ export default function ChatMessage({
         <Markdown
           remarkPlugins={[remarkGfm]}
           components={{
+            // Kasi's links to pages here open in place. "//host" starts
+            // with a slash too, but leads off the site.
             a: ({ node, href = "", ...props }) =>
-              href.startsWith("/") ? (
+              href.startsWith("/") && sitePath(href) ? (
                 <Link
                   href={href}
                   className="break-words underline underline-offset-2"

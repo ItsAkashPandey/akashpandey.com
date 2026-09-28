@@ -10,11 +10,14 @@ import {
 const COOKIE_NAME = "admin_session";
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 
+/**
+ * Compares hashes rather than the strings, so the time taken says nothing
+ * about the length of the secret either (a length check used to return
+ * early).
+ */
 function timingSafeStringEqual(a: string, b: string): boolean {
-  const aBuffer = Buffer.from(a);
-  const bBuffer = Buffer.from(b);
-  if (aBuffer.length !== bBuffer.length) return false;
-  return timingSafeEqual(aBuffer, bBuffer);
+  const digest = (value: string) => createHash("sha256").update(value).digest();
+  return timingSafeEqual(digest(a), digest(b));
 }
 
 function verifyScryptPassword(password: string, encodedHash: string): boolean {
@@ -72,13 +75,15 @@ export function verifyAdminCredentials(
   const expectedHash = process.env.ADMIN_PASSWORD_HASH;
 
   if (!expectedUsername || (!expectedPassword && !expectedHash)) return false;
-  if (!timingSafeStringEqual(username, expectedUsername)) return false;
 
-  if (expectedPassword) {
-    return timingSafeStringEqual(password, expectedPassword);
-  }
-
-  return verifyScryptPassword(password, expectedHash!);
+  // Both are always checked: returning on a wrong username skipped the
+  // (slow, with a hash) password check and told a guesser which one was
+  // wrong.
+  const usernameMatches = timingSafeStringEqual(username, expectedUsername);
+  const passwordMatches = expectedPassword
+    ? timingSafeStringEqual(password, expectedPassword)
+    : verifyScryptPassword(password, expectedHash!);
+  return usernameMatches && passwordMatches;
 }
 
 /**

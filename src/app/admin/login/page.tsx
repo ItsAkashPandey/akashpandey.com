@@ -13,16 +13,17 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/label";
+import { sitePath } from "@/lib/utils";
 
 function AdminLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = useMemo(() => {
-    const requested = searchParams.get("next") || "/admin";
-    return requested.startsWith("/") && !requested.startsWith("//")
-      ? requested
-      : "/admin";
-  }, [searchParams]);
+  // Only a path on this site, so signing in can't send anyone elsewhere:
+  // "//host" and "/\host" also start with a slash.
+  const next = useMemo(
+    () => sitePath(searchParams.get("next") || "/admin") ?? "/admin",
+    [searchParams],
+  );
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
