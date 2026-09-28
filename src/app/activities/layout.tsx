@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Activities",
   description:
-    "Fieldwork, outreach, academic events, UAV mapping activities, and geospatial research highlights from Akash Kumar Pandey.",
+    "Fieldwork, outreach, academic events, UAV mapping activities, and geospatial research highlights from Dr. Akash Kumar.",
   alternates: { canonical: "/activities" },
 };
 

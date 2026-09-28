@@ -1,11 +1,14 @@
 "use client";
 
-import { Activity } from "@/lib/schemas";
+import { activityYear } from "@/lib/content-utils";
+import type { Photo } from "@/lib/photo";
+import type { Activity, ActivityCategory } from "@/lib/schemas";
 import {
   createSearchDocument,
   normalizeSearchText,
   scoreSearchDocument,
-  } from "@/lib/search";
+} from "@/lib/search";
+import { useUrlFilters } from "@/lib/use-url-filters";
 import { cn } from "@/lib/utils";
 import {
   ArrowUpDown,
@@ -14,13 +17,9 @@ import {
   Search,
   SlidersHorizontal,
 } from "lucide-react";
-import {
-  LegendIcon,
-  PlateIcon,
-  ShootIcon,
-} from "./icons/FieldIcons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import LazyActivity from "./LazyActivity";
+import { ActivityCard } from "./ActivityCard";
+import { LegendIcon, PlateIcon, ShootIcon } from "./icons/FieldIcons";
 import TimelineBar from "./TimelineBar";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
@@ -33,301 +32,281 @@ import {
   SelectValue,
 } from "./ui/select";
 
-type ActivityWithMeta = Activity & {
-  elementId: string;
-  resolvedImages: string[];
+export type ActivityListItem = Activity & { photos: Photo[] };
+
+type Sort = "newest" | "oldest";
+type Focus = "all" | ActivityCategory;
+type Filters = { query: string; year: string; focus: Focus; sort: Sort };
+
+const DEFAULT_FILTERS: Filters = {
+  query: "",
+  year: "all",
+  focus: "all",
+  sort: "newest",
 };
-type ActivitySort = "newest" | "oldest";
-type ActivityTypeFilter = "all" | "academics" | "startups";
-
-interface Props {
-  allActivities: ActivityWithMeta[];
-  initialVisibleCount: number;
-}
-
+const FILTER_KEYS = { query: "q", year: "year", focus: "focus", sort: "sort" };
+const INITIAL_COUNT = 3;
 const BATCH_SIZE = 3;
-const STARTUP_KEYWORDS = [
-  "100 startups",
-  "aabtonics",
-  "bhoomicam",
-  "dronagiri",
-  "nasscom",
-  "startup",
-  "tides",
-];
 
-const activityTypeStyles = {
-  all: {
-    label: "All activities",
-    Icon: LegendIcon,
-    ink: "text-slate-700 dark:text-slate-300",
-  },
-  academics: {
-    label: "Academics",
-    Icon: PlateIcon,
-    ink: "text-emerald-700 dark:text-emerald-300",
-  },
-  startups: {
-    label: "Startups",
-    Icon: ShootIcon,
-    ink: "text-sky-700 dark:text-sky-300",
-  },
-} satisfies Record<
-  ActivityTypeFilter,
-  {
-    label: string;
-    Icon: typeof LegendIcon;
-    ink: string;
-  }
->;
+const focusOptions = {
+  all: { label: "All activities", short: "All", Icon: LegendIcon, ink: "text-foreground/80" },
+  academic: { label: "Academic", short: "Academic", Icon: PlateIcon, ink: "text-tone-green" },
+  startup: { label: "Startup", short: "Startup", Icon: ShootIcon, ink: "text-tone-sky" },
+} satisfies Record<Focus, { label: string; short: string; Icon: typeof LegendIcon; ink: string }>;
 
-function scrollToRenderedActivity(
-  id: string,
-  behavior: ScrollBehavior = "smooth",
-  attempt = 0,
-) {
-  const element = document.getElementById(id);
-  if (element) {
-    element.scrollIntoView({ behavior, block: "center" });
-    return;
-  }
-
-  if (attempt < 12) {
-    requestAnimationFrame(() =>
-      scrollToRenderedActivity(id, behavior, attempt + 1),
-    );
-  }
-}
-
-function getActivityType(
-  activity: ActivityWithMeta,
-): Exclude<ActivityTypeFilter, "all"> {
-  const searchableText = [
-    activity.name,
-    activity.description,
-    activity.imageFolder ?? "",
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  return STARTUP_KEYWORDS.some((keyword) => searchableText.includes(keyword))
-    ? "startups"
-    : "academics";
+/**
+ * The slug a hash points at. Also accepts the old `#activity-N` links (N was
+ * the position in the newest-first list), so links already shared still land
+ * on the activity they were copied from.
+ */
+export function slugFromHash(hash: string, activities: ActivityListItem[]) {
+  const value = decodeURIComponent(hash.replace(/^#/, ""));
+  if (!value) return null;
+  const legacy = value.match(/^activity-(\d+)$/);
+  if (legacy) return activities[Number(legacy[1])]?.slug ?? null;
+  return activities.some((activity) => activity.slug === value) ? value : null;
 }
 
 export default function ProgressiveActivitiesList({
-  allActivities,
-  initialVisibleCount = 5,
-}: Props) {
-  const [visibleCount, setVisibleCount] = useState(initialVisibleCount);
-  const [query, setQuery] = useState("");
-  const [selectedYear, setSelectedYear] = useState("all");
-  const [sortBy, setSortBy] = useState<ActivitySort>("newest");
-  const [selectedType, setSelectedType] = useState<ActivityTypeFilter>("all");
+  activities,
+}: {
+  activities: ActivityListItem[];
+}) {
+  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
+  const [pendingTarget, setPendingTarget] = useState<string | null>(null);
+  const [highlighted, setHighlighted] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const years = useMemo(
     () =>
-      Array.from(
-        new Set(
-          allActivities.map((activity) =>
-            new Date(activity.date).getFullYear(),
-          ),
-        ),
-      ).sort((a, b) => b - a),
-    [allActivities],
+      Array.from(new Set(activities.map((a) => activityYear(a.date)))).sort(
+        (a, b) => b.localeCompare(a),
+      ),
+    [activities],
   );
 
-  const activityTypeCounts = useMemo(() => {
-    return allActivities.reduce(
-      (counts, activity) => {
-        counts[getActivityType(activity)]++;
-        return counts;
-      },
-      { academics: 0, startups: 0 },
-    );
-  }, [allActivities]);
+  // Filters are kept in the query string (?q=&year=&focus=&sort=).
+  const [filters, patchFilters, resetFilters] = useUrlFilters<Filters>(
+    DEFAULT_FILTERS,
+    FILTER_KEYS,
+    (raw) => ({
+      ...(raw.query ? { query: raw.query } : {}),
+      ...(raw.year && years.includes(raw.year) ? { year: raw.year } : {}),
+      ...(raw.focus === "academic" || raw.focus === "startup"
+        ? { focus: raw.focus }
+        : {}),
+      ...(raw.sort === "oldest" ? { sort: raw.sort } : {}),
+    }),
+  );
+
+  const focusCounts = useMemo(
+    () => ({
+      all: activities.length,
+      academic: activities.filter((a) => a.category === "academic").length,
+      startup: activities.filter((a) => a.category === "startup").length,
+    }),
+    [activities],
+  );
 
   const searchIndex = useMemo(
     () =>
       new Map(
-        allActivities.map((activity) => {
-          const activityType = getActivityType(activity);
-          return [
-            activity.elementId,
-            createSearchDocument([
-              { value: activity.name, weight: 6 },
-              { value: activity.description, weight: 2 },
-              { value: activity.location, weight: 3 },
-              { value: activity.date },
-              { value: activityType, weight: 2 },
-            ]),
-          ];
-        }),
+        activities.map((activity) => [
+          activity.slug,
+          createSearchDocument([
+            { value: activity.name, weight: 6 },
+            { value: activity.description, weight: 2 },
+            { value: activity.location, weight: 3 },
+            { value: activity.date },
+            { value: activity.category, weight: 2 },
+          ]),
+        ]),
       ),
-    [allActivities],
+    [activities],
   );
 
   const filteredActivities = useMemo(() => {
-    const normalizedQuery = normalizeSearchText(query);
+    const normalizedQuery = normalizeSearchText(filters.query);
 
-    return allActivities
+    return activities
       .map((activity) => ({
         activity,
         score: scoreSearchDocument(
-          searchIndex.get(activity.elementId) ?? [],
+          searchIndex.get(activity.slug) ?? [],
           normalizedQuery,
         ),
       }))
       .filter(({ activity, score }) => {
-        const activityType = getActivityType(activity);
-        const activityYear = new Date(activity.date).getFullYear().toString();
-
         if (normalizedQuery && score === 0) return false;
-        if (selectedYear !== "all" && activityYear !== selectedYear) {
+        if (filters.year !== "all" && activityYear(activity.date) !== filters.year) {
           return false;
         }
-        if (selectedType !== "all" && activityType !== selectedType) {
-          return false;
-        }
-        return true;
+        return filters.focus === "all" || activity.category === filters.focus;
       })
       .sort((a, b) => {
         if (normalizedQuery && b.score !== a.score) return b.score - a.score;
-        const dateA = new Date(a.activity.date).getTime();
-        const dateB = new Date(b.activity.date).getTime();
-        return sortBy === "newest" ? dateB - dateA : dateA - dateB;
+        const byDate = a.activity.date.localeCompare(b.activity.date);
+        return filters.sort === "newest" ? -byDate : byDate;
       })
       .map(({ activity }) => activity);
-  }, [allActivities, query, searchIndex, selectedYear, selectedType, sortBy]);
+  }, [activities, filters, searchIndex]);
 
   const hasMore = visibleCount < filteredActivities.length;
-  const visibleActivities = useMemo(
-    () => filteredActivities.slice(0, visibleCount),
-    [filteredActivities, visibleCount],
-  );
+  const visibleActivities = filteredActivities.slice(0, visibleCount);
   const isFiltered =
-    query.trim() !== "" ||
-    selectedYear !== "all" ||
-    selectedType !== "all" ||
-    sortBy !== "newest";
+    filters.query.trim() !== "" ||
+    filters.year !== "all" ||
+    filters.focus !== "all" ||
+    filters.sort !== "newest";
 
-  const resetFilters = () => {
-    setQuery("");
-    setSelectedYear("all");
-    setSelectedType("all");
-    setSortBy("newest");
-  };
+  // Every filter change goes through here, so the list resets to its first
+  // few cards in the same update. Resetting from an effect instead ran after
+  // the deep-link reveal on load and cut the list back before the target
+  // card was ever rendered.
+  const updateFilters = useCallback(
+    (patch: Partial<Filters>) => {
+      patchFilters(patch);
+      setVisibleCount(INITIAL_COUNT);
+    },
+    [patchFilters],
+  );
 
+  // #slug in the address bar (from the map, Kasi, or a shared link) asks for
+  // that card.
   useEffect(() => {
-    const revealHashTarget = () => {
-      const match = window.location.hash.match(/^#activity-(\d+)$/);
-      if (!match) return;
-
-      const index = Number(match[1]);
-      if (!Number.isFinite(index)) return;
-
-      setVisibleCount((current) =>
-        Math.max(current, Math.min(index + 1, filteredActivities.length)),
-      );
-      scrollToRenderedActivity(`activity-${index}`, "smooth");
+    const reveal = () => {
+      const slug = slugFromHash(window.location.hash, activities);
+      if (!slug) return;
+      if (window.location.hash !== `#${slug}`) {
+        const url = new URL(window.location.href);
+        url.hash = slug;
+        window.history.replaceState(null, "", url);
+      }
+      setPendingTarget(slug);
     };
+    reveal();
+    window.addEventListener("hashchange", reveal);
+    return () => window.removeEventListener("hashchange", reveal);
+  }, [activities]);
 
-    revealHashTarget();
-    window.addEventListener("hashchange", revealHashTarget);
-    return () => window.removeEventListener("hashchange", revealHashTarget);
-  }, [filteredActivities.length]);
+  // Walks a requested card into view: clear filters that hide it, render
+  // enough of the list to include it, then scroll once it is in the DOM.
+  useEffect(() => {
+    if (!pendingTarget) return;
 
-  const loadMore = useCallback(() => {
-    if (!hasMore) return;
-    setVisibleCount((previous) =>
-      Math.min(previous + BATCH_SIZE, filteredActivities.length),
+    const index = filteredActivities.findIndex(
+      (activity) => activity.slug === pendingTarget,
     );
-    requestAnimationFrame(() => {
-      window.dispatchEvent(new Event("timeline-measure"));
-    });
-  }, [hasMore, filteredActivities.length]);
+    if (index < 0) {
+      if (isFiltered) {
+        resetFilters();
+      } else {
+        setPendingTarget(null);
+      }
+      return;
+    }
+    if (index >= visibleCount) {
+      setVisibleCount(index + 1);
+      return;
+    }
 
-  useEffect(() => {
-    setVisibleCount(initialVisibleCount);
-    requestAnimationFrame(() => {
-      window.dispatchEvent(new Event("timeline-measure"));
-    });
-  }, [initialVisibleCount, query, selectedYear, selectedType, sortBy]);
+    const element = document.getElementById(pendingTarget);
+    if (!element) return;
 
+    setPendingTarget(null);
+    setHighlighted(pendingTarget);
+    // Glide for short hops; jump for long ones, where a smooth scroll would
+    // drag past dozens of cards (and their photos) on the way.
+    const far =
+      Math.abs(element.getBoundingClientRect().top) > window.innerHeight * 2;
+    element.scrollIntoView({
+      behavior: far ? "instant" : "smooth",
+      block: "start",
+    });
+  }, [pendingTarget, filteredActivities, visibleCount, isFiltered, resetFilters]);
+
+  // After a jump: photos and fonts above the card can still shift it, so
+  // re-align a couple of times unless the visitor has started scrolling, and
+  // let the highlight fade. Kept apart from the effect above, whose own
+  // re-run would otherwise cancel these timers straight away.
   useEffect(() => {
-    if (!hasMore || !sentinelRef.current) return;
+    if (!highlighted) return;
+    const element = document.getElementById(highlighted);
+    if (!element) return;
+
+    let userMoved = false;
+    const stop = () => (userMoved = true);
+    const events = ["wheel", "touchmove", "keydown"] as const;
+    events.forEach((name) =>
+      window.addEventListener(name, stop, { passive: true }),
+    );
+    const realign = () => {
+      if (userMoved) return;
+      const top = element.getBoundingClientRect().top;
+      const offset = parseFloat(getComputedStyle(element).scrollMarginTop) || 0;
+      if (Math.abs(top - offset) > 24) {
+        element.scrollIntoView({ behavior: "instant", block: "start" });
+      }
+    };
+    const timers = [700, 1500].map((delay) => window.setTimeout(realign, delay));
+    const unhighlight = window.setTimeout(() => setHighlighted(null), 2400);
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      window.clearTimeout(unhighlight);
+      events.forEach((name) => window.removeEventListener(name, stop));
+    };
+  }, [highlighted]);
+
+  // One loader: an observer on the sentinel, re-created after each batch so it
+  // reports again if the sentinel is still on screen.
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!hasMore || !node) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) loadMore();
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          setVisibleCount((count) =>
+            Math.min(count + BATCH_SIZE, filteredActivities.length),
+          );
+        }
       },
-      { rootMargin: "800px" },
+      { rootMargin: "400px 0px" },
     );
-
-    observer.observe(sentinelRef.current);
+    observer.observe(node);
     return () => observer.disconnect();
-  }, [hasMore, loadMore]);
-
-  useEffect(() => {
-    if (!hasMore) return;
-
-    const handleScroll = () => {
-      const remaining =
-        document.documentElement.scrollHeight -
-        window.scrollY -
-        window.innerHeight;
-      if (remaining < 900) loadMore();
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [hasMore, loadMore]);
+  }, [hasMore, visibleCount, filteredActivities.length]);
 
   const timelineEntries = useMemo(
     () =>
       filteredActivities.map((activity) => ({
-        id: activity.elementId,
+        id: activity.slug,
         date: activity.date,
       })),
     [filteredActivities],
   );
 
-  const selectTimelineEntry = useCallback(
-    (id: string) => {
-      const index = filteredActivities.findIndex(
-        (activity) => activity.elementId === id,
-      );
-      if (index < 0) return;
-
-      setVisibleCount((current) =>
-        Math.max(current, Math.min(index + 1, filteredActivities.length)),
-      );
-      scrollToRenderedActivity(id);
-    },
-    [filteredActivities],
-  );
-
   return (
-    <div className="relative grid min-w-0 gap-5 lg:grid-cols-[232px_minmax(0,1fr)] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-8">
-      <aside className="filter-rail rounded-lg p-4 lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1">
+    <div className="relative grid min-w-0 gap-5 lg:grid-cols-[232px_minmax(0,1fr)_76px] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)_84px] xl:gap-8">
+      <aside className="filter-rail rounded-lg p-4 lg:sticky lg:top-24">
         <div className="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <SlidersHorizontal className="size-4" />
+              <SlidersHorizontal className="size-4" aria-hidden />
               <h2 className="text-sm font-semibold">Explore</h2>
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">
-              {filteredActivities.length} activit
-              {filteredActivities.length === 1 ? "y" : "ies"}
+            <p className="text-muted-foreground mt-1 text-xs" aria-live="polite">
+              {filteredActivities.length}{" "}
+              {filteredActivities.length === 1 ? "activity" : "activities"}
             </p>
           </div>
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            onClick={resetFilters}
+            onClick={() => updateFilters(DEFAULT_FILTERS)}
             disabled={!isFiltered}
             className="text-muted-foreground hover:text-foreground size-9 rounded-lg"
             title="Reset filters"
@@ -339,92 +318,78 @@ export default function ProgressiveActivitiesList({
 
         <div className="flex flex-col gap-5">
           <div className="flex min-w-0 flex-col gap-1.5">
-            <Label
-              htmlFor="activity-search"
-              className="text-muted-foreground px-1 text-[9px] font-semibold uppercase"
-            >
+            <Label htmlFor="activity-search" className="filter-label">
               Search
             </Label>
             <div className="relative min-w-0">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
-                <Search className="text-muted-foreground size-3.5" />
+                <Search className="text-muted-foreground size-3.5" aria-hidden />
               </span>
               <Input
                 id="activity-search"
                 type="search"
                 placeholder="Topic or place"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                value={filters.query}
+                onChange={(event) => updateFilters({ query: event.target.value })}
                 className="border-border/60 bg-background/70 h-10 rounded-lg pl-10 text-sm shadow-none"
               />
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <p className="text-muted-foreground px-1 text-[9px] font-semibold uppercase">
-              Focus
-            </p>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="filter-label mb-2">Focus</legend>
             <div className="grid grid-cols-3 gap-2 lg:grid-cols-1">
-              {(["all", "academics", "startups"] as ActivityTypeFilter[]).map(
-                (type) => {
-                  const config = activityTypeStyles[type];
-                  const Icon = config.Icon;
-                  const count =
-                    type === "all"
-                      ? allActivities.length
-                      : activityTypeCounts[type];
-
-                  return (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setSelectedType(type)}
+              {(Object.keys(focusOptions) as Focus[]).map((focus) => {
+                const option = focusOptions[focus];
+                const Icon = option.Icon;
+                const selected = filters.focus === focus;
+                return (
+                  <button
+                    key={focus}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => updateFilters({ focus })}
+                    className={cn(
+                      "group flex min-w-0 items-center gap-2.5 rounded-lg border p-2 text-left transition-colors",
+                      selected
+                        ? "border-foreground/25 bg-foreground/[0.055] shadow-sm"
+                        : "hover:border-border/70 hover:bg-muted/55 border-transparent",
+                    )}
+                  >
+                    <span
                       className={cn(
-                        "group flex min-w-0 items-center gap-2.5 rounded-lg border p-2 text-left transition-colors",
-                        selectedType === type
-                          ? "border-foreground/25 bg-foreground/[0.055] shadow-sm"
-                          : "hover:border-border/70 hover:bg-muted/55 border-transparent",
+                        "flex size-8 shrink-0 items-center justify-center",
+                        option.ink,
                       )}
                     >
-                      <span
-                        className={cn(
-                          "flex size-8 shrink-0 items-center justify-center",
-                          config.ink,
-                        )}
-                      >
-                        <Icon className="size-[1.15rem]" strokeWidth={1.5} />
+                      <Icon className="size-[1.15rem]" strokeWidth={1.5} />
+                    </span>
+                    <span className="hidden min-w-0 lg:block">
+                      <span className="block truncate text-xs font-semibold">
+                        {option.label}
                       </span>
-                      <span className="hidden min-w-0 lg:block">
-                        <span className="block truncate text-xs font-semibold">
-                          {config.label}
-                        </span>
-                        <span className="text-muted-foreground block text-[10px]">
-                          {count} items
-                        </span>
+                      <span className="text-muted-foreground block text-[11px]">
+                        {focusCounts[focus]} items
                       </span>
-                      <span className="truncate text-[10px] font-semibold lg:hidden">
-                        {type === "all"
-                          ? "All"
-                          : type === "academics"
-                            ? "Academic"
-                            : "Startup"}
-                      </span>
-                    </button>
-                  );
-                },
-              )}
+                    </span>
+                    <span className="truncate text-[11px] font-semibold lg:hidden">
+                      {option.short}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-          </div>
+          </fieldset>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <div className="flex min-w-0 flex-col gap-1.5">
-              <Label
-                htmlFor="activity-year-filter"
-                className="text-muted-foreground px-1 text-[9px] font-semibold uppercase"
-              >
+              <Label htmlFor="activity-year-filter" className="filter-label">
                 Year
               </Label>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <Select
+                value={filters.year}
+                onValueChange={(year) => updateFilters({ year })}
+              >
                 <SelectTrigger
                   id="activity-year-filter"
                   className="border-border/60 bg-background/70 h-10 w-full rounded-lg shadow-none"
@@ -435,7 +400,7 @@ export default function ProgressiveActivitiesList({
                 <SelectContent>
                   <SelectItem value="all">All years</SelectItem>
                   {years.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
+                    <SelectItem key={year} value={year}>
                       {year}
                     </SelectItem>
                   ))}
@@ -444,15 +409,12 @@ export default function ProgressiveActivitiesList({
             </div>
 
             <div className="flex min-w-0 flex-col gap-1.5">
-              <Label
-                htmlFor="activity-sort-filter"
-                className="text-muted-foreground px-1 text-[9px] font-semibold uppercase"
-              >
+              <Label htmlFor="activity-sort-filter" className="filter-label">
                 Order
               </Label>
               <Select
-                value={sortBy}
-                onValueChange={(value) => setSortBy(value as ActivitySort)}
+                value={filters.sort}
+                onValueChange={(value) => updateFilters({ sort: value as Sort })}
               >
                 <SelectTrigger
                   id="activity-sort-filter"
@@ -471,28 +433,38 @@ export default function ProgressiveActivitiesList({
         </div>
       </aside>
 
-      {filteredActivities.length > 0 && (
-        <TimelineBar
-          entries={timelineEntries}
-          onSelectEntry={selectTimelineEntry}
-        />
-      )}
-
-      <div className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-1">
+      <div className="flex min-w-0 flex-col gap-5">
         <section className="relative z-10 flex min-w-0 flex-col gap-6">
           {filteredActivities.length === 0 ? (
-            <div className="bg-muted/55 text-muted-foreground rounded-lg px-6 py-16 text-center text-sm">
-              No activities found matching your filters.
+            <div className="bg-muted/55 text-muted-foreground flex flex-col items-center gap-3 rounded-lg px-6 py-16 text-center text-sm">
+              No activities match these filters.
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => updateFilters(DEFAULT_FILTERS)}
+              >
+                Clear filters
+              </Button>
             </div>
           ) : (
             visibleActivities.map((activity, index) => (
-              <LazyActivity
-                key={activity.elementId}
-                activity={activity}
-                index={index}
-                initiallyVisible
-                searchQuery={query.trim()}
-              />
+              <div
+                key={activity.slug}
+                id={activity.slug}
+                className={cn(
+                  "scroll-mt-24 rounded-lg transition-shadow duration-700",
+                  highlighted === activity.slug &&
+                    "ring-ink/60 ring-offset-background ring-2 ring-offset-4",
+                )}
+              >
+                <ActivityCard
+                  activity={activity}
+                  photos={activity.photos}
+                  priorityImage={index === 0}
+                  searchQuery={filters.query.trim()}
+                />
+              </div>
             ))
           )}
 
@@ -501,7 +473,11 @@ export default function ProgressiveActivitiesList({
               <Button
                 type="button"
                 variant="outline"
-                onClick={loadMore}
+                onClick={() =>
+                  setVisibleCount((count) =>
+                    Math.min(count + BATCH_SIZE, filteredActivities.length),
+                  )
+                }
                 className="rounded-lg"
               >
                 Load more
@@ -510,13 +486,23 @@ export default function ProgressiveActivitiesList({
           ) : filteredActivities.length > 0 ? (
             <div className="flex flex-col items-center gap-3 py-8">
               <div className="from-primary/20 h-12 w-px bg-gradient-to-b to-transparent" />
-              <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase">
-                You&apos;ve reached the beginning
+              <p className="text-muted-foreground text-xs font-medium">
+                {filters.sort === "newest"
+                  ? "You've reached the beginning."
+                  : "You've reached the latest."}
               </p>
             </div>
           ) : null}
         </section>
       </div>
+
+      {filteredActivities.length > 0 && (
+        <TimelineBar
+          entries={timelineEntries}
+          renderedCount={visibleActivities.length}
+          onSelectEntry={setPendingTarget}
+        />
+      )}
     </div>
   );
 }
