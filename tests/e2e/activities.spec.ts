@@ -29,6 +29,17 @@ test.describe("activities", () => {
     await expect(page.locator(`#${newestSlug}`)).toBeInViewport();
   });
 
+  test("a deep link clears filters that hide the card, and highlights it", async ({
+    page,
+  }) => {
+    // NASA Space Apps is academic, so the startup filter hides it.
+    await page.goto("/activities?focus=startup#nasa-space-apps-2024");
+    const card = page.locator("#nasa-space-apps-2024");
+    await expect(card).toHaveClass(/ring-2/);
+    await expect(card).toBeInViewport();
+    await expect(page).not.toHaveURL(/focus=startup/);
+  });
+
   test("typing in the search box updates the URL", async ({ page }) => {
     await page.goto("/activities");
     await page.getByRole("searchbox", { name: "Search" }).fill("phenocam");

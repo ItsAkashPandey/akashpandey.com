@@ -37,7 +37,7 @@ do it. Tick things off here as they get done.
 The Playwright tests (`npm run test:e2e`) cover the basics on desktop and
 phone sizes; these need eyes:
 
-- [ ] Deep links: `/activities#nasa-space-apps-2024` and the old style
+- [x] Deep links: `/activities#nasa-space-apps-2024` and the old style
       `/activities#activity-12` land on the card and highlight it, including
       on a phone and with filters active.
 - [x] Map: Tab in from the contact form: the "Skip the map" link shows up and
