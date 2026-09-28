@@ -43,7 +43,19 @@ const nextConfig = {
           {
             key: "Permissions-Policy",
             value:
-              "camera=(), microphone=(), payment=(), usb=(), geolocation=(self)",
+              "camera=(), microphone=(), payment=(), usb=(), browsing-topics=(), geolocation=(self)",
+          },
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin",
+          },
+          {
+            // Only the parts that can't block the map tiles, fonts or the
+            // spam check. Locking down scripts properly needs per-request
+            // nonces, which would turn every static page dynamic.
+            key: "Content-Security-Policy",
+            value:
+              "base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
           },
         ],
       },

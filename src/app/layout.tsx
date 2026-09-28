@@ -8,6 +8,7 @@ import {
   websiteSchema,
 } from "@/lib/structured-data";
 import { cn } from "@/lib/utils";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Calistoga, Inter } from "next/font/google";
 import "yet-another-react-lightbox/styles.css";
@@ -132,6 +133,7 @@ export default function RootLayout({
           </div>
           <Footer />
         </Providers>
+        <SpeedInsights />
       </body>
     </html>
   );
