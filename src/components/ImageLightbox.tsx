@@ -1,10 +1,14 @@
 "use client";
 
+import { lightboxSlide } from "@/lib/browser-image-cache";
+import type { Photo } from "@/lib/photo";
 import { useMemo } from "react";
 import Lightbox from "yet-another-react-lightbox";
 
 interface ImageLightboxProps {
-  images: string[];
+  photos: Photo[];
+  /** What the images show, for their alt text. */
+  alt?: string;
   currentIndex: number;
   onClose: () => void;
   onNavigate: (index: number) => void;
@@ -12,7 +16,8 @@ interface ImageLightboxProps {
 }
 
 export default function ImageLightbox({
-  images,
+  photos,
+  alt = "Image",
   currentIndex,
   onClose,
   onNavigate,
@@ -20,14 +25,16 @@ export default function ImageLightbox({
 }: ImageLightboxProps) {
   const slides = useMemo(
     () =>
-      images.map((src, index) => ({
-        src,
-        alt: `Image ${index + 1} of ${images.length}`,
-      })),
-    [images],
+      photos.map((photo, index) =>
+        lightboxSlide(
+          photo,
+          photos.length > 1 ? `${alt}, ${index + 1} of ${photos.length}` : alt,
+        ),
+      ),
+    [alt, photos],
   );
 
-  if (!images.length) return null;
+  if (!photos.length) return null;
 
   return (
     <Lightbox

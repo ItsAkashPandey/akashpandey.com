@@ -1,6 +1,12 @@
 "use client";
 
-import { preloadBrowserImage } from "@/lib/browser-image-cache";
+import {
+  isPhotoLoaded,
+  markPhotoLoaded,
+  photoAttributes,
+  preloadPhoto,
+} from "@/lib/browser-image-cache";
+import type { Photo } from "@/lib/photo";
 import { cn } from "@/lib/utils";
 import {
   animate,
@@ -10,18 +16,23 @@ import {
   useTransform,
 } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { preload } from "react-dom";
 
 interface StackedImageDeckProps {
-  images: string[];
+  photos: Photo[];
+  /** What the photos show; each card's alt adds "photo 2 of 9". */
   alt?: string;
+  /** Per-photo alt text, when the images differ in kind (figures, posters). */
+  alts?: string[];
   className?: string;
   cardClassName?: string;
   imageClassName?: string;
+  /** Aspect of the card in the layout, used only for optimiser fallbacks. */
   imageWidth: number;
   imageHeight: number;
   sizes: string;
+  /** Above the fold: load at once, at high priority, and preload the file. */
   priority?: boolean;
   quality?: number;
   showCounter?: boolean;
@@ -53,7 +64,9 @@ export function wrapDeckIndex(index: number, total: number) {
 }
 
 type CardChrome = {
-  source: string;
+  photo: Photo;
+  /** Render the real image, not just the blur preview. */
+  showImage: boolean;
   alt: string;
   label?: string;
   counter?: string;
@@ -66,11 +79,14 @@ type CardChrome = {
   imageClassName?: string;
 };
 
-function CardFace({
-  source,
+/**
+ * The photo itself. A plain <img> with the pipeline's srcset rather than
+ * next/image: the files are already sized, so there is nothing left to
+ * optimise and no reason to route them through /_next/image.
+ */
+function DeckPhoto({
+  photo,
   alt,
-  label,
-  counter,
   fit,
   imageWidth,
   imageHeight,
@@ -78,35 +94,76 @@ function CardFace({
   quality,
   priority,
   imageClassName,
-}: CardChrome) {
+}: Omit<CardChrome, "showImage" | "label" | "counter">) {
+  const [loaded, setLoaded] = useState(() => isPhotoLoaded(photo));
+  const attributes = photoAttributes(photo, {
+    sizes,
+    width: imageWidth,
+    height: imageHeight,
+    quality,
+  });
+
+  if (priority) {
+    // Puts a <link rel="preload"> in the document head during rendering, so
+    // the browser starts on the hero photo before it parses the gallery.
+    preload(attributes.src, {
+      as: "image",
+      imageSrcSet: attributes.srcSet,
+      imageSizes: attributes.sizes,
+      fetchPriority: "high",
+    });
+  }
+
+  const onLoad = () => {
+    markPhotoLoaded(photo);
+    setLoaded(true);
+  };
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- pre-sized files, see above
+    <img
+      ref={(node) => {
+        // A server-rendered image can finish before hydration attaches onLoad.
+        if (node?.complete && node.naturalWidth > 0 && !loaded) onLoad();
+      }}
+      src={attributes.src}
+      srcSet={attributes.srcSet}
+      sizes={attributes.sizes}
+      width={photo.width}
+      height={photo.height}
+      alt={alt}
+      // Deck cards sit under an animated transform, and Chromium never runs
+      // the lazy-load check for an <img> under a transform, so `lazy` would
+      // mean "never". The deck gates on viewport distance itself instead.
+      loading="eager"
+      fetchPriority={priority ? "high" : "auto"}
+      decoding="async"
+      draggable={false}
+      onLoad={onLoad}
+      className={cn(
+        "pointer-events-none absolute inset-0 h-full w-full transition-opacity duration-500 ease-out select-none",
+        fit === "cover" ? "object-cover" : "object-contain",
+        loaded ? "opacity-100" : "opacity-0",
+        imageClassName,
+      )}
+    />
+  );
+}
+
+function CardFace({ photo, showImage, label, counter, ...rest }: CardChrome) {
   return (
     <>
-      <Image
-        src={source}
-        alt={alt}
-        width={imageWidth}
-        height={imageHeight}
-        sizes={sizes}
-        quality={quality}
-        priority={priority}
-        // Deck cards live inside an animated (transform: x/rotate/scale)
-        // ancestor at all times. Chromium never fires the lazy-load
-        // intersection check for an <img> whose ancestor has a transform, so
-        // `loading="lazy"` here just means "never loads" — the image quietly
-        // disappears instead of paining the frame. Mounting is already
-        // gated upstream (only a handful of cards exist in the DOM per deck,
-        // and decks only mount once their section is visible), so eager is
-        // safe and is what actually gets pixels on screen.
-        loading="eager"
-        fetchPriority={priority ? "high" : "low"}
-        decoding="async"
-        draggable={false}
-        className={cn(
-          "pointer-events-none h-full w-full select-none",
-          fit === "cover" ? "object-cover" : "object-contain",
-          imageClassName,
-        )}
-      />
+      {photo.blur ? (
+        <span
+          aria-hidden
+          className="absolute inset-0 scale-110 bg-cover bg-center blur-lg"
+          style={{ backgroundImage: `url("${photo.blur}")` }}
+        />
+      ) : (
+        <span aria-hidden className="bg-muted/70 absolute inset-0" />
+      )}
+
+      {showImage && <DeckPhoto photo={photo} {...rest} />}
 
       {counter && (
         <span className="deck-count pointer-events-none absolute top-2.5 right-2.5">
@@ -117,7 +174,7 @@ function CardFace({
       {label && (
         <>
           <span className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/55 to-transparent" />
-          <span className="pointer-events-none absolute bottom-2.5 left-2.5 max-w-[calc(100%-5.5rem)] truncate rounded-[4px] bg-black/45 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur-sm">
+          <span className="pointer-events-none absolute bottom-2.5 left-2.5 max-w-[calc(100%-5.5rem)] truncate rounded-sm bg-black/45 px-2 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
             {label}
           </span>
         </>
@@ -127,7 +184,7 @@ function CardFace({
 }
 
 const CARD_BASE =
-  "absolute inset-0 origin-bottom overflow-hidden rounded-lg [grid-area:1/1]";
+  "absolute inset-0 origin-bottom overflow-hidden rounded-lg bg-muted [grid-area:1/1]";
 
 /**
  * The card behind the front one. Static, never grabbable, and unaware of any
@@ -144,7 +201,7 @@ function BackCard({
       className={cn(CARD_BASE, "pointer-events-none", cardClassName)}
       style={{
         zIndex: 100 - depth,
-        boxShadow: "0 8px 18px -10px rgb(12 35 36 / 0.3)",
+        boxShadow: "0 8px 18px -10px hsl(var(--foreground) / 0.3)",
       }}
       // A card that has just been thrown rejoins the stack here while its
       // thrown copy is still flying off. Fading in turns what would read as a
@@ -197,7 +254,7 @@ function FrontCard({
         rotate,
         zIndex: 100,
         boxShadow:
-          "0 14px 26px -8px rgb(12 35 36 / 0.42), 0 4px 8px -4px rgb(12 35 36 / 0.3)",
+          "0 14px 26px -8px hsl(var(--foreground) / 0.42), 0 4px 8px -4px hsl(var(--foreground) / 0.3)",
       }}
       initial={{ scale: 0.94 }}
       animate={{ scale: 1 }}
@@ -248,9 +305,38 @@ function FrontCard({
   );
 }
 
+/** Flips to true once the element comes within a screen of the viewport. */
+function useNearViewport(initial: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(initial);
+
+  useEffect(() => {
+    if (near) return;
+    const node = ref.current;
+    if (!node || typeof IntersectionObserver === "undefined") {
+      setNear(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setNear(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [near]);
+
+  return [ref, near] as const;
+}
+
 export default function StackedImageDeck({
-  images,
+  photos,
   alt = "Image",
+  alts,
   className,
   cardClassName,
   imageClassName,
@@ -265,20 +351,23 @@ export default function StackedImageDeck({
   stackSize = 4,
   onImageClick,
 }: StackedImageDeckProps) {
-  const imageSetKey = images.join("");
+  const photoSetKey = photos.map((photo) => photo.src).join("");
+  const [containerRef, nearViewport] = useNearViewport(priority);
 
   // The last entry is the front card, matching the visual stacking order.
   const [order, setOrder] = useState<number[]>(() =>
-    images.map((_, index) => index).reverse(),
+    photos.map((_, index) => index).reverse(),
   );
   // Bumped on every advance so the front card is guaranteed a fresh mount.
   const [generation, setGeneration] = useState(0);
   const [exitDirection, setExitDirection] = useState<-1 | 1>(-1);
 
   useEffect(() => {
-    setOrder(images.map((_, index) => index).reverse());
+    setOrder(photos.map((_, index) => index).reverse());
     setGeneration(0);
-  }, [imageSetKey, images]);
+    // Only a different set of photos should reset the stack.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photoSetKey]);
 
   const frontIndex = order[order.length - 1] ?? 0;
 
@@ -302,33 +391,25 @@ export default function StackedImageDeck({
     setGeneration((current) => current + 1);
   }, []);
 
+  // Once the front photo is on its way, fetch its neighbours in both throw
+  // directions at idle priority, so a swipe lands on an image already decoded.
   useEffect(() => {
-    if (!images.length) return;
-    const upcoming = [
-      images[frontIndex],
-      images[wrapDeckIndex(frontIndex + 1, images.length)],
+    if (!nearViewport || photos.length < 2) return;
+    const rendering = { sizes, width: imageWidth, height: imageHeight, quality };
+    const neighbours = [
+      photos[wrapDeckIndex(frontIndex + 1, photos.length)],
+      photos[wrapDeckIndex(frontIndex - 1, photos.length)],
     ];
-    void Promise.all(upcoming.map(preloadBrowserImage));
-  }, [images, imageSetKey, frontIndex]);
-
-  const readyKeyRef = useRef("");
-  useEffect(() => {
-    if (!priority || !images.length || readyKeyRef.current === imageSetKey) {
-      return;
-    }
-
-    let cancelled = false;
-    void Promise.all(images.slice(0, 2).map(preloadBrowserImage)).then(() => {
-      if (cancelled || readyKeyRef.current === imageSetKey) return;
-      readyKeyRef.current = imageSetKey;
-      document.documentElement.dataset.heroDeckReady = "true";
-      window.dispatchEvent(new Event("hero-deck-ready"));
-    });
-
-    return () => {
-      cancelled = true;
+    const run = () => {
+      for (const photo of neighbours) void preloadPhoto(photo, rendering);
     };
-  }, [imageSetKey, images, priority]);
+    if ("requestIdleCallback" in window) {
+      const handle = window.requestIdleCallback(run, { timeout: 1500 });
+      return () => window.cancelIdleCallback(handle);
+    }
+    const timer = setTimeout(run, 200);
+    return () => clearTimeout(timer);
+  }, [photos, frontIndex, nearViewport, sizes, imageWidth, imageHeight, quality]);
 
   /** Everything behind the front card, back-most first. */
   const behind = useMemo(() => {
@@ -336,7 +417,7 @@ export default function StackedImageDeck({
     return order.slice(order.length - depth, order.length - 1);
   }, [order, stackSize]);
 
-  if (!images.length) {
+  if (!photos.length) {
     return (
       <div className={cn("grid place-items-center", className)}>
         <div className="text-muted-foreground px-4 py-6 text-center text-xs">
@@ -346,13 +427,26 @@ export default function StackedImageDeck({
     );
   }
 
-  const counterFor = (index: number) =>
-    showCounter || images.length > 1
-      ? `${index + 1}/${images.length}`
-      : undefined;
+  const altFor = (index: number) =>
+    alts?.[index] ??
+    (photos.length > 1
+      ? `${alt}, photo ${index + 1} of ${photos.length}`
+      : alt);
+
+  const chrome = (index: number) => ({
+    photo: photos[index],
+    label: labels?.[index],
+    fit,
+    imageWidth,
+    imageHeight,
+    sizes,
+    quality,
+    imageClassName,
+  });
 
   return (
     <div
+      ref={containerRef}
       data-stacked-deck
       data-deck-index={frontIndex}
       // shrink-0 keeps the shared size intact inside flex and grid parents,
@@ -362,7 +456,10 @@ export default function StackedImageDeck({
         className,
       )}
       role="region"
-      aria-label={`${alt} gallery, drag to browse`}
+      aria-roledescription="carousel"
+      aria-label={`${alt}: ${photos.length} ${
+        photos.length === 1 ? "image" : "images"
+      }. Drag or use the arrow keys to browse.`}
       tabIndex={0}
       onKeyDown={(event) => {
         if (event.key === "ArrowLeft") {
@@ -379,46 +476,40 @@ export default function StackedImageDeck({
     >
       {behind.map((index, position) => (
         <BackCard
-          key={`back-${images[index]}`}
+          key={`back-${photos[index].src}`}
           depth={behind.length - position}
           tiltSeed={index}
           cardClassName={cardClassName}
-          source={images[index]}
+          {...chrome(index)}
+          // The edges of the stack show the blur preview until that photo has
+          // been downloaded for the front, so a deck costs one request, not
+          // four. Decorative: no alt, no counter, no priority.
+          showImage={nearViewport && isPhotoLoaded(photos[index])}
           alt=""
-          counter={counterFor(index)}
-          label={labels?.[index]}
-          fit={fit}
-          imageWidth={imageWidth}
-          imageHeight={imageHeight}
-          sizes={sizes}
-          quality={quality}
           priority={false}
-          imageClassName={imageClassName}
         />
       ))}
 
       <AnimatePresence initial={false} custom={exitDirection}>
         <FrontCard
           key={`front-${frontIndex}-${generation}`}
-          canThrow={images.length > 1}
+          canThrow={photos.length > 1}
           onThrow={recycle}
           onOpen={() => onImageClick?.(frontIndex)}
           cardClassName={cardClassName}
-          source={images[frontIndex]}
-          alt={alt}
-          counter={counterFor(frontIndex)}
-          label={labels?.[frontIndex]}
-          fit={fit}
-          imageWidth={imageWidth}
-          imageHeight={imageHeight}
-          sizes={sizes}
-          quality={quality}
-          priority={priority}
-          imageClassName={imageClassName}
+          {...chrome(frontIndex)}
+          showImage={nearViewport}
+          alt={altFor(frontIndex)}
+          counter={
+            showCounter || photos.length > 1
+              ? `${frontIndex + 1}/${photos.length}`
+              : undefined
+          }
+          priority={priority && generation === 0}
         />
       </AnimatePresence>
 
-      {images.length > 1 && (
+      {photos.length > 1 && (
         <div className="deck-nav absolute bottom-2.5 left-1/2 z-[200] -translate-x-1/2">
           <button
             type="button"
