@@ -98,6 +98,9 @@ file, it gets sorted by `date`). The bits that matter:
   opposite of what Google Maps copies. `country` only if it isn't India.
 - Photos go in a folder under `public/`, and `imageFolder` points at it. They're
   shown in number order, so I just call them `1.webp`, `2.webp` and so on.
+- `"kind": "fieldwork"` is for a site visit, an installation or a survey rather
+  than an event. Search engines then get the page as an article instead of an
+  event. Leave it out for events.
 
 The build checks the data as it goes, so a typo in a place id fails the build
 instead of quietly dropping a pin off the map.

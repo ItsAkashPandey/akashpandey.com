@@ -44,11 +44,20 @@ const isoDate = z
 export const ACTIVITY_CATEGORIES = ["academic", "startup"] as const;
 export type ActivityCategory = (typeof ACTIVITY_CATEGORIES)[number];
 
+/**
+ * An event other people came to, or fieldwork (a site visit, an
+ * installation, a survey). Only the structured data differs: fieldwork is
+ * marked up as an article, since search engines treat events as things to
+ * attend.
+ */
+export const ACTIVITY_KINDS = ["event", "fieldwork"] as const;
+
 const activity = z.object({
   /** Never change a published slug: it is the activity's permanent URL. */
   slug,
   name: z.string().min(1),
   category: z.enum(ACTIVITY_CATEGORIES),
+  kind: z.enum(ACTIVITY_KINDS).default("event"),
   date: isoDate,
   /** Shown to visitors. The map uses `place` instead of parsing this. */
   location: z.string().min(1),
