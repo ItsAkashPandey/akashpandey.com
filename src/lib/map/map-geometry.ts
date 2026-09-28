@@ -78,6 +78,22 @@ export function formatDistance(distance: number) {
     : `${Math.round(distance).toLocaleString("en-IN")} km`;
 }
 
+/** The smallest box holding every coordinate, as MapLibre's own bounds shape. */
+export function boundsForCoordinates(
+  coordinates: Coordinate[],
+): [Coordinate, Coordinate] {
+  return [
+    [
+      Math.min(...coordinates.map((c) => c[0])),
+      Math.min(...coordinates.map((c) => c[1])),
+    ],
+    [
+      Math.max(...coordinates.map((c) => c[0])),
+      Math.max(...coordinates.map((c) => c[1])),
+    ],
+  ];
+}
+
 export function footprintCircle(
   center: Coordinate,
   radiusKm: number,

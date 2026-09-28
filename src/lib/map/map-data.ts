@@ -5,6 +5,15 @@ import { getPlace, HOME_PLACE_ID } from "@/lib/places";
 import type { Experience } from "@/lib/schemas";
 
 /**
+ * Same rule as the `slug()` in globe-data.ts, kept here too so a MapPoint's
+ * city lines up with a GlobeStop's id without either file importing the
+ * other.
+ */
+function slug(text: string) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+/**
  * Builds the contact map's points on the server, so the page ships a few
  * kilobytes of places instead of the whole activities file. Activities are
  * grouped by place id; schools and employers get one point per organisation.
@@ -21,6 +30,7 @@ export function buildMapData(): MapData {
         id: `activity:${activity.place}`,
         category: "activity",
         place: activity.place,
+        city: slug(place.city),
         coordinates: place.coordinates,
         label: place.name,
         items: [],
@@ -48,6 +58,7 @@ export function buildMapData(): MapData {
         id: `${category}:${org.place}:${org.shortName}`,
         category,
         place: org.place,
+        city: slug(place.city),
         coordinates: place.coordinates,
         label: org.shortName,
         website: org.href,
