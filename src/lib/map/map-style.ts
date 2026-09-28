@@ -19,10 +19,16 @@ const GLYPHS = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf";
 const IMAGERY_TILES = [
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
 ];
-/** Esri's real tile coverage stops here over most of the plotted locations;
- * beyond it MapLibre upscales this last real tile instead of requesting a
- * zoom level Esri doesn't have — soft, but never a blank "no data" tile. */
+/** Esri's real tile coverage stops here over most of the plotted locations. */
 const IMAGERY_MAX_SOURCE_ZOOM = 18;
+
+/** The map stops where the imagery does, so it never shows upscaled blur. */
+export const MAP_MAX_ZOOM = IMAGERY_MAX_SOURCE_ZOOM;
+
+const BASEMAP_ATTRIBUTION =
+  '<a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener">© OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
+const IMAGERY_ATTRIBUTION =
+  'Powered by <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a> · Esri, Maxar, Earthstar Geographics, and the GIS User Community';
 
 // OpenFreeMap only ships Regular, Bold and Italic glyph stacks. Asking for a
 // weight it does not serve leaves the labels unrendered.
@@ -109,7 +115,7 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
       basemap: {
         type: "vector",
         url: VECTOR_SOURCE_URL,
-        attribution: "© OpenStreetMap contributors",
+        attribution: BASEMAP_ATTRIBUTION,
       },
       imagery: {
         type: "raster",
@@ -117,7 +123,7 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
         tileSize: 256,
         minzoom: 0,
         maxzoom: IMAGERY_MAX_SOURCE_ZOOM,
-        attribution: "Imagery © Esri, Maxar, Earthstar Geographics",
+        attribution: IMAGERY_ATTRIBUTION,
       },
     },
     layers: [
@@ -337,11 +343,19 @@ export function createMapStyle(theme: MapTheme): StyleSpecification {
   };
 }
 
+/**
+ * Paint and layout changes apply as soon as the style itself is parsed. They
+ * used to bail out on `isStyleLoaded()`, which is false whenever any tile is
+ * still loading, so a toggle during a pan changed the button and not the map.
+ */
 export function applyMapTheme(map: MapLibreMap, theme: MapTheme) {
-  if (!map.isStyleLoaded()) return;
   const c = palette[theme];
 
-  const set = (layer: string, property: string, value: unknown) => {
+  const set = (
+    layer: string,
+    property: Parameters<MapLibreMap["setPaintProperty"]>[1],
+    value: unknown,
+  ) => {
     if (map.getLayer(layer)) {
       map.setPaintProperty(layer, property, value as never);
     }
@@ -371,7 +385,7 @@ export function applyMapTheme(map: MapLibreMap, theme: MapTheme) {
 const GROUND_COVER_LAYERS = ["landcover-green", "landuse-builtup", "water", "waterway"];
 
 export function setImageryVisible(map: MapLibreMap, visible: boolean) {
-  if (!map.isStyleLoaded() || !map.getLayer("imagery")) return;
+  if (!map.getLayer("imagery")) return;
   map.setLayoutProperty("imagery", "visibility", visible ? "visible" : "none");
 
   // The imagery sits at the bottom of the stack, so the vector fills have to

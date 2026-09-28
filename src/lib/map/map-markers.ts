@@ -1,72 +1,48 @@
+import {
+  CATEGORY_LABELS,
+  countLabel,
+  type MarkerCategory,
+  type MapPoint,
+} from "./map-types";
+
 /**
- * Two ink families run through the whole plate: ochre for people and places,
- * teal for anything orbital. The markers are the ochre end of that pairing.
+ * DOM markers for the contact map. Colours come from the theme variables
+ * (globals.css), so they follow light and dark mode like the rest of the page.
+ * Hover labels are drawn here rather than with `title`, which used to show a
+ * second, native tooltip on top.
  */
-export function createLocationMarkerElement(kind: "akash" | "visitor") {
+
+const ACCENT: Record<MarkerCategory, string> = {
+  activity: "hsl(var(--activity-accent))",
+  education: "hsl(var(--education-accent))",
+  experience: "hsl(var(--experience-accent))",
+};
+const HOME_ACCENT = "hsl(var(--accent-warm))";
+
+const LABEL_CLASS =
+  "pointer-events-none absolute bottom-full left-1/2 mb-1.5 w-max max-w-[200px] -translate-x-1/2 rounded-sm bg-foreground/90 px-2 py-1 text-center text-[11px] leading-snug font-semibold text-background opacity-0 shadow-sm transition-opacity group-hover/pin:opacity-100 group-focus-visible/pin:opacity-100";
+
+function hoverLabel(text: string) {
+  const label = document.createElement("span");
+  label.textContent = text;
+  label.className = LABEL_CLASS;
+  return label;
+}
+
+function pinButton(ariaLabel: string, sizeClass: string) {
   const element = document.createElement("button");
   element.type = "button";
-  element.title = kind === "akash" ? "Akash's location" : "Your location";
-  element.setAttribute(
-    "aria-label",
-    kind === "akash" ? "Akash's location" : "Your location",
-  );
-  element.className =
-    "group/location relative flex size-8 items-center justify-center border-0 bg-transparent p-0";
-
-  const ring = document.createElement("span");
-  ring.className =
-    kind === "akash"
-      ? "absolute size-5 rounded-full border border-[#9c5b23]/50 bg-[#c98a3e]/15 dark:border-[#e6b678]/55"
-      : "absolute size-5 rounded-full border border-[#1f5457]/50 bg-[#2c6a6d]/15 dark:border-[#9adcd5]/55";
-
-  const dot = document.createElement("span");
-  dot.className =
-    kind === "akash"
-      ? "relative size-2.5 rounded-full border-2 border-[#f4f1e8] bg-[#9c5b23] shadow-md dark:border-[#1b2429] dark:bg-[#e6b678]"
-      : "relative size-2.5 rounded-full border-2 border-[#f4f1e8] bg-[#1f5457] shadow-md dark:border-[#1b2429] dark:bg-[#9adcd5]";
-
-  const label = document.createElement("span");
-  label.textContent = kind === "akash" ? "Akash" : "You";
-  label.className =
-    "pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 rounded-[3px] bg-[#1b2429]/90 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide whitespace-nowrap text-[#f4f1e8] opacity-0 shadow-sm transition-opacity group-hover/location:opacity-100 group-focus-visible/location:opacity-100";
-
-  element.append(ring, dot, label);
+  element.setAttribute("aria-label", ariaLabel);
+  element.className = `group/pin relative flex ${sizeClass} items-center justify-center rounded-full border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[hsl(var(--ring))]`;
   return element;
 }
 
-export type MarkerCategory = "activity" | "education" | "experience";
-
-const CATEGORY_ACCENT_VAR: Record<MarkerCategory, string> = {
-  activity: "--activity-accent",
-  education: "--education-accent",
-  experience: "--experience-accent",
-};
-
-/**
- * The three "somewhere on the map" categories — activities, schools, jobs —
- * share one pin design so a visitor learns the shape once, then tells them
- * apart purely by ink: activity is the berry, education is green, experience
- * is violet. Each gets a held pulse ring so it reads as "there's something
- * here" against the quiet paper basemap instead of blending in the way the
- * very first pass at this marker did.
- *
- * The accent colour is set via inline style rather than a Tailwind
- * arbitrary-value class: `bg-[hsl(var(--x))]` only reaches the stylesheet
- * when that exact string is scanned from source, and here `--x` is only
- * known at runtime.
- */
-export function createCategoryMarkerElement(
-  category: MarkerCategory,
-  count: number,
-  tooltip: string,
-) {
-  const accent = `hsl(var(${CATEGORY_ACCENT_VAR[category]}))`;
-  const element = document.createElement("button");
-  element.type = "button";
-  element.title = tooltip;
-  element.setAttribute("aria-label", tooltip);
-  element.className =
-    "group/pin relative flex size-7 items-center justify-center border-0 bg-transparent p-0";
+/** One place with one category: a dot in that category's ink. */
+export function createPointMarker(point: MapPoint) {
+  const count = point.items.length;
+  const text = `${point.label}: ${countLabel(point.category, count)}`;
+  const element = pinButton(text, "size-7");
+  const accent = ACCENT[point.category];
 
   const pulse = document.createElement("span");
   pulse.className = "marker-pulse absolute size-4 rounded-full";
@@ -75,7 +51,7 @@ export function createCategoryMarkerElement(
 
   const dot = document.createElement("span");
   dot.className =
-    "relative size-3 rounded-full border-2 border-[#f4f1e8] shadow-[0_1px_4px_rgba(0,0,0,0.35)] transition-transform duration-150 group-hover/pin:scale-125 dark:border-[#1b2429]";
+    "border-background relative size-3 rounded-full border-2 shadow-[0_1px_4px_rgb(0_0_0/0.35)] transition-transform duration-150 group-hover/pin:scale-125";
   dot.style.backgroundColor = accent;
 
   element.append(pulse, dot);
@@ -84,15 +60,83 @@ export function createCategoryMarkerElement(
     const badge = document.createElement("span");
     badge.textContent = count > 9 ? "9+" : String(count);
     badge.className =
-      "pointer-events-none absolute -top-1 -right-1 flex size-3.5 items-center justify-center rounded-full border border-[#f4f1e8] bg-[#1b2429] text-[8px] leading-none font-bold text-[#f4f1e8] dark:border-[#1b2429] dark:bg-[#f4f1e8] dark:text-[#1b2429]";
+      "border-background bg-foreground text-background pointer-events-none absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full border text-[10px] leading-none font-bold";
     element.append(badge);
   }
 
-  const label = document.createElement("span");
-  label.textContent = tooltip;
-  label.className =
-    "pointer-events-none absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 rounded-[3px] bg-[#1b2429]/90 px-1.5 py-0.5 text-[9px] font-semibold tracking-wide whitespace-nowrap text-[#f4f1e8] opacity-0 shadow-sm transition-opacity group-hover/pin:opacity-100 group-focus-visible/pin:opacity-100";
-  element.append(label);
+  element.append(hoverLabel(text));
+  return element;
+}
 
+export type ClusterCounts = Record<MarkerCategory, number> & { home: number };
+
+/**
+ * Several points close together at this zoom. The ring is split in
+ * proportion to what is inside, and carries an ochre outline when Akash's own
+ * pin is part of it.
+ */
+export function createClusterMarker(counts: ClusterCounts) {
+  const categories = Object.keys(CATEGORY_LABELS) as MarkerCategory[];
+  const total = categories.reduce((sum, key) => sum + counts[key], 0);
+  const parts = categories
+    .filter((key) => counts[key] > 0)
+    .map((key) => countLabel(key, counts[key]));
+  const summary = [
+    counts.home ? "Akash is based here" : "",
+    parts.join(", "),
+  ]
+    .filter(Boolean)
+    .join(". ");
+  const size = total >= 20 ? 44 : total >= 8 ? 38 : 32;
+
+  const element = pinButton(`${summary}. Select to see them.`, "");
+  element.style.width = `${size}px`;
+  element.style.height = `${size}px`;
+
+  let angle = 0;
+  const stops = categories
+    .filter((key) => counts[key] > 0)
+    .map((key) => {
+      const start = angle;
+      angle += (counts[key] / Math.max(1, total)) * 360;
+      return `${ACCENT[key]} ${start}deg ${angle}deg`;
+    });
+
+  const ring = document.createElement("span");
+  ring.className =
+    "absolute inset-0 rounded-full shadow-[0_2px_8px_rgb(0_0_0/0.3)] transition-transform duration-150 group-hover/pin:scale-110";
+  ring.style.background = stops.length
+    ? `conic-gradient(${stops.join(", ")})`
+    : HOME_ACCENT;
+  if (counts.home) ring.style.boxShadow = `0 0 0 3px ${HOME_ACCENT}, 0 2px 8px rgb(0 0 0 / 0.3)`;
+
+  const face = document.createElement("span");
+  face.className =
+    "bg-background text-foreground relative flex items-center justify-center rounded-full text-xs font-bold tabular-nums";
+  face.style.width = `${size - 10}px`;
+  face.style.height = `${size - 10}px`;
+  face.textContent = String(total || 1);
+
+  element.append(ring, face, hoverLabel(summary));
+  return element;
+}
+
+/** Akash's pin (ochre) or the visitor's (teal). */
+export function createLocationMarkerElement(kind: "akash" | "visitor") {
+  const label = kind === "akash" ? "Akash is based here" : "Your location";
+  const element = pinButton(label, "size-8");
+  const accent = kind === "akash" ? HOME_ACCENT : "hsl(var(--accent-ink))";
+
+  const ring = document.createElement("span");
+  ring.className = "absolute size-5 rounded-full border";
+  ring.style.borderColor = accent;
+  ring.style.backgroundColor = `color-mix(in srgb, ${accent} 15%, transparent)`;
+
+  const dot = document.createElement("span");
+  dot.className =
+    "border-background relative size-2.5 rounded-full border-2 shadow-md";
+  dot.style.backgroundColor = accent;
+
+  element.append(ring, dot, hoverLabel(kind === "akash" ? "Akash" : "You"));
   return element;
 }

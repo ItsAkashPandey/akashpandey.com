@@ -11,142 +11,103 @@ import {
   updateVisitorConnection,
 } from "@/lib/map/map-layers";
 import {
-  createCategoryMarkerElement,
+  createClusterMarker,
   createLocationMarkerElement,
-  type MarkerCategory,
+  createPointMarker,
 } from "@/lib/map/map-markers";
-import { buildActivityPoints } from "@/lib/map/activity-points";
-import { buildEducationPoints, buildExperiencePoints } from "@/lib/map/org-points";
+import { loadMapLibre } from "@/lib/map/load-maplibre";
+import { groupPopupHtml, pointPopupHtml } from "@/lib/map/map-popups";
 import {
   applyMapTheme,
   createMapStyle,
+  MAP_MAX_ZOOM,
   setImageryVisible,
   type MapTheme,
 } from "@/lib/map/map-style";
-import type { Map as MapLibreMap, Marker } from "maplibre-gl";
+import type { LngLat, MapData, MapPoint } from "@/lib/map/map-types";
+import type {
+  GeoJSONSource,
+  LngLatBoundsLike,
+  Map as MapLibreMap,
+  Marker,
+  Popup,
+} from "maplibre-gl";
 import { useTheme } from "next-themes";
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-const AKASH_LOCATION: [longitude: number, latitude: number] = [
-  77.900244, 29.862397,
-];
+const SOURCE = "places";
+const HOME_ID = "home";
+/** Past this zoom nothing is clustered, so every pin can be reached. */
+const CLUSTER_MAX_ZOOM = 16;
+const CLUSTER_RADIUS = 44;
+/** The opening view: home plus everything within this distance of it. */
+const HOME_REGION_RADIUS_KM = 600;
+const LOAD_TIMEOUT_MS = 12_000;
 
-/** Anything past this radius (Vienna, chiefly) is still pinned on the map,
- * it just doesn't drag the opening view out to a mostly-ocean world shot. */
-const HOME_CLUSTER_RADIUS_KM = 2000;
-
-const ACTIVITY_POINTS = buildActivityPoints();
-const EDUCATION_POINTS = buildEducationPoints();
-const EXPERIENCE_POINTS = buildExperiencePoints();
-
-const HTML_ESCAPES: Record<string, string> = {
-  "&": "&amp;",
-  "<": "&lt;",
-  ">": "&gt;",
-  '"': "&quot;",
-  "'": "&#39;",
+type ClusterProperties = {
+  cluster: true;
+  cluster_id: number;
+  activity: number;
+  education: number;
+  experience: number;
+  home: number;
 };
+type PointProperties = { cluster?: false; id: string };
 
-/** Popup content is built as an HTML string (MapLibre's `setHTML`), so
- * activity names and hrefs — free text from `activities.json` — go through
- * this before they touch the template. */
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char]);
+function toFeatureCollection(
+  data: MapData,
+): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  return {
+    type: "FeatureCollection",
+    features: [
+      ...data.points.map((point) => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: point.coordinates },
+        properties: {
+          id: point.id,
+          category: point.category,
+          count: point.items.length,
+        },
+      })),
+      {
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: data.home.coordinates },
+        properties: { id: HOME_ID, category: "home", count: 0 },
+      },
+    ],
+  };
 }
 
-const CHEVRON_SVG =
-  '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-
-function formatMonthYear(isoDate: string) {
-  return new Date(`${isoDate}T12:00:00`).toLocaleDateString(undefined, {
-    month: "short",
-    year: "numeric",
-  });
+/** Sums what a cluster holds, per category, for its marker and label. */
+function countIn(category: string, value: unknown = ["get", "count"]) {
+  return ["+", ["case", ["==", ["get", "category"], category], value, 0]];
 }
 
-function popupShell(category: MarkerCategory, headHtml: string, listHtml: string) {
-  return `<div class="map-popup-card" data-category="${category}">
-    <header class="map-popup-head">${headHtml}</header>
-    <ul class="map-popup-list">${listHtml}</ul>
-  </div>`;
+function regionBounds(data: MapData): LngLatBoundsLike {
+  const home = data.home.coordinates;
+  const nearby = data.points
+    .map((point) => point.coordinates)
+    .filter((coordinates) => distanceKm(home, coordinates) <= HOME_REGION_RADIUS_KM);
+  const all = [home, ...nearby];
+  return [
+    [Math.min(...all.map((c) => c[0])), Math.min(...all.map((c) => c[1]))],
+    [Math.max(...all.map((c) => c[0])), Math.max(...all.map((c) => c[1]))],
+  ];
 }
 
-function activityPopupHtml(point: {
-  label: string;
-  activities: { name: string; date: string; href: string }[];
-}) {
-  const rows = point.activities
-    .map(
-      (activity) => `<li><a class="map-popup-row" href="${escapeHtml(activity.href)}">
-        <span class="map-popup-text">
-          <span class="map-popup-name">${escapeHtml(activity.name)}</span>
-          <span class="map-popup-date">${escapeHtml(formatMonthYear(activity.date))}</span>
-        </span>
-        ${CHEVRON_SVG}
-      </a></li>`,
-    )
-    .join("");
-  const count = point.activities.length;
-  const head = `<span class="map-popup-place">${escapeHtml(point.label)}</span><span class="map-popup-count">${count} ${count === 1 ? "visit" : "visits"}</span>`;
-  return popupShell("activity", head, rows);
-}
-
-function orgPopupHtml(
-  category: "education" | "experience",
-  point: {
-    label: string;
-    href: string;
-    positions: { title: string; start: string; end?: string }[];
-  },
-) {
-  const rows = point.positions
-    .map(
-      (position) => `<li class="map-popup-row">
-        <span class="map-popup-text">
-          <span class="map-popup-name">${escapeHtml(position.title)}</span>
-          <span class="map-popup-date">${escapeHtml(position.start)}${
-            position.end ? ` – ${escapeHtml(position.end)}` : ""
-          }</span>
-        </span>
-      </li>`,
-    )
-    .join("");
-  const count = point.positions.length;
-  const noun =
-    category === "education"
-      ? count === 1
-        ? "programme"
-        : "programmes"
-      : count === 1
-        ? "role"
-        : "roles";
-  const head = `<a class="map-popup-place" href="${escapeHtml(point.href)}" target="_blank" rel="noreferrer">${escapeHtml(point.label)}</a><span class="map-popup-count">${count} ${noun}</span>`;
-  return popupShell(category, head, rows);
-}
-
-function fitLocations(
-  map: MapLibreMap,
-  visitor: [longitude: number, latitude: number],
-) {
+function fitLocations(map: MapLibreMap, home: LngLat, visitor: LngLat) {
   let visitorLongitude = visitor[0];
-  while (visitorLongitude - AKASH_LOCATION[0] > 180) visitorLongitude -= 360;
-  while (visitorLongitude - AKASH_LOCATION[0] < -180) visitorLongitude += 360;
+  while (visitorLongitude - home[0] > 180) visitorLongitude -= 360;
+  while (visitorLongitude - home[0] < -180) visitorLongitude += 360;
 
   map.fitBounds(
     [
-      [
-        Math.min(AKASH_LOCATION[0], visitorLongitude),
-        Math.min(AKASH_LOCATION[1], visitor[1]),
-      ],
-      [
-        Math.max(AKASH_LOCATION[0], visitorLongitude),
-        Math.max(AKASH_LOCATION[1], visitor[1]),
-      ],
+      [Math.min(home[0], visitorLongitude), Math.min(home[1], visitor[1])],
+      [Math.max(home[0], visitorLongitude), Math.max(home[1], visitor[1])],
     ],
     {
       padding: { top: 56, right: 60, bottom: 56, left: 60 },
-      // A 8.5 ceiling collapsed two nearby points into one dot. Only cap far
-      // enough back that a same-city pair still reads as two markers.
       maxZoom: 12,
       duration: 950,
       essential: true,
@@ -154,304 +115,262 @@ function fitLocations(
   );
 }
 
-/** Opens on the spread of activity/education/experience pins near home
- * instead of a street-level zoom on one address, so the map reads as
- * "everywhere I've studied, worked and shown up" first. */
-function fitHomeCluster(map: MapLibreMap) {
-  const allPoints: { coordinates: [number, number] }[] = [
-    ...ACTIVITY_POINTS,
-    ...EDUCATION_POINTS,
-    ...EXPERIENCE_POINTS,
-  ];
-  const nearby = allPoints.filter(
-    (point) =>
-      distanceKm(AKASH_LOCATION, point.coordinates) <= HOME_CLUSTER_RADIUS_KM,
-  );
-  if (nearby.length === 0) return;
+type MapState = "loading" | "ready" | "failed";
 
-  let minLng = AKASH_LOCATION[0];
-  let maxLng = AKASH_LOCATION[0];
-  let minLat = AKASH_LOCATION[1];
-  let maxLat = AKASH_LOCATION[1];
-  for (const point of nearby) {
-    minLng = Math.min(minLng, point.coordinates[0]);
-    maxLng = Math.max(maxLng, point.coordinates[0]);
-    minLat = Math.min(minLat, point.coordinates[1]);
-    maxLat = Math.max(maxLat, point.coordinates[1]);
-  }
-
-  map.fitBounds(
-    [
-      [minLng, minLat],
-      [maxLng, maxLat],
-    ],
-    {
-      padding: { top: 36, right: 36, bottom: 36, left: 36 },
-      maxZoom: 7,
-      duration: 0,
-    },
-  );
-}
-
-export default function LocationMap() {
-  const rootRef = useRef<HTMLDivElement>(null);
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+export default function LocationMap({ data }: { data: MapData }) {
+  const router = useRouter();
+  const { resolvedTheme } = useTheme();
+  const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
-  const akashMarkerRef = useRef<Marker | null>(null);
+  const popupRef = useRef<Popup | null>(null);
   const visitorMarkerRef = useRef<Marker | null>(null);
-  const categoryMarkersRef = useRef<Marker[]>([]);
-  const visitorLocationRef = useRef<[number, number] | null>(null);
-  const mapThemeRef = useRef<MapTheme>("light");
-  const mapReadyRef = useRef(false);
+  const visitorLocationRef = useRef<LngLat | null>(null);
 
-  const [isClient, setIsClient] = useState(false);
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const [mapUnavailable, setMapUnavailable] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [mapState, setMapState] = useState<MapState>("loading");
   const [imagery, setImagery] = useState(true);
-  const [visitorLocation, setVisitorLocation] = useState<
-    [number, number] | null
-  >(null);
-  const [distanceLabelPosition, setDistanceLabelPosition] = useState({
-    x: 0,
-    y: 0,
-  });
+  const [visitorLocation, setVisitorLocation] = useState<LngLat | null>(null);
+  const [distanceLabelPosition, setDistanceLabelPosition] = useState({ x: 0, y: 0 });
   const [locating, setLocating] = useState(false);
   const [locationMessage, setLocationMessage] = useState("");
-  const { resolvedTheme } = useTheme();
 
-  const visitorDistance = visitorLocation
-    ? distanceKm(AKASH_LOCATION, visitorLocation)
-    : null;
-
-  useEffect(() => setIsClient(true), []);
+  const home = data.home.coordinates;
+  const mapLoaded = mapState === "ready";
+  const pointsById = useMemo(
+    () => new Map<string, MapPoint>(data.points.map((point) => [point.id, point])),
+    [data.points],
+  );
+  const bounds = useMemo(() => regionBounds(data), [data]);
+  const visitorDistance = visitorLocation ? distanceKm(home, visitorLocation) : null;
 
   useEffect(() => {
     visitorLocationRef.current = visitorLocation;
   }, [visitorLocation]);
 
+  // Create the map. Re-runs on "Try again" (attempt) after a failed load.
   useEffect(() => {
-    if (!isClient || !mapContainerRef.current || mapRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
     let cancelled = false;
-    let loadTimer = 0;
+    let loaded = false;
+    let map: MapLibreMap | null = null;
+    const markers = new Map<string, Marker>();
+
+    const timer = window.setTimeout(() => {
+      if (!loaded && !cancelled) setMapState("failed");
+    }, LOAD_TIMEOUT_MS);
 
     const initialise = async () => {
-      const maplibregl = (await import("maplibre-gl")).default;
-      if (cancelled || !mapContainerRef.current) return;
+      const maplibregl = await loadMapLibre();
+      if (cancelled) return;
 
-      const theme: MapTheme = document.documentElement.classList.contains(
-        "dark",
-      )
-        ? "dark"
-        : "light";
-      mapThemeRef.current = theme;
-
-      const map = new maplibregl.Map({
-        container: mapContainerRef.current,
-        style: createMapStyle(theme),
-        center: AKASH_LOCATION,
-        zoom: 4,
-        minZoom: 1,
-        maxZoom: 22,
-        pitch: 0,
-        bearing: 0,
-        dragPan: true,
-        dragRotate: false,
-        scrollZoom: true,
-        // Shift-drag box zoom fights the drag-to-pan people actually expect.
-        boxZoom: false,
-        doubleClickZoom: true,
-        keyboard: true,
-        touchZoomRotate: true,
-        touchPitch: false,
-        attributionControl: false,
-        renderWorldCopies: false,
-        fadeDuration: 80,
-        zoomSnap: 0,
-        cancelPendingTileRequestsWhileZooming: false,
-        maxTileCacheZoomLevels: 8,
-      });
-      // Pinch-to-zoom stays; pinch-to-rotate does not — a quiet distance
-      // widget has no use for a control that then needs its own reset button.
-      map.touchZoomRotate.disableRotation();
-      mapRef.current = map;
-
-      const handleLoad = () => {
-        mapReadyRef.current = true;
-        window.clearTimeout(loadTimer);
-        applyMapTheme(map, mapThemeRef.current);
-        ensureResearchLayers(map, mapThemeRef.current);
-        fitHomeCluster(map);
-        // Style always loads with imagery hidden (`visibility: "none"`) —
-        // turn it on to match the default-on toggle state.
-        setImageryVisible(map, true);
-        setMapLoaded(true);
-        setMapUnavailable(false);
-        document.documentElement.dataset.heroMapReady = "true";
-        window.dispatchEvent(new Event("hero-map-ready"));
+      const openPopup = (coordinates: LngLat, html: string) => {
+        if (!map) return;
+        popupRef.current?.remove();
+        const popup = new maplibregl.Popup({
+          offset: 16,
+          closeButton: true,
+          className: "map-popup",
+          maxWidth: "300px",
+        })
+          .setLngLat(coordinates)
+          .setHTML(html)
+          .addTo(map);
+        popupRef.current = popup;
+        // Keyboard users land on the first entry instead of the page behind.
+        popup
+          .getElement()
+          ?.querySelector<HTMLElement>("a")
+          ?.focus({ preventScroll: true });
       };
 
+      const theme: MapTheme = document.documentElement.classList.contains("dark")
+        ? "dark"
+        : "light";
+
+      map = new maplibregl.Map({
+        container,
+        style: createMapStyle(theme),
+        bounds,
+        fitBoundsOptions: { padding: 40, maxZoom: 9 },
+        minZoom: 1,
+        maxZoom: MAP_MAX_ZOOM,
+        dragRotate: false,
+        touchPitch: false,
+        // Box zoom fights the drag-to-pan people expect.
+        boxZoom: false,
+        // The page keeps the wheel and one-finger swipes; the map takes
+        // Ctrl/Cmd + wheel and two fingers, and says so on screen.
+        cooperativeGestures: true,
+        attributionControl: { compact: true },
+        renderWorldCopies: false,
+        fadeDuration: 80,
+      });
+      map.touchZoomRotate.disableRotation();
+      map.keyboard.disableRotation();
+      mapRef.current = map;
+      const current = map;
+
       // MapLibre swallows style, source and glyph failures unless something
-      // listens, which is what made a blank map impossible to diagnose.
+      // listens, which made a blank map impossible to diagnose.
       map.on("error", (event) => {
         console.error("[map]", event.error?.message ?? event);
       });
-      map.on("load", handleLoad);
-      loadTimer = window.setTimeout(() => {
-        if (!mapReadyRef.current) setMapUnavailable(true);
-      }, 8_000);
+
+      const updateMarkers = () => {
+        if (!current.getSource(SOURCE)) return;
+        const seen = new Set<string>();
+
+        for (const feature of current.querySourceFeatures(SOURCE)) {
+          const properties = feature.properties as ClusterProperties | PointProperties;
+          const coordinates = (feature.geometry as GeoJSON.Point).coordinates as LngLat;
+          const key = properties.cluster
+            ? `cluster:${properties.cluster_id}`
+            : `point:${properties.id}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          if (markers.has(key)) continue;
+
+          let element: HTMLElement;
+          if (properties.cluster) {
+            const cluster = properties;
+            element = createClusterMarker(cluster);
+            element.addEventListener("click", async (event) => {
+              event.stopPropagation();
+              const source = current.getSource(SOURCE) as GeoJSONSource;
+              const zoom = await source.getClusterExpansionZoom(cluster.cluster_id);
+              if (zoom <= CLUSTER_MAX_ZOOM) {
+                current.easeTo({ center: coordinates, zoom: zoom + 0.2, duration: 600 });
+                return;
+              }
+              // Points that share one spot never separate: list them instead.
+              const leaves = await source.getClusterLeaves(cluster.cluster_id, 200, 0);
+              const points = leaves
+                .map((leaf) => pointsById.get(String(leaf.properties?.id)))
+                .filter((point): point is MapPoint => Boolean(point));
+              openPopup(coordinates, groupPopupHtml(points, cluster.home > 0));
+            });
+          } else if (properties.id === HOME_ID) {
+            element = createLocationMarkerElement("akash");
+            element.addEventListener("click", (event) => {
+              event.stopPropagation();
+              if (visitorLocationRef.current) {
+                fitLocations(current, home, visitorLocationRef.current);
+              } else {
+                current.easeTo({
+                  center: home,
+                  zoom: Math.max(current.getZoom(), 14),
+                  duration: 850,
+                });
+              }
+            });
+          } else {
+            const point = pointsById.get(properties.id);
+            if (!point) continue;
+            element = createPointMarker(point);
+            element.addEventListener("click", (event) => {
+              event.stopPropagation();
+              openPopup(point.coordinates, pointPopupHtml(point));
+            });
+          }
+
+          markers.set(
+            key,
+            new maplibregl.Marker({ element, anchor: "center" })
+              .setLngLat(coordinates)
+              .addTo(current),
+          );
+        }
+
+        for (const [key, marker] of markers) {
+          if (!seen.has(key)) {
+            marker.remove();
+            markers.delete(key);
+          }
+        }
+      };
+
+      map.on("load", () => {
+        if (cancelled) return;
+        loaded = true;
+        window.clearTimeout(timer);
+
+        current.addSource(SOURCE, {
+          type: "geojson",
+          data: toFeatureCollection(data),
+          cluster: true,
+          clusterRadius: CLUSTER_RADIUS,
+          clusterMaxZoom: CLUSTER_MAX_ZOOM,
+          clusterProperties: {
+            activity: countIn("activity"),
+            education: countIn("education"),
+            experience: countIn("experience"),
+            home: countIn("home", 1),
+          },
+        });
+        // Invisible: it only makes MapLibre build the clustered tiles that
+        // the HTML markers are read from.
+        current.addLayer({
+          id: `${SOURCE}-index`,
+          type: "circle",
+          source: SOURCE,
+          paint: { "circle-radius": 0, "circle-opacity": 0 },
+        });
+
+        current.on("render", updateMarkers);
+        setMapState("ready");
+      });
     };
 
     void initialise().catch((error) => {
       console.error("[map] initialise failed", error);
+      if (!cancelled) setMapState("failed");
     });
+
     return () => {
       cancelled = true;
-      window.clearTimeout(loadTimer);
-      mapReadyRef.current = false;
-      akashMarkerRef.current?.remove();
+      window.clearTimeout(timer);
+      for (const marker of markers.values()) marker.remove();
+      popupRef.current?.remove();
+      popupRef.current = null;
       visitorMarkerRef.current?.remove();
-      for (const marker of categoryMarkersRef.current) marker.remove();
-      categoryMarkersRef.current = [];
-      mapRef.current?.remove();
-      akashMarkerRef.current = null;
       visitorMarkerRef.current = null;
+      map?.remove();
       mapRef.current = null;
     };
-  }, [isClient]);
+  }, [attempt, bounds, data, home, pointsById]);
 
+  // Theme and imagery are applied from React state on every change, so the
+  // buttons and the map can no longer drift apart.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded) return;
     const theme: MapTheme = resolvedTheme === "dark" ? "dark" : "light";
-    mapThemeRef.current = theme;
     applyMapTheme(map, theme);
     ensureResearchLayers(map, theme);
-  }, [mapLoaded, resolvedTheme]);
+    updateVisitorConnection(map, home, visitorLocationRef.current);
+  }, [mapLoaded, resolvedTheme, home]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapLoaded || akashMarkerRef.current) return;
-    let active = true;
-
-    const addMarker = async () => {
-      const maplibregl = (await import("maplibre-gl")).default;
-      if (!active) return;
-      const element = createLocationMarkerElement("akash");
-      element.addEventListener("click", () => {
-        if (visitorLocationRef.current) {
-          fitLocations(map, visitorLocationRef.current);
-        } else {
-          map.easeTo({
-            center: AKASH_LOCATION,
-            zoom: Math.max(map.getZoom(), 14),
-            duration: 850,
-            essential: true,
-          });
-        }
-      });
-      akashMarkerRef.current = new maplibregl.Marker({
-        element,
-        anchor: "center",
-      })
-        .setLngLat(AKASH_LOCATION)
-        .addTo(map);
-    };
-
-    void addMarker();
-    return () => {
-      active = false;
-    };
-  }, [mapLoaded]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded || categoryMarkersRef.current.length > 0) return;
-    let active = true;
-
-    const addMarkers = async () => {
-      const maplibregl = (await import("maplibre-gl")).default;
-      if (!active) return;
-
-      const activityMarkers = ACTIVITY_POINTS.map((point) => {
-        const count = point.activities.length;
-        const element = createCategoryMarkerElement(
-          "activity",
-          count,
-          `${count} ${count === 1 ? "activity" : "activities"} near ${point.label}`,
-        );
-        const popup = new maplibregl.Popup({
-          offset: 14,
-          closeButton: true,
-          className: "map-popup",
-        }).setHTML(activityPopupHtml(point));
-
-        return new maplibregl.Marker({ element, anchor: "center" })
-          .setLngLat(point.coordinates)
-          .setPopup(popup)
-          .addTo(map);
-      });
-
-      const orgMarkers = (
-        [
-          ["education", EDUCATION_POINTS],
-          ["experience", EXPERIENCE_POINTS],
-        ] as const
-      ).flatMap(([category, points]) =>
-        points.map((point) => {
-          const count = point.positions.length;
-          const noun =
-            category === "education"
-              ? count === 1
-                ? "programme"
-                : "programmes"
-              : count === 1
-                ? "role"
-                : "roles";
-          const element = createCategoryMarkerElement(
-            category,
-            count,
-            `${point.label} — ${count} ${noun}`,
-          );
-          const popup = new maplibregl.Popup({
-            offset: 14,
-            closeButton: true,
-            className: "map-popup",
-          }).setHTML(orgPopupHtml(category, point));
-
-          return new maplibregl.Marker({ element, anchor: "center" })
-            .setLngLat(point.coordinates)
-            .setPopup(popup)
-            .addTo(map);
-        }),
-      );
-
-      categoryMarkersRef.current = [...activityMarkers, ...orgMarkers];
-    };
-
-    void addMarkers();
-    return () => {
-      active = false;
-    };
-  }, [mapLoaded]);
+    if (!map || !mapLoaded) return;
+    setImageryVisible(map, imagery);
+  }, [mapLoaded, imagery]);
 
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !visitorLocation) return;
     let active = true;
 
-    const addMarker = async () => {
-      const maplibregl = (await import("maplibre-gl")).default;
+    void loadMapLibre().then((maplibregl) => {
       if (!active) return;
-      if (!visitorMarkerRef.current) {
-        visitorMarkerRef.current = new maplibregl.Marker({
-          element: createLocationMarkerElement("visitor"),
-          anchor: "center",
-        });
-      }
+      visitorMarkerRef.current ??= new maplibregl.Marker({
+        element: createLocationMarkerElement("visitor"),
+        anchor: "center",
+      });
       visitorMarkerRef.current.setLngLat(visitorLocation).addTo(map);
-    };
+    });
 
-    void addMarker();
     return () => {
       active = false;
     };
@@ -460,13 +379,12 @@ export default function LocationMap() {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded) return;
-    ensureResearchLayers(map, mapThemeRef.current);
-    updateVisitorConnection(map, AKASH_LOCATION, visitorLocation);
+    ensureResearchLayers(map, resolvedTheme === "dark" ? "dark" : "light");
+    updateVisitorConnection(map, home, visitorLocation);
 
     const updateLabelPosition = () => {
       if (!visitorLocation) return;
-      const midpoint = greatCircleMidpoint(AKASH_LOCATION, visitorLocation);
-      const point = map.project(midpoint);
+      const point = map.project(greatCircleMidpoint(home, visitorLocation));
       setDistanceLabelPosition({ x: point.x, y: point.y });
     };
     updateLabelPosition();
@@ -474,7 +392,7 @@ export default function LocationMap() {
     return () => {
       map.off("move", updateLabelPosition);
     };
-  }, [mapLoaded, visitorLocation, resolvedTheme]);
+  }, [mapLoaded, visitorLocation, resolvedTheme, home]);
 
   useEffect(() => {
     if (!locationMessage) return;
@@ -486,7 +404,7 @@ export default function LocationMap() {
     const map = mapRef.current;
     if (!map) return;
     if (visitorLocation) {
-      fitLocations(map, visitorLocation);
+      fitLocations(map, home, visitorLocation);
       return;
     }
     if (!("geolocation" in navigator)) {
@@ -497,106 +415,133 @@ export default function LocationMap() {
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const nextLocation: [number, number] = [
-          position.coords.longitude,
-          position.coords.latitude,
-        ];
-        setVisitorLocation(nextLocation);
+        const next: LngLat = [position.coords.longitude, position.coords.latitude];
+        setVisitorLocation(next);
         setLocating(false);
         setLocationMessage("");
-        fitLocations(map, nextLocation);
+        fitLocations(map, home, next);
       },
       () => {
         setLocating(false);
         setLocationMessage("Location permission was not granted.");
       },
-      {
-        enableHighAccuracy: false,
-        timeout: 7_000,
-        maximumAge: 300_000,
-      },
+      { enableHighAccuracy: false, timeout: 7_000, maximumAge: 300_000 },
     );
   };
 
-  const toggleImagery = () => {
-    const map = mapRef.current;
-    if (!map) return;
-    const next = !imagery;
-    setImagery(next);
-    setImageryVisible(map, next);
-  };
+  const resetView = useCallback(() => {
+    popupRef.current?.remove();
+    mapRef.current?.fitBounds(bounds, { padding: 40, maxZoom: 9, duration: 700 });
+  }, [bounds]);
 
-  if (!isClient) {
-    return (
-      <div className="h-72 animate-pulse overflow-hidden rounded-md bg-[#f1ede2] sm:h-[26rem] dark:bg-[#1b2429]" />
+  // Links inside popups are plain HTML; route the internal ones through the
+  // Next router, so the page (and an open Kasi chat) is not reloaded.
+  const onClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const anchor = (event.target as HTMLElement).closest<HTMLAnchorElement>(
+      "a[data-internal]",
     );
-  }
+    if (
+      !anchor ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+    event.preventDefault();
+    router.push(anchor.getAttribute("href") ?? "/");
+  };
 
   return (
-    <div
-      ref={rootRef}
-      className="group relative isolate h-72 overflow-hidden rounded-md bg-[#f1ede2] sm:h-[26rem] dark:bg-[#1b2429]"
-    >
+    <>
+      <a
+        href="#map-end"
+        className="bg-background text-foreground sr-only z-50 rounded-md px-3 py-2 text-sm font-semibold focus:not-sr-only focus:absolute focus:m-3"
+      >
+        Skip the map
+      </a>
+      {/* The click handler only reroutes popup links; the map and its controls
+          are keyboard operable themselves. */}
       <div
-        ref={mapContainerRef}
-        className="absolute inset-0 size-full"
-        style={{ position: "absolute" }}
-      />
+        onClick={onClick}
+        className="group bg-muted relative isolate h-80 overflow-hidden rounded-md sm:h-[28rem]"
+      >
+        <div
+          ref={containerRef}
+          className="absolute inset-0 size-full"
+          aria-label="Map of places Akash has studied, worked and visited"
+          role="region"
+        />
 
-      <MapControls
-        disabled={!mapLoaded}
-        imagery={imagery}
-        locateDisabled={
-          typeof navigator !== "undefined" && !("geolocation" in navigator)
-        }
-        locating={locating}
-        onLocate={locateVisitor}
-        onToggleImagery={toggleImagery}
-      />
+        <MapControls
+          disabled={!mapLoaded}
+          imagery={imagery}
+          locateDisabled={
+            typeof navigator !== "undefined" && !("geolocation" in navigator)
+          }
+          locating={locating}
+          onLocate={locateVisitor}
+          onToggleImagery={() => setImagery((value) => !value)}
+          onZoomIn={() => mapRef.current?.zoomIn()}
+          onZoomOut={() => mapRef.current?.zoomOut()}
+          onReset={resetView}
+        />
 
-      {visitorDistance !== null && (
-        <>
-          <div
-            className="bg-background/92 border-border/65 pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-1/2 border px-2 py-1 text-[9px] font-medium shadow-sm backdrop-blur-md"
-            style={{
-              left: distanceLabelPosition.x,
-              top: distanceLabelPosition.y,
-            }}
-          >
-            {formatDistance(visitorDistance)}
-          </div>
-          <div className="bg-background/88 border-border/65 pointer-events-none absolute top-12 right-3 z-30 flex w-12 flex-col items-center border py-2 shadow-sm backdrop-blur-md">
-            <span className="text-[8px] font-semibold text-sky-700 dark:text-sky-200">
-              You
-            </span>
-            <span className="my-1 h-9 border-l border-dashed border-orange-700/60 dark:border-orange-200/60" />
-            <span className="font-mono text-[8px] tabular-nums">
+        {visitorDistance !== null && (
+          <>
+            <div
+              className="bg-background/92 border-border/65 pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-1/2 rounded-sm border px-2 py-1 text-xs font-semibold shadow-sm backdrop-blur-md"
+              style={{ left: distanceLabelPosition.x, top: distanceLabelPosition.y }}
+            >
               {formatDistance(visitorDistance)}
-            </span>
-            <span className="mt-1 text-[8px] font-semibold text-orange-700 dark:text-orange-200">
-              Akash
-            </span>
+            </div>
+            <div className="bg-background/90 border-border/65 pointer-events-none absolute top-3 right-3 z-30 flex flex-col items-center rounded-md border px-2.5 py-2 text-xs shadow-sm backdrop-blur-md">
+              <span className="text-ink font-semibold">You</span>
+              <span className="border-warm/60 my-1 h-8 border-l border-dashed" />
+              <span className="font-semibold tabular-nums">
+                {formatDistance(visitorDistance)}
+              </span>
+              <span className="text-warm mt-1 font-semibold">
+                Akash
+              </span>
+            </div>
+          </>
+        )}
+
+        {locationMessage && (
+          <div
+            role="status"
+            className="bg-background/94 border-border/70 text-foreground absolute top-3 left-16 z-40 rounded-md border px-3 py-1.5 text-xs shadow-md"
+          >
+            {locationMessage}
           </div>
-        </>
-      )}
+        )}
 
-      {locationMessage && (
-        <div
-          role="status"
-          className="bg-background/94 border-border/70 text-foreground absolute top-3 left-12 z-40 border px-2.5 py-1.5 text-[10px] shadow-md"
-        >
-          {locationMessage}
-        </div>
-      )}
-
-      {mapUnavailable && (
-        <div
-          role="status"
-          className="bg-background/92 text-muted-foreground absolute inset-0 z-20 flex items-center justify-center px-6 text-center text-sm backdrop-blur-sm"
-        >
-          The map is temporarily unavailable. It will retry automatically.
-        </div>
-      )}
-    </div>
+        {mapState === "failed" && (
+          <div
+            role="status"
+            className="bg-background/92 text-muted-foreground absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 px-6 text-center text-sm backdrop-blur-sm"
+          >
+            The map could not load. The tile servers may be slow right now.
+            <button
+              type="button"
+              onClick={() => {
+                setMapState("loading");
+                setAttempt((value) => value + 1);
+              }}
+              className="border-border bg-card hover:bg-accent text-foreground rounded-md border px-3 py-1.5 text-sm font-semibold transition-colors"
+            >
+              Try again
+            </button>
+          </div>
+        )}
+      </div>
+      <span id="map-end" tabIndex={-1} className="sr-only">
+        End of map
+      </span>
+    </>
   );
 }
