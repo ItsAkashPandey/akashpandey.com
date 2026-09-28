@@ -138,8 +138,10 @@ export default function PlacesGlobe({ data }: { data: GlobeData }) {
       resize.observe(canvas);
       cleanups.push(() => resize.disconnect());
 
-      const visible = new IntersectionObserver(([entry]) => {
-        onScreen = entry.isIntersecting;
+      // One callback can carry several entries for the frame, oldest first
+      // (off, then on after a quick scroll); the last one is where it is now.
+      const visible = new IntersectionObserver((entries) => {
+        onScreen = entries[entries.length - 1].isIntersecting;
         setActive();
       });
       visible.observe(frame);
@@ -162,8 +164,11 @@ export default function PlacesGlobe({ data }: { data: GlobeData }) {
     };
 
     const near = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
+      (entries) => {
+        // Not just the first entry: landing on the globe right after load
+        // can deliver "not near" and "near" together, and nothing fires
+        // after that until it leaves the screen again.
+        if (!entries.some((entry) => entry.isIntersecting)) return;
         near.disconnect();
         start().catch((error) => {
           console.error("[globe]", error);
