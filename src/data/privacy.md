@@ -4,7 +4,8 @@ _Last updated: 28 September 2026_
 
 This is a personal portfolio. It has no ads, marketing trackers or
 behavioural analytics. Kasi (the chat), the contact form, the map and the
-theme switch need a small amount of data to work, described below.
+theme switch need a small amount of data to work, described below. Page speed
+is measured anonymously, without cookies.
 
 ## Kasi chat
 
@@ -61,11 +62,13 @@ your coordinates stay in the open tab: they are used to place your marker and
 measure the distance to Roorkee, and are never sent to my server, added to the
 chat logs or saved.
 
-## Theme and server logs
+## Theme, page speed and server logs
 
 Your light, dark or system theme choice is saved in your browser. Vercel, which
-hosts the site, and the other services named above keep their normal security
-and delivery logs.
+hosts the site, measures how fast pages load and respond (Speed Insights): the
+page, your device type and timing numbers, with no cookies and nothing that
+identifies you. Vercel and the other services named above also keep their
+normal security and delivery logs.
 
 ## Deleting your data
 
