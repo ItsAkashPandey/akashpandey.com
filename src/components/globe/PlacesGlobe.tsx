@@ -310,10 +310,12 @@ export default function PlacesGlobe({ data }: { data: GlobeData }) {
             ready && !failed && "opacity-0",
           )}
         />
+        {/* Round, so a zoomed-in globe, bigger than the frame, still reads
+            as a globe rather than a square. */}
         <div
           ref={canvasHostRef}
           className={cn(
-            "relative size-full transition-opacity duration-700",
+            "relative size-full transition-opacity duration-700 [clip-path:circle(50%)]",
             ready ? "opacity-100" : "opacity-0",
           )}
         />
