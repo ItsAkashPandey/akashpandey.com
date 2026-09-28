@@ -1,3 +1,8 @@
+// Keeps the photos in public/ a sensible size before they're committed:
+// turns new PNG/JPG skill logos into small WebP files and re-encodes any WebP
+// that is oversized. Run it by hand after adding photos:
+//   node scripts/optimize-images.mjs [--dry-run]
+// (The web-sized copies the pages use come from build-images.mjs.)
 import fs from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
@@ -6,25 +11,6 @@ const workspaceRoot = process.cwd();
 const publicRoot = path.resolve(workspaceRoot, "public");
 const dryRun = process.argv.includes("--dry-run");
 const MAX_PARALLEL = 4;
-
-const krishiTechImages = [
-  {
-    input: "WhatsApp Image 2026-07-03 at 9.04.43 AM.jpeg",
-    output: "01-team-at-ihfc.webp",
-  },
-  {
-    input: "WhatsApp Image 2026-07-03 at 9.04.39 AM.jpeg",
-    output: "02-team-at-ihfc.webp",
-  },
-  {
-    input: "WhatsApp Image 2026-07-03 at 9.04.40 AM.jpeg",
-    output: "03-team-at-ihfc.webp",
-  },
-  {
-    input: "CropLizer Suite IHFC PPT AgriTech Synapse PPT-updated v2.png",
-    output: "04-croplizer-geoai-suite.webp",
-  },
-];
 
 function assertInsidePublic(filePath) {
   const resolved = path.resolve(filePath);
@@ -43,45 +29,6 @@ async function exists(filePath) {
     return true;
   } catch {
     return false;
-  }
-}
-
-async function prepareKrishiTechImages() {
-  const folder = assertInsidePublic(
-    path.join(publicRoot, "KrishiTech_IIT_Delhi"),
-  );
-  if (!(await exists(folder))) return;
-
-  for (const image of krishiTechImages) {
-    const input = assertInsidePublic(path.join(folder, image.input));
-    const output = assertInsidePublic(path.join(folder, image.output));
-    if (!(await exists(input))) continue;
-
-    if (dryRun) {
-      console.log(
-        `[prepare] ${path.relative(publicRoot, input)} -> ${image.output}`,
-      );
-      continue;
-    }
-
-    const temporary = `${output}.tmp`;
-    await sharp(input)
-      .rotate()
-      .resize({
-        width: 2000,
-        height: 2000,
-        fit: "inside",
-        withoutEnlargement: true,
-      })
-      .webp({
-        quality: image.output.includes("croplizer") ? 88 : 84,
-        alphaQuality: 90,
-        effort: 5,
-        smartSubsample: true,
-      })
-      .toFile(temporary);
-    await fs.rename(temporary, output);
-    await fs.rm(input);
   }
 }
 
@@ -130,10 +77,15 @@ async function optimizeSkillAssets() {
   }
 }
 
+// Generated output (pre-sized photos, the map worker) is left alone.
+const GENERATED = new Set(["_img", "maplibre"]);
+
 async function walk(directory) {
   const entries = await fs.readdir(directory, { withFileTypes: true });
   const nested = await Promise.all(
-    entries.map((entry) => {
+    entries
+      .filter((entry) => !(directory === publicRoot && GENERATED.has(entry.name)))
+      .map((entry) => {
       const fullPath = path.join(directory, entry.name);
       return entry.isDirectory() ? walk(fullPath) : [fullPath];
     }),
@@ -225,7 +177,6 @@ async function runPool(items, worker) {
   return results;
 }
 
-await prepareKrishiTechImages();
 await optimizeSkillAssets();
 
 const files = (await walk(publicRoot)).map(assertInsidePublic);
