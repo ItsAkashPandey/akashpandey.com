@@ -92,7 +92,8 @@ export async function sendEmail(
       from: from || "Website contact <onboarding@resend.dev>",
       to: process.env.CONTACT_TO_EMAIL || "akash_k@ce.iitr.ac.in",
       replyTo: email,
-      subject: `New message from ${name}`,
+      // Line breaks in a name would break the subject line.
+      subject: `New message from ${name.replace(/\s+/g, " ")}`,
       text: `Name: ${name}\nEmail: ${email}\n\n${message}\n\n(Sent from the contact form on akashpandey.com)`,
     });
 

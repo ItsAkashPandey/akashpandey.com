@@ -29,7 +29,11 @@ export default function SearchTrigger() {
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
+      // Autofill fires keydown events with no key at all.
+      if (
+        event.key?.toLowerCase() === "k" &&
+        (event.metaKey || event.ctrlKey)
+      ) {
         event.preventDefault();
         setUsed(true);
         setOpen((current) => !current);
