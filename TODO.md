@@ -75,7 +75,7 @@ phone sizes; these need eyes:
 - [ ] Globe: markers around Roorkee/Delhi overlap; maybe smaller dots or a
       closer camera on India. The land mask stops at ±84°, so Antarctica is
       patchy (not visible in normal use).
-- [ ] View Transitions from activity cards into activity pages, once Next's
+- [x] View Transitions from activity cards into activity pages, once Next's
       `viewTransition` flag is stable.
 - [ ] Go through the security/admin and code-health parts of the old audit
       once more (sections H and I); everything else is done apart from the

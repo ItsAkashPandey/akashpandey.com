@@ -14,7 +14,7 @@ import { getHighlightTerms } from "@/lib/search";
 import { cn } from "@/lib/utils";
 import { Calendar, Linkedin, MapPin, Search, Users } from "lucide-react";
 import Link from "next/link";
-import { Fragment } from "react";
+import { Fragment, ViewTransition } from "react";
 import Markdown from "react-markdown";
 import ActivitySwipeCards from "./ActivitySwipeCards";
 import { HighlightText, MARK_CLASS } from "./HighlightedText";
@@ -53,14 +53,22 @@ export function ActivityCard({
         </div>
 
         <div className="flex min-w-0 flex-col gap-3">
-          <h2 className="text-xl leading-snug font-bold sm:text-2xl">
-            <Link
-              href={activityHref(slug)}
-              className="decoration-primary/30 hover:text-primary decoration-2 underline-offset-4 transition-colors hover:underline"
-            >
-              <HighlightText text={name} query={searchQuery} />
-            </Link>
-          </h2>
+          {/* Shares its name with the heading on the activity's own page,
+              so opening the card morphs one into the other. */}
+          <ViewTransition
+            name={`activity-${slug}`}
+            share="morph"
+            default="none"
+          >
+            <h2 className="text-xl leading-snug font-bold sm:text-2xl">
+              <Link
+                href={activityHref(slug)}
+                className="decoration-primary/30 hover:text-primary decoration-2 underline-offset-4 transition-colors hover:underline"
+              >
+                <HighlightText text={name} query={searchQuery} />
+              </Link>
+            </h2>
+          </ViewTransition>
 
           <div className="bg-border h-px w-full" />
 

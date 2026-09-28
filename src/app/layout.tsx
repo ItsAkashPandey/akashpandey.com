@@ -111,7 +111,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    // data-scroll-behavior: a new page starts at the top straight away, while
+    // in-page links still scroll smoothly (globals.css). Next 16 no longer
+    // does this without being asked.
+    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <script {...jsonLdProps(personSchema())} />
         <script {...jsonLdProps(websiteSchema)} />

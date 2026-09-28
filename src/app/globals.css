@@ -1057,3 +1057,35 @@
     transform: translateX(100%);
   }
 }
+
+/* View transitions: an activity card's heading morphs into the heading on
+   the activity's page. Clicks reach the page while it runs, and there is no
+   motion for anyone who asked for less. */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(.morph) {
+  animation-duration: 350ms;
+}
+
+/* The card's sans heading and the page's serif one overlap on the way; a
+   touch of blur mid-flight hides the seams. */
+::view-transition-image-pair(.morph) {
+  animation-name: via-blur;
+}
+
+@keyframes via-blur {
+  30% {
+    filter: blur(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
