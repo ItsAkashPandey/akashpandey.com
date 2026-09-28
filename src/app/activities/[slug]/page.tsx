@@ -17,6 +17,7 @@ import { ArrowLeft, ArrowRight, ListFilter, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ViewTransition } from "react";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -131,9 +132,12 @@ export default async function ActivityPage({ params }: Params) {
             })}
           </time>
         </p>
-        <h1 className="font-serif text-4xl leading-[1.08] font-normal text-balance sm:text-5xl">
-          {activity.name}
-        </h1>
+        {/* The activity card's heading morphs into this one. */}
+        <ViewTransition name={`activity-${slug}`} share="morph" default="none">
+          <h1 className="font-serif text-4xl leading-[1.08] font-normal text-balance sm:text-5xl">
+            {activity.name}
+          </h1>
+        </ViewTransition>
         <p className="text-muted-foreground inline-flex items-start gap-1.5 text-sm">
           <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden />
           {activity.location}
