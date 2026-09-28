@@ -1,143 +1,150 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
-import path from "node:path";
+import { requireAdminSession } from "@/lib/admin-auth";
+import { chatLogDatabaseUrl } from "@/lib/chat-log";
 import {
-  getAdminCookieName,
-  getAdminSessionSecret,
-  verifyAdminSessionCookieValue,
-} from "@/lib/admin-auth";
-import { ensureChatLogTable, getChatLogPool } from "@/lib/chat-log-postgres";
+  ensureChatLogTable,
+  getChatLogPool,
+  pruneChatLogs,
+} from "@/lib/chat-log-postgres";
+import { NextResponse } from "next/server";
 
-async function requireAdminSession(): Promise<NextResponse | null> {
-  const secret = getAdminSessionSecret();
+const NO_STORE = { "Cache-Control": "no-store, max-age=0" };
 
-  const cookieStore = await cookies();
-  const session = cookieStore.get(getAdminCookieName())?.value;
-  if (!session || !verifyAdminSessionCookieValue(session, secret)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+type Row = {
+  id?: number;
+  timestamp: string;
+  visitorId: string;
+  visitorName: string | null;
+  conversationId: string;
+  role: "user" | "assistant";
+  message: string;
+  notes: string | null;
+};
 
-  return null;
+type WebhookRead = {
+  rows?: Record<string, unknown>[];
+  viewUrl?: string;
+  error?: string;
+} | null;
+
+function toRow(raw: Record<string, unknown>): Row {
+  return {
+    ...(typeof raw.id === "number" || typeof raw.id === "string"
+      ? { id: Number(raw.id) }
+      : {}),
+    timestamp:
+      raw.timestamp instanceof Date
+        ? raw.timestamp.toISOString()
+        : String(raw.timestamp ?? ""),
+    visitorId: String(raw.visitorId ?? ""),
+    visitorName: raw.visitorName ? String(raw.visitorName) : null,
+    conversationId: String(raw.conversationId ?? ""),
+    role: raw.role === "assistant" ? "assistant" : "user",
+    message: String(raw.message ?? ""),
+    notes: raw.notes ? String(raw.notes) : null,
+  };
 }
 
-function safeParseJsonLine(line: string): any | null {
-  const trimmed = line.trim();
-  if (!trimmed) return null;
-  try {
-    return JSON.parse(trimmed);
-  } catch {
-    return null;
+const complete = (row: Row) =>
+  Boolean(row.timestamp && row.visitorId && row.conversationId && row.message);
+
+/**
+ * Reads from the Apps Script web app. The current script reads over POST, so
+ * the token stays out of URLs (and out of request logs). A script from before
+ * that change only reads over GET; it still works, with a nudge to update.
+ */
+async function readWebhook(
+  url: string,
+  token: string | undefined,
+  filters: Record<string, string>,
+) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, action: "read", ...filters }),
+    cache: "no-store",
+  });
+  const json = (await response.json().catch(() => null)) as WebhookRead;
+  if (json?.error) throw new Error(json.error);
+  if (Array.isArray(json?.rows)) {
+    return { rows: json.rows, viewUrl: json.viewUrl, warning: null };
   }
+
+  const legacy = new URL(url);
+  for (const [key, value] of Object.entries(filters)) {
+    legacy.searchParams.set(key, value);
+  }
+  if (token) legacy.searchParams.set("token", token);
+  const legacyResponse = await fetch(legacy, { cache: "no-store" });
+  const legacyJson = (await legacyResponse.json().catch(() => null)) as WebhookRead;
+  if (!legacyResponse.ok || legacyJson?.error) {
+    throw new Error(
+      legacyJson?.error || `Webhook read failed (${legacyResponse.status})`,
+    );
+  }
+  return {
+    rows: legacyJson?.rows ?? [],
+    viewUrl: legacyJson?.viewUrl,
+    warning:
+      "The Apps Script is an older version that reads with the token in the URL. Paste the current script from docs/chat-logging.md to fix that.",
+  };
 }
 
 export async function GET(req: Request) {
-  const authError = await requireAdminSession();
-  if (authError) return authError;
+  const unauthorized = await requireAdminSession();
+  if (unauthorized) return unauthorized;
 
   const url = new URL(req.url);
   const limit = Math.min(
-    Math.max(Number(url.searchParams.get("limit") || "200"), 1),
+    Math.max(Number(url.searchParams.get("limit")) || 200, 1),
     2000,
   );
-  const visitorId = url.searchParams.get("visitorId")?.trim() || null;
-  const conversationId = url.searchParams.get("conversationId")?.trim() || null;
+  const visitorId = url.searchParams.get("visitorId")?.trim() || "";
+  const conversationId = url.searchParams.get("conversationId")?.trim() || "";
+  const warnings: string[] = [];
 
-  let readWarning: string | null = null;
-
-  // Preferred simple storage: Google Sheets (Apps Script Web App)
   const webhookUrl = process.env.CHAT_LOG_WEBHOOK_URL;
-  const webhookToken = process.env.CHAT_LOG_WEBHOOK_TOKEN;
   if (webhookUrl) {
     try {
-      const webhook = new URL(webhookUrl);
-      webhook.searchParams.set("limit", String(limit));
-      if (visitorId) webhook.searchParams.set("visitorId", visitorId);
-      if (conversationId)
-        webhook.searchParams.set("conversationId", conversationId);
-      if (webhookToken) webhook.searchParams.set("token", webhookToken);
-
-      const response = await fetch(webhook.toString(), {
-        method: "GET",
-        headers: {
-          "Cache-Control":
-            "no-store, no-cache, must-revalidate, proxy-revalidate",
-          Pragma: "no-cache",
-        },
-      });
-
-      if (!response.ok) {
-        const text = await response.text().catch(() => "");
-        throw new Error(
-          `Webhook read failed: ${response.status} ${response.statusText}${text ? ` — ${text}` : ""}`,
-        );
-      }
-
-      const json = (await response.json().catch(() => null)) as {
-        rows?: any[];
-        viewUrl?: string;
-        error?: string;
-      } | null;
-
-      // Apps Script returns 200 with an error payload when the script throws
-      // (most often it has lost permission to open the spreadsheet).
-      if (json?.error) {
-        throw new Error(json.error);
-      }
-
-      const rawRows = Array.isArray(json?.rows) ? json!.rows : [];
-
-      const rows = rawRows
-        .map((r) => ({
-          timestamp: String(r.timestamp || ""),
-          visitorId: String(r.visitorId || ""),
-          visitorName: (r.visitorName ?? null) ? String(r.visitorName) : null,
-          conversationId: String(r.conversationId || ""),
-          role: r.role === "assistant" ? "assistant" : "user",
-          message: String(r.message || ""),
-          notes: r.notes ? String(r.notes) : null,
-        }))
-        .filter(
-          (r) => r.timestamp && r.visitorId && r.conversationId && r.message,
-        );
-
+      const filters: Record<string, string> = { limit: String(limit) };
+      if (visitorId) filters.visitorId = visitorId;
+      if (conversationId) filters.conversationId = conversationId;
+      const result = await readWebhook(
+        webhookUrl,
+        process.env.CHAT_LOG_WEBHOOK_TOKEN,
+        filters,
+      );
+      const rows = result.rows.map(toRow).filter(complete);
       return NextResponse.json(
         {
           rows,
           count: rows.length,
           storage: "webhook",
-          ...(json?.viewUrl ? { viewUrl: json.viewUrl } : null),
+          ...(result.viewUrl ? { viewUrl: result.viewUrl } : {}),
+          ...(result.warning ? { message: result.warning } : {}),
         },
-        {
-          headers: {
-            "Cache-Control":
-              "no-store, no-cache, must-revalidate, proxy-revalidate",
-            Pragma: "no-cache",
-            Expires: "0",
-          },
-        },
+        { headers: NO_STORE },
       );
     } catch (error) {
-      readWarning = `Webhook read failed; falling back. ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`;
+      warnings.push(
+        `Google Sheets read failed: ${
+          error instanceof Error ? error.message : "unknown error"
+        }.`,
+      );
     }
   }
 
-  const databaseUrl =
-    process.env.CHAT_LOG_DATABASE_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.DATABASE_URL;
+  const databaseUrl = chatLogDatabaseUrl();
   if (databaseUrl) {
     try {
       const pool = await getChatLogPool(databaseUrl);
       await ensureChatLogTable(pool);
+      await pruneChatLogs(pool).catch(() => undefined);
 
       const where: string[] = [];
-      const params: any[] = [];
+      const params: (string | number)[] = [];
       if (visitorId) {
         params.push(visitorId);
         where.push(`visitor_id = $${params.length}`);
@@ -146,116 +153,79 @@ export async function GET(req: Request) {
         params.push(conversationId);
         where.push(`conversation_id = $${params.length}`);
       }
-
       params.push(limit);
-      const limitParam = `$${params.length}`;
 
-      const sql = `select id, timestamp, visitor_id as "visitorId", visitor_name as "visitorName", conversation_id as "conversationId", role, message, notes from chat_logs${
-        where.length ? ` where ${where.join(" and ")}` : ""
-      } order by timestamp desc, id desc limit ${limitParam}`;
-
-      const result = await pool.query(sql, params);
-      const rows = (result.rows || []).slice().reverse();
-
+      const result = await pool.query(
+        `select id, timestamp, visitor_id as "visitorId", visitor_name as "visitorName",
+                conversation_id as "conversationId", role, message, notes
+           from chat_logs${where.length ? ` where ${where.join(" and ")}` : ""}
+          order by timestamp desc, id desc
+          limit $${params.length}`,
+        params,
+      );
+      const rows = result.rows.map(toRow).reverse();
       return NextResponse.json(
         {
           rows,
           count: rows.length,
           storage: "postgres",
-          ...(readWarning ? { message: readWarning } : null),
+          ...(warnings.length ? { message: warnings.join(" ") } : {}),
         },
-        {
-          headers: {
-            "Cache-Control":
-              "no-store, no-cache, must-revalidate, proxy-revalidate",
-            Pragma: "no-cache",
-            Expires: "0",
-          },
-        },
+        { headers: NO_STORE },
       );
     } catch (error) {
-      readWarning = `${readWarning ? `${readWarning} ` : ""}Postgres read failed; falling back. ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`;
+      warnings.push(
+        `Postgres read failed: ${
+          error instanceof Error ? error.message : "unknown error"
+        }.`,
+      );
     }
   }
 
-  const filePath = process.env.CHAT_LOG_FILE_PATH
-    ? path.resolve(process.env.CHAT_LOG_FILE_PATH)
-    : path.join(process.cwd(), "logs", "chat-log.jsonl");
-
-  // Serverless / Vercel safeguard: prevent aggressive project-wide tracing
-  if (process.env.VERCEL === "1" && !process.env.CHAT_LOG_FILE_PATH) {
-    return NextResponse.json(
-      {
-        rows: [],
-        storage: "none",
-        message: readWarning
-          ? `${readWarning} Add CHAT_LOG_DATABASE_URL for Postgres, or repair the Google Sheets web app, in your Vercel environment variables.`
-          : "Chat storage is not connected. Add CHAT_LOG_DATABASE_URL for Postgres, or CHAT_LOG_WEBHOOK_URL for Google Sheets, in your Vercel environment variables.",
-      },
-      {
-        headers: {
-          "Cache-Control":
-            "no-store, no-cache, must-revalidate, proxy-revalidate",
+  const filePath = process.env.CHAT_LOG_FILE_PATH;
+  if (filePath) {
+    try {
+      const { readFile } = await import("node:fs/promises");
+      const rows = (await readFile(filePath, "utf-8"))
+        .split("\n")
+        .flatMap((line) => {
+          try {
+            return line.trim() ? [toRow(JSON.parse(line))] : [];
+          } catch {
+            return [];
+          }
+        })
+        .filter(
+          (row) =>
+            complete(row) &&
+            (!visitorId || row.visitorId === visitorId) &&
+            (!conversationId || row.conversationId === conversationId),
+        )
+        .slice(-limit);
+      return NextResponse.json(
+        {
+          rows,
+          count: rows.length,
+          storage: "file",
+          ...(warnings.length ? { message: warnings.join(" ") } : {}),
         },
-      },
-    );
+        { headers: NO_STORE },
+      );
+    } catch {
+      warnings.push("No log file yet.");
+    }
   }
-
-  let text = "";
-  try {
-    const { readFile } = await import("node:fs/promises");
-    text = await readFile(filePath, "utf-8");
-  } catch (error) {
-    return NextResponse.json(
-      {
-        rows: [],
-        filePath,
-        message: readWarning
-          ? `${readWarning} No log file found yet. If you're deployed on a serverless host, local file logs won't persist; use Google Sheets logging instead.`
-          : "No log file found yet. If you're deployed on a serverless host, local file logs won't persist; use Google Sheets logging instead.",
-      },
-      {
-        status: 200,
-        headers: {
-          "Cache-Control":
-            "no-store, no-cache, must-revalidate, proxy-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
-        },
-      },
-    );
-  }
-
-  const lines = text.split("\n");
-  const parsed = lines.map(safeParseJsonLine).filter(Boolean) as Array<
-    Record<string, any>
-  >;
-
-  const filtered = parsed.filter((row) => {
-    if (visitorId && row.visitorId !== visitorId) return false;
-    if (conversationId && row.conversationId !== conversationId) return false;
-    return true;
-  });
-
-  const rows = filtered.slice(-limit);
 
   return NextResponse.json(
     {
-      rows,
-      filePath,
-      count: rows.length,
-      storage: "file",
-      ...(readWarning ? { message: readWarning } : null),
+      rows: [],
+      count: 0,
+      storage: "none",
+      message: [
+        ...warnings,
+        "Chat storage is not connected. Set CHAT_LOG_DATABASE_URL (Postgres) or CHAT_LOG_WEBHOOK_URL (Google Sheets).",
+      ].join(" "),
     },
-    {
-      headers: {
-        "Cache-Control":
-          "no-store, no-cache, must-revalidate, proxy-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
-    },
+    { headers: NO_STORE },
   );
 }

@@ -1,23 +1,16 @@
-import { cookies } from "next/headers";
+import { readAdminSession } from "@/lib/admin-auth";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import ChatLogsClient from "./chat-logs/ChatLogsClient";
-import {
-  decodeAdminSessionCookieValue,
-  getAdminCookieName,
-  getAdminSessionSecret,
-  verifyAdminSessionCookieValue,
-} from "@/lib/admin-auth";
+
+export const metadata: Metadata = {
+  title: "Chat logs",
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminPage() {
-  const secret = getAdminSessionSecret();
+  const session = await readAdminSession();
+  if (!session) redirect("/admin/login?next=%2Fadmin");
 
-  const cookieStore = await cookies();
-  const session = cookieStore.get(getAdminCookieName())?.value;
-
-  if (!session || !verifyAdminSessionCookieValue(session, secret)) {
-    redirect("/admin/login?next=%2Fadmin");
-  }
-
-  const decoded = decodeAdminSessionCookieValue(session, secret);
-  return <ChatLogsClient adminUsername={decoded?.username ?? null} />;
+  return <ChatLogsClient adminUsername={session.username} />;
 }

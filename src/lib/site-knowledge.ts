@@ -1,574 +1,339 @@
-import activitiesData from "@/data/activities.json";
-import careerData from "@/data/career.json";
-import educationData from "@/data/education.json";
-import publicationsData from "@/data/publications.json";
-import skillsData from "@/data/skills.json";
-import type { ChatAction, ChatUiCard } from "./chat-types";
-import fs from "fs";
-import path from "path";
+import { splitDescription } from "@/lib/collaborators";
+import {
+  getActivities,
+  getActivity,
+  getCareer,
+  getEducation,
+  getPublication,
+  getPublications,
+  getSkills,
+} from "@/lib/content";
+import {
+  activityHref,
+  formatActivityDate,
+  plainText,
+  publicationHref,
+  publicationLink,
+  publicationVenue,
+  toolSlug,
+  truncate,
+} from "@/lib/content-utils";
+import type { ChatUiCard } from "@/lib/chat-types";
+import { getPlace } from "@/lib/places";
+import type { Activity, Experience } from "@/lib/schemas";
+import fs from "node:fs";
+import path from "node:path";
 
-export type KnowledgeDoc = {
-  id: string;
-  kind:
-    | "profile"
-    | "page"
-    | "activity"
-    | "publication"
-    | "skill"
-    | "career"
-    | "education"
-    | "contact";
-  title: string;
-  text: string;
-  href?: string;
-  meta?: string;
-  keywords?: string[];
-  details?: {
-    model?: string;
-    experience?: string;
-    tasks?: string[];
-  };
-};
+/**
+ * Everything Kasi is told about Akash. The profile file is sent whole, and the
+ * facts that also live on the site (roles, degrees, papers, skills,
+ * activities) are generated from the same JSON the pages render, so the two
+ * can no longer disagree.
+ */
 
-type RetrievalResult = {
-  docs: KnowledgeDoc[];
-  actions: ChatAction[];
-  cards: ChatUiCard[];
-};
+const BIRTH_DATE = "1998-04-30";
 
-let cachedDocs: KnowledgeDoc[] | null = null;
-let cachedProfileText: string | null = null;
+let profileText: string | null = null;
 
-const ROUTE_DOCS: KnowledgeDoc[] = [
-  {
-    id: "route-home",
-    kind: "page",
-    title: "Home",
-    href: "/",
-    text: "Portfolio overview, research highlights, Bhoomicam work, recent activities, skills, publications, and contact entry points.",
-    keywords: ["home", "overview", "portfolio", "akashpandey.com"],
-  },
-  {
-    id: "route-activities",
-    kind: "page",
-    title: "Activities",
-    href: "/activities",
-    text: "Full activity timeline with conferences, startup events, workshops, fieldwork, outreach, awards, and installations.",
-    keywords: ["activities", "events", "timeline", "conference", "workshop"],
-  },
-  {
-    id: "route-publications",
-    kind: "page",
-    title: "Publications",
-    href: "/publications",
-    text: "Research publications, papers, conference abstracts, posters, DOI links, journal status, and publication media.",
-    keywords: ["publications", "paper", "journal", "doi", "research", "poster"],
-  },
-  {
-    id: "route-skills",
-    kind: "page",
-    title: "Skills",
-    href: "/skills",
-    text: "Technical skills, instruments, UAVs, GPS, sensors, software, GIS, remote sensing, photogrammetry, and programming tools.",
-    keywords: ["skills", "tools", "uav", "gps", "software", "gis"],
-  },
-  {
-    id: "route-contact",
-    kind: "contact",
-    title: "Contact",
-    href: "/contact",
-    text: "Contact Akash through the website contact form. Public contact email: akash_k@ce.iitr.ac.in.",
-    keywords: ["contact", "email", "reach", "message", "connect"],
-  },
-];
-
-function readProfileText() {
-  if (cachedProfileText) return cachedProfileText;
-  try {
-    cachedProfileText = fs.readFileSync(
-      path.join(process.cwd(), "src", "data", "profile.md"),
-      "utf-8",
-    );
-  } catch {
-    cachedProfileText =
-      "Akash is a PhD scholar in Geospatial Engineering at IIT Roorkee.";
-  }
-  return cachedProfileText;
-}
-
-function cleanText(input: unknown, limit = 650) {
-  return String(input ?? "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, limit);
-}
-
-function getActivityDocs(): KnowledgeDoc[] {
-  const activities = [...((activitiesData as any).activities ?? [])].sort(
-    (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  );
-  return activities.map((activity: any, index: number) => {
-    const date = activity.date
-      ? new Date(activity.date).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "2-digit",
-        })
-      : "";
-    const links = Array.isArray(activity.links)
-      ? activity.links
-          .map((link: any) => `${link.name}: ${link.href}`)
-          .filter(Boolean)
-          .join("; ")
-      : "";
-
-    return {
-      id: `activity-${index}`,
-      kind: "activity",
-      title: activity.name,
-      href: `/activities#activity-${index}`,
-      meta: [date, activity.location].filter(Boolean).join(" · "),
-      text: cleanText(
-        `${activity.name}. Date: ${date}. Location: ${activity.location ?? ""}. ${activity.description ?? ""} ${links}`,
-      ),
-      keywords: [
-        "activity",
-        "event",
-        "conference",
-        activity.imageFolder,
-        activity.location,
-      ].filter(Boolean),
-    };
-  });
-}
-
-function getPublicationDocs(): KnowledgeDoc[] {
-  const publications = (publicationsData as any).publications ?? [];
-  return publications.map((publication: any) => ({
-    id: `publication-${publication.id ?? publication.title}`,
-    kind: "publication",
-    title: publication.title,
-    href: publication.doi || publication.preprint || "/publications",
-    meta: [
-      publication.year,
-      publication.journal || publication.conference || publication.type,
-      publication.status,
-    ]
-      .filter(Boolean)
-      .join(" · "),
-    text: cleanText(
-      `${publication.title}. Authors: ${publication.authors}. Year: ${publication.year}. Type: ${publication.type}. Venue: ${
-        publication.journal || publication.conference || ""
-      }. Status: ${publication.status ?? ""}. DOI: ${publication.doi ?? ""}. Preprint: ${
-        publication.preprint ?? ""
-      }.`,
-    ),
-    keywords: [
-      "publication",
-      "paper",
-      "doi",
-      publication.journal,
-      publication.conference,
-      publication.status,
-      publication.type,
-    ].filter(Boolean),
-  }));
-}
-
-function getSkillDocs(): KnowledgeDoc[] {
-  const categories = (skillsData as any).skills ?? [];
-  const docs: KnowledgeDoc[] = [];
-
-  for (const category of categories) {
-    const tools = (category.subcategories ?? []).flatMap((subcategory: any) =>
-      (subcategory.tools ?? []).map((tool: any) => tool.name),
-    );
-    docs.push({
-      id: `skill-${category.id ?? category.mainCategory}`,
-      kind: "skill",
-      title: category.mainCategory,
-      href: "/skills",
-      meta: `${tools.length} tools`,
-      text: cleanText(
-        `${category.mainCategory}. ${category.description ?? ""} Tools: ${tools.join(", ")}.`,
-      ),
-      keywords: [
-        "skill",
-        "tools",
-        "instrument",
-        category.mainCategory,
-        ...tools,
-      ],
-    });
-
-    for (const subcategory of category.subcategories ?? []) {
-      for (const tool of subcategory.tools ?? []) {
-        docs.push({
-          id: `skill-tool-${String(tool.name)
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/(^-|-$)/g, "")}`,
-          kind: "skill",
-          title: tool.name,
-          href: `/skills#${String(tool.name)
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/(^-|-$)/g, "")}`,
-          meta: [subcategory.name, tool.model].filter(Boolean).join(" · "),
-          text: cleanText(
-            [
-              `${tool.name} is part of Akash's ${subcategory.name} field and software toolkit.`,
-              tool.model ? `Model: ${tool.model}.` : "",
-              tool.experience ?? "",
-              tool.tasks ? `Used for: ${tool.tasks.join("; ")}.` : "",
-            ]
-              .filter(Boolean)
-              .join(" "),
-          ),
-          keywords: [
-            "skill",
-            "tool",
-            "instrument",
-            category.mainCategory,
-            subcategory.name,
-            tool.name,
-            tool.model,
-            ...(tool.aliases ?? []),
-            ...(tool.tasks ?? []),
-          ].filter(Boolean),
-          details: {
-            model: tool.model,
-            experience: tool.experience,
-            tasks: tool.tasks,
-          },
-        });
-      }
+export function getProfileText() {
+  if (profileText === null) {
+    try {
+      profileText = fs
+        .readFileSync(path.join(process.cwd(), "src", "data", "profile.md"), "utf-8")
+        .trim();
+    } catch {
+      profileText =
+        "Dr. Akash Kumar is a geospatial researcher at IIT Roorkee.";
     }
   }
-
-  return docs;
+  // Optional notes kept out of the public repository (Vercel env variable).
+  const privateNotes = process.env.KASI_PRIVATE_NOTES?.trim();
+  return privateNotes
+    ? `${profileText}\n\n## Private notes (only when asked)\n\n${privateNotes}`
+    : profileText;
 }
 
-function getCareerDocs(): KnowledgeDoc[] {
-  const careers = (careerData as any).career ?? [];
-  return careers.flatMap((career: any) =>
-    (career.positions ?? []).map((position: any, index: number) => ({
-      id: `career-${career.name}-${index}`,
-      kind: "career" as const,
-      title: `${position.title} at ${career.name}`,
-      href: "/",
-      meta: `${position.start} - ${position.end || "Present"}`,
-      text: cleanText(
-        `${position.title} at ${career.name}, ${position.start} to ${
-          position.end || "Present"
-        }. ${
-          Array.isArray(position.description)
-            ? position.description.join("; ")
-            : position.description || ""
-        }`,
-      ),
-      keywords: ["career", "experience", "role", career.name, position.title],
-    })),
+export function ageOn(today: Date, birthDate = BIRTH_DATE) {
+  const [year, month, day] = birthDate.split("-").map(Number);
+  let age = today.getUTCFullYear() - year;
+  const beforeBirthday =
+    today.getUTCMonth() + 1 < month ||
+    (today.getUTCMonth() + 1 === month && today.getUTCDate() < day);
+  if (beforeBirthday) age -= 1;
+  return age;
+}
+
+function positionLine(org: Experience, position: Experience["positions"][number]) {
+  const details = position.description?.join(" ") ?? "";
+  return `- ${position.title}, ${org.shortName} (${org.name}), ${position.start} – ${
+    position.end ?? "Present"
+  }.${details ? ` ${details}` : ""}`;
+}
+
+let factSheet: string | null = null;
+
+/** The generated half of Kasi's knowledge. Built once per server instance. */
+export function getFactSheet() {
+  if (factSheet) return factSheet;
+
+  const career = getCareer();
+  const current = career.flatMap((org) =>
+    org.positions
+      .filter((position) => position.end === "Present")
+      .map((position) => positionLine(org, position)),
   );
-}
-
-function getEducationDocs(): KnowledgeDoc[] {
-  const schools = (educationData as any).education ?? [];
-  return schools.flatMap((school: any) =>
-    (school.positions ?? []).map((position: any, index: number) => ({
-      id: `education-${school.name}-${index}`,
-      kind: "education" as const,
-      title: `${position.title} - ${school.name}`,
-      href: "/",
-      meta: `${position.start} - ${position.end || "Present"}`,
-      text: cleanText(
-        `${position.title} from ${school.name}, ${position.start} to ${
-          position.end || "Present"
-        }. ${
-          Array.isArray(position.description)
-            ? position.description.join("; ")
-            : position.description || ""
-        }`,
-      ),
-      keywords: ["education", "degree", "phd", "mtech", "btech", school.name],
-    })),
+  const earlier = career.flatMap((org) =>
+    org.positions
+      .filter((position) => position.end !== "Present")
+      .map((position) => positionLine(org, position)),
   );
-}
+  const education = getEducation().flatMap((school) =>
+    school.positions.map((position) => positionLine(school, position)),
+  );
 
-export function getSiteKnowledgeDocs(): KnowledgeDoc[] {
-  if (cachedDocs) return cachedDocs;
+  const publications = getPublications().map((publication) => {
+    const link = publicationLink(publication);
+    const quality = [
+      publication.journalQuartile,
+      publication.impactFactor ? `IF ${publication.impactFactor}` : "",
+    ]
+      .filter(Boolean)
+      .join(", ");
+    return `- ${publication.year} · ${publication.type} · ${publication.status} · ${
+      publicationVenue(publication) || "no venue yet"
+    }${quality ? ` (${quality})` : ""}: "${publication.title}". Authors: ${
+      publication.authors
+    }. Page: ${publicationHref(publication.slug)}${link ? `. ${link.label}: ${link.href}` : ""}`;
+  });
 
-  cachedDocs = [
-    {
-      id: "profile-core",
-      kind: "profile",
-      title: "Akash Profile",
-      href: "/",
-      text: cleanText(readProfileText(), 1800),
-      keywords: [
-        "akash",
-        "profile",
-        "bio",
-        "about",
-        "age",
-        "birthday",
-        "contact",
-        "phd",
-      ],
-    },
-    ...ROUTE_DOCS,
-    ...getActivityDocs(),
-    ...getPublicationDocs(),
-    ...getSkillDocs(),
-    ...getCareerDocs(),
-    ...getEducationDocs(),
-  ];
-
-  return cachedDocs;
-}
-
-function tokenize(input: string) {
-  const stopWords = new Set([
-    "about",
-    "akash",
-    "does",
-    "have",
-    "know",
-    "tell",
-    "that",
-    "the",
-    "their",
-    "what",
-    "when",
-    "where",
-    "which",
-    "with",
+  const skills = getSkills().flatMap((category) => [
+    `Group: ${category.mainCategory === "instrument handling" ? "Field instruments" : "Software"}`,
+    ...category.subcategories.map(
+      (subcategory) =>
+        `- ${subcategory.name}: ${subcategory.tools
+          .map(
+            (tool) =>
+              `${tool.name}${tool.model && tool.model !== tool.name ? ` (${tool.model})` : ""} [${`/skills#${toolSlug(
+                tool.name,
+              )}`}] — used for ${tool.tasks.join(", ")}. In Akash's words: "${tool.experience}"`,
+          )
+          .join(" | ")}`,
+    ),
   ]);
 
-  return Array.from(
-    new Set(
-      input
-        .toLowerCase()
-        .replace(/[^a-z0-9+\-. ]/g, " ")
-        .split(/\s+/)
-        .map((token) => {
-          if (token === "activities") return "activity";
-          if (token === "publications") return "publication";
-          if (token === "papers") return "paper";
-          if (token === "skills") return "skill";
-          if (token === "events") return "event";
-          if (token === "tools") return "tool";
-          return token;
-        })
-        .filter((token) => token.length > 2 && !stopWords.has(token)),
-    ),
+  const activities = getActivities().map(
+    (activity) =>
+      `- ${activity.date} · ${activity.name} · ${activity.location} · ${
+        activity.category
+      } · ${activityHref(activity.slug)}`,
   );
+
+  factSheet = [
+    "## Current roles",
+    ...current,
+    "",
+    "## Earlier roles",
+    ...earlier,
+    "",
+    "## Education",
+    ...education,
+    "",
+    "## Publications (every one; a page for each)",
+    ...publications,
+    "",
+    "## Skills, instruments and software (skills page: /skills)",
+    ...skills,
+    "",
+    "## Activities, newest first (a page for each)",
+    ...activities,
+  ].join("\n");
+  return factSheet;
 }
 
-function detectIntentKind(query: string): KnowledgeDoc["kind"] | null {
-  const lower = query.toLowerCase();
-  if (
-    /(activity|activities|event|conference|workshop|visit|timeline)/.test(lower)
-  ) {
-    return "activity";
-  }
-  if (/(publication|paper|journal|doi|research|poster)/.test(lower)) {
-    return "publication";
-  }
-  if (
-    /(skill|tool|uav|gps|software|instrument|drone|gis|sensor|spectro|phenocam|weather station|theodolite|total station|faro|trimble|emlid|sokkia|python|qgis|arcgis|earth engine|pix4d|cloudcompare|latex|erdas|envi|revit|staad|autocad)/.test(
-      lower,
-    )
-  ) {
-    return "skill";
-  }
-  if (/(contact|email|reach|message|connect)/.test(lower)) return "contact";
-  if (/(education|phd|degree|mtech|btech|iit)/.test(lower)) return "education";
-  if (/(career|role|experience|bhoomicam|job|work)/.test(lower)) {
-    return "career";
-  }
-  return null;
+// Retrieval: which activities get their full description in the prompt.
+
+const STOP_WORDS = new Set(
+  (
+    "a about above after again all also am an and any are as at be because been before being " +
+    "between both but by can could did do does doing done during each few for from further " +
+    "get got had has have having he her here hers him his how i if in into is it its just " +
+    "know like me more most my no nor not now of off on once only or other our out over own " +
+    "please same she should so some such tell than that the their them then there these they " +
+    "this those through to too under until up very was we were what when where which while who " +
+    "whom why will with would you your akash kasi pandey kumar his him he mr dr prof " +
+    "show list give any anything something everything thing things did done ever"
+  ).split(" "),
+);
+
+/** A few words visitors use for things the data names differently. */
+const SYNONYMS: Record<string, string[]> = {
+  drone: ["uav", "trinity", "ideaforge", "spray"],
+  uav: ["drone"],
+  gps: ["gnss", "trimble", "emlid", "sokkia"],
+  gnss: ["gps"],
+  award: ["prize", "winner", "won", "awarded", "grant"],
+  prize: ["award", "winner"],
+  won: ["winner", "prize", "award"],
+  talk: ["lecture", "presented", "presentation"],
+  conference: ["conclave", "summit", "assembly", "symposium"],
+  camera: ["phenocam"],
+  farmer: ["farmers", "outreach", "kvk"],
+  startup: ["bhoomicam"],
+};
+
+function words(text: string) {
+  return text
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .split(/[^a-z0-9+]+/)
+    .filter((word) => word.length > 2 || /^\d+$/.test(word))
+    .map((word) =>
+      word.length > 4 && word.endsWith("s") && !word.endsWith("ss")
+        ? word.slice(0, -1)
+        : word,
+    );
 }
 
-function scoreDoc(
-  doc: KnowledgeDoc,
-  tokens: string[],
-  intentKind: KnowledgeDoc["kind"] | null,
+function queryTerms(text: string) {
+  const terms = new Set<string>();
+  for (const word of words(text)) {
+    if (STOP_WORDS.has(word)) continue;
+    terms.add(word);
+    for (const synonym of SYNONYMS[word] ?? []) terms.add(synonym);
+  }
+  return terms;
+}
+
+type IndexedActivity = {
+  activity: Activity;
+  name: Set<string>;
+  place: Set<string>;
+  body: Set<string>;
+};
+
+let activityIndex: IndexedActivity[] | null = null;
+
+function getActivityIndex() {
+  activityIndex ??= getActivities().map((activity) => ({
+    activity,
+    name: new Set(words(activity.name)),
+    place: new Set(words(`${activity.location} ${getPlace(activity.place).name}`)),
+    body: new Set(words(activity.description)),
+  }));
+  return activityIndex;
+}
+
+/**
+ * The activities most relevant to the conversation. Scores whole words (the
+ * old substring match found "and" in "Grand Challenge"), and includes the
+ * previous question so a follow-up like "and the second one?" still works.
+ */
+export function findRelevantActivities(
+  message: string,
+  previousQuestion = "",
+  limit = 6,
 ) {
-  const title = doc.title.toLowerCase();
-  const text = doc.text.toLowerCase();
-  const keywords = (doc.keywords ?? []).join(" ").toLowerCase();
-  let score = doc.id === "profile-core" ? 1.2 : 0;
+  const terms = queryTerms(`${message} ${previousQuestion}`);
+  const years = new Set(message.match(/\b20\d{2}\b/g) ?? []);
+  const wantsRecent = /\b(recent|recently|latest|newest|last|current|now)\b/i.test(message);
 
-  if (intentKind === "activity" && doc.id === "route-activities") score += 8;
-  if (intentKind === "activity" && doc.id.startsWith("activity-")) {
-    const index = Number(doc.id.replace("activity-", ""));
-    if (Number.isFinite(index)) score += Math.max(0, 6 - index * 0.2);
-  }
-  if (intentKind === "publication" && doc.id === "route-publications") {
-    score += 8;
-  }
-  if (intentKind === "skill" && doc.id === "route-skills") score += 8;
-  if (intentKind === "contact" && doc.id === "route-contact") score += 8;
-
-  for (const token of tokens) {
-    if (title === token) score += 14;
-    else if (title.includes(token)) score += 8;
-    if (keywords.includes(token)) score += 5;
-    if (text.includes(token)) score += 1;
-  }
-
-  return score;
-}
-
-function activityIndex(doc: KnowledgeDoc) {
-  if (!doc.id.startsWith("activity-")) return Number.POSITIVE_INFINITY;
-  const index = Number(doc.id.replace("activity-", ""));
-  return Number.isFinite(index) ? index : Number.POSITIVE_INFINITY;
-}
-
-function uniqueActions(actions: ChatAction[]) {
-  const seen = new Set<string>();
-  return actions.filter((action) => {
-    const key = action.href || action.prompt || action.label;
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
+  const scored = getActivityIndex().map((entry, index) => {
+    let score = 0;
+    for (const term of terms) {
+      if (entry.name.has(term)) score += 4;
+      if (entry.place.has(term)) score += 2;
+      if (entry.body.has(term)) score += 1;
+    }
+    if (years.has(entry.activity.date.slice(0, 4))) score += 3;
+    if (wantsRecent && index < 4) score += 5 - index;
+    return { activity: entry.activity, score };
   });
+
+  return scored
+    .filter((entry) => entry.score >= 2)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((entry) => entry.activity);
 }
 
-function actionForDoc(doc: KnowledgeDoc): ChatAction | null {
-  if (!doc.href) return null;
-  const external =
-    /^https?:\/\//i.test(doc.href) || doc.href.startsWith("mailto:");
+function activityDetails(activity: Activity) {
+  const { body, collaborators } = splitDescription(activity.description);
+  return [
+    `### ${activity.name} (${activityHref(activity.slug)})`,
+    `${formatActivityDate(activity.date)} · ${activity.location} · ${activity.category}`,
+    plainText(body),
+    collaborators ? `With: ${collaborators}` : "",
+    activity.links.length
+      ? `Links: ${activity.links.map((link) => `${link.name} ${link.href}`).join("; ")}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/** The whole <facts> block for one question. */
+export function buildKnowledge(
+  message: string,
+  previousQuestion: string,
+  today: Date,
+) {
+  const relevant = findRelevantActivities(message, previousQuestion);
   return {
-    label:
-      doc.kind === "publication" && external
-        ? "Open paper"
-        : doc.kind === "contact"
-          ? "Contact Akash"
-          : doc.title,
-    href: doc.href,
-    kind: doc.href.startsWith("mailto:")
-      ? "email"
-      : external
-        ? "external"
-        : "page",
+    relevant,
+    // The same for every question.
+    facts: ["# Profile", getProfileText(), "", "# From the website's data", getFactSheet()].join(
+      "\n",
+    ),
+    // Changes from question to question.
+    context: [
+      `Today is ${today.toISOString().slice(0, 10)}. Akash is ${ageOn(today)} years old.`,
+      ...(relevant.length
+        ? [
+            "",
+            "# Details of the activities most relevant to this question",
+            ...relevant.map(activityDetails),
+          ]
+        : []),
+    ].join("\n"),
   };
 }
 
-function intentActions(query: string): ChatAction[] {
-  const lower = query.toLowerCase();
-  const actions: ChatAction[] = [];
+/**
+ * Cards for the activities and papers the reply actually links to, rather
+ * than for whatever a keyword list guessed the question was about.
+ */
+export function cardsForReply(reply: string): ChatUiCard[] {
+  const cards: ChatUiCard[] = [];
+  const seen = new Set<string>();
 
-  if (
-    /(activity|activities|event|conference|workshop|visit|timeline)/.test(lower)
-  ) {
-    actions.push({
-      label: "View activities",
-      href: "/activities",
-      kind: "page",
-    });
+  for (const [, href] of reply.matchAll(/\]\((\/(?:activities|publications)\/[a-z0-9-]+)\)/g)) {
+    if (seen.has(href) || cards.length >= 2) continue;
+    seen.add(href);
+    const slug = href.split("/").pop()!;
+
+    if (href.startsWith("/activities/")) {
+      const activity = getActivity(slug);
+      if (!activity) continue;
+      cards.push({
+        title: activity.name,
+        href,
+        meta: `${formatActivityDate(activity.date, { month: "short", year: "numeric" })} · ${
+          getPlace(activity.place).name
+        }`,
+        subtitle: truncate(plainText(splitDescription(activity.description).body), 140),
+      });
+    } else {
+      const publication = getPublication(slug);
+      if (!publication) continue;
+      cards.push({
+        title: publication.title,
+        href,
+        meta: [publication.year, publicationVenue(publication), publication.status]
+          .filter(Boolean)
+          .join(" · "),
+      });
+    }
   }
-  if (/(publication|paper|journal|doi|research|poster)/.test(lower)) {
-    actions.push({
-      label: "View publications",
-      href: "/publications",
-      kind: "page",
-    });
-  }
-  if (
-    /(skill|tool|uav|gps|software|instrument|drone|gis|sensor|spectro|phenocam|weather station|theodolite|total station|faro|trimble|emlid|sokkia|python|qgis|arcgis|earth engine|pix4d|cloudcompare|latex|erdas|envi|revit|staad|autocad)/.test(
-      lower,
-    )
-  ) {
-    actions.push({ label: "View skills", href: "/skills", kind: "page" });
-    actions.push({
-      label: "Ask Akash",
-      href: "/contact",
-      kind: "page",
-    });
-    actions.push({
-      label: "Email Akash",
-      href: "mailto:akash_k@ce.iitr.ac.in",
-      kind: "email",
-    });
-  }
-  if (/(contact|email|reach|message|connect)/.test(lower)) {
-    actions.push({ label: "Contact Akash", href: "/contact", kind: "page" });
-    actions.push({
-      label: "Email Akash",
-      href: "mailto:akash_k@ce.iitr.ac.in",
-      kind: "email",
-    });
-  }
-
-  return actions;
-}
-
-export function retrieveSiteKnowledge(
-  query: string,
-  limit = 5,
-): RetrievalResult {
-  const tokens = tokenize(query);
-  const intentKind = detectIntentKind(query);
-  const wantsRecent = /(recent|latest|newest|new|current)/i.test(query);
-  const rankedDocs = getSiteKnowledgeDocs()
-    .map((doc) => ({ doc, score: scoreDoc(doc, tokens, intentKind) }))
-    .filter(({ doc, score }) => doc.id === "profile-core" || score > 0)
-    .sort((a, b) => {
-      if (
-        wantsRecent &&
-        intentKind === "activity" &&
-        a.doc.kind === "activity" &&
-        b.doc.kind === "activity"
-      ) {
-        return activityIndex(a.doc) - activityIndex(b.doc);
-      }
-
-      return b.score - a.score;
-    })
-    .slice(0, limit);
-  const docs = rankedDocs.map(({ doc }) => doc);
-
-  const actions = uniqueActions([
-    ...intentActions(query),
-    ...rankedDocs
-      .filter(
-        ({ doc, score }) =>
-          score >= 8 &&
-          !doc.id.startsWith("route-") &&
-          (!intentKind || doc.kind === intentKind),
-      )
-      .map(({ doc }) => actionForDoc(doc))
-      .filter(Boolean),
-  ] as ChatAction[]).slice(0, 5);
-
-  const cards = rankedDocs
-    .filter(
-      ({ doc, score }) =>
-        score >= 8 &&
-        doc.kind === intentKind &&
-        ["activity", "publication", "skill"].includes(doc.kind) &&
-        !doc.id.startsWith("route-"),
-    )
-    .slice(0, intentKind === "activity" ? 3 : 2)
-    .map(({ doc }) => ({
-      title: doc.title,
-      subtitle: doc.text.slice(0, 160),
-      href: doc.href,
-      meta: doc.meta || doc.kind,
-    }));
-
-  return { docs, actions, cards };
-}
-
-export function buildKnowledgePrompt(docs: KnowledgeDoc[]) {
-  return docs
-    .map((doc, index) => {
-      const href = doc.href ? `\nLink: ${doc.href}` : "";
-      const meta = doc.meta ? `\nMeta: ${doc.meta}` : "";
-      return `[#${index + 1}] ${doc.title} (${doc.kind})${meta}${href}\n${doc.text}`;
-    })
-    .join("\n\n");
+  return cards;
 }

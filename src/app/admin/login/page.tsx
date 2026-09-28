@@ -67,12 +67,11 @@ function AdminLoginContent() {
     <main className="mx-auto flex min-h-[70vh] w-full max-w-md items-center px-4 py-10">
       <form
         onSubmit={onSubmit}
-        className="relative w-full overflow-hidden rounded-2xl border border-white/60 bg-white/45 p-5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35),0_18px_55px_rgba(15,23,42,0.08)] backdrop-blur-2xl sm:p-6 dark:border-white/10 dark:bg-white/[0.08] dark:shadow-[0_18px_55px_rgba(0,0,0,0.28)]"
+        className="record-surface relative w-full overflow-hidden rounded-lg p-5 sm:p-6"
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/10" />
 
         <div className="flex items-start gap-3">
-          <div className="bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-xl">
+          <div className="bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-lg">
             <ShieldCheck className="size-5" />
           </div>
           <div>
@@ -100,7 +99,7 @@ function AdminLoginContent() {
               <UserRound className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
                 id="admin-username"
-                className="bg-background/70 h-11 rounded-xl pl-10"
+                className="bg-background/70 h-11 rounded-lg pl-10"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
@@ -120,7 +119,7 @@ function AdminLoginContent() {
               <LockKeyhole className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
                 id="admin-password"
-                className="bg-background/70 h-11 rounded-xl pr-11 pl-10"
+                className="bg-background/70 h-11 rounded-lg pr-11 pl-10"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 type={showPassword ? "text" : "password"}
@@ -142,14 +141,17 @@ function AdminLoginContent() {
           </div>
 
           {error && (
-            <p className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-600 dark:text-rose-300">
+            <p
+              role="alert"
+              className="border-tone-rose/20 bg-tone-rose/10 text-tone-rose rounded-lg border px-3 py-2 text-sm"
+            >
               {error}
             </p>
           )}
 
           <Button
             type="submit"
-            className="h-11 rounded-xl"
+            className="h-11 rounded-lg"
             disabled={isLoading || !username || !password}
           >
             {isLoading ? "Signing in..." : "Sign in"}

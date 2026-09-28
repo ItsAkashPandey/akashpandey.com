@@ -6,17 +6,21 @@ import { Button } from "./ui/Button";
 
 export default function ChatToggle() {
   const { isOpen, toggleChat } = useChatbot();
+  const label = isOpen ? "Close Kasi" : "Ask Kasi";
 
   return (
     <Button
-      size="icon"
       variant="ghost"
+      data-kasi-toggle
       onClick={toggleChat}
-      className="header-icon-button relative"
-      title={isOpen ? "Close Kasi" : "Open Kasi"}
+      aria-expanded={isOpen}
+      className="header-icon-button relative w-auto gap-1.5 px-2 md:pr-3"
+      title={label}
     >
       <KasiMark active={isOpen} size="sm" />
-      <span className="sr-only">{isOpen ? "Close Kasi" : "Open Kasi"}</span>
+      <span className="sr-only md:not-sr-only md:text-sm md:font-semibold">
+        {label}
+      </span>
     </Button>
   );
 }

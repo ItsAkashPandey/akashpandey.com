@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { ChatAction, ChatMessageShape } from "@/lib/chat-types";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight, LoaderCircle, Sparkles } from "lucide-react";
 import Link from "next/link";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -66,8 +66,20 @@ export default function ChatMessage({
   message,
   onPromptClick,
 }: ChatMessageProps) {
-  const { role, content, actions, cards } = message;
+  const { role, content, actions, cards, pending } = message;
   const isBot = role === "assistant";
+
+  if (isBot && pending && !content) {
+    return (
+      <div className="flex items-center justify-start">
+        <KasiMark active size="sm" className="mt-0.5 mr-2 size-7 shrink-0" />
+        <div className="bg-card/80 border-border/60 flex items-center gap-2 rounded-full border px-3 py-1.5 shadow-sm">
+          <LoaderCircle className="text-muted-foreground size-3.5 animate-spin" />
+          <p className="text-muted-foreground text-xs">Thinking</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -83,8 +95,9 @@ export default function ChatMessage({
         className={cn(
           "max-w-[86%] min-w-0 rounded-lg border px-3.5 py-2.5 text-sm break-words shadow-sm sm:max-w-[330px]",
           isBot
-            ? "border-white/30 bg-white/55 backdrop-blur-md dark:border-white/10 dark:bg-white/10"
+            ? "bg-card/85 border-border/60"
             : "bg-primary text-primary-foreground border-primary shadow-md",
+          pending && "kasi-streaming",
         )}
       >
         <Markdown
