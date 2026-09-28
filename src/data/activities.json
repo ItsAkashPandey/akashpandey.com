@@ -1,10 +1,13 @@
 {
   "activities": [
     {
+      "slug": "phd-viva-voce-2026",
       "name": "PhD Viva-Voce — Successfully Defended",
-      "description": "Successfully defended my PhD thesis, \"Multi-scale Analysis of Crop Phenology using PhenoCam and Satellite Data,\" at the Department of Civil Engineering, IIT Roorkee.\n\nThanks to Prof. S. K. Katiyar (external examiner, MANIT Bhopal) and Prof. Narendra Kumar Samadhiya (HoD, CED) for their time and feedback.\n\nWith: my supervisor - Prof. Siddhartha Khare, Madhulika Singh, and Geospatial Engineering Group, IITR",
+      "category": "academic",
       "date": "2026-07-16",
       "location": "Civil Engineering Department, IIT Roorkee",
+      "place": "iit-roorkee",
+      "description": "Successfully defended my PhD thesis, \"Multi-scale Analysis of Crop Phenology using PhenoCam and Satellite Data,\" at the Department of Civil Engineering, IIT Roorkee.\n\nThanks to Prof. S. K. Katiyar (external examiner, MANIT Bhopal) and Prof. Narendra Kumar Samadhiya (HoD, CED) for their time and feedback.\n\nWith: my supervisor - Prof. Siddhartha Khare, Madhulika Singh, and Geospatial Engineering Group, IITR",
       "imageFolder": "PhD_Viva_Voce",
       "links": [
         {
@@ -12,24 +15,16 @@
           "href": "https://www.linkedin.com/posts/phd-iitroorkee-civilengineering-ugcPost-7491892509464256513-lIS8/?utm_source=share&utm_medium=member_desktop&rcm=ACoAABgGOigBD0uYsImp08_vVYXmidELL64_x28",
           "icon": "linkedin"
         }
-      ],
-      "resolvedImages": [
-        "/PhD_Viva_Voce/1.webp",
-        "/PhD_Viva_Voce/2.webp",
-        "/PhD_Viva_Voce/3.webp",
-        "/PhD_Viva_Voce/4.webp",
-        "/PhD_Viva_Voce/5.webp",
-        "/PhD_Viva_Voce/6.webp",
-        "/PhD_Viva_Voce/7.webp",
-        "/PhD_Viva_Voce/8.webp",
-        "/PhD_Viva_Voce/9.webp"
       ]
     },
     {
+      "slug": "krishitech-synapse-2026",
       "name": "KrishiTech Synapse 2026 — Third-Round Expert Evaluation",
-      "description": "I participated in the third round of KrishiTech Synapse 2026, an IHFC–IIT Delhi programme designed to accelerate deep-tech agricultural innovations from prototype to real-world deployment.\n\nAt the prototype showcase we presented the CropLizer GeoAI Suite, which pairs CropLizer's agronomic models with Bhoomicam's satellite, UAV and IoT infrastructure for season-long crop decisions.\n\nWith: Prof. Idhayachandhiran Ilampooranan and Mukund Narayanan",
+      "category": "startup",
       "date": "2026-07-02",
       "location": "IHFC, Block A, Research & Innovation Park, IIT Delhi, Hauz Khas, New Delhi",
+      "place": "ihfc-iit-delhi",
+      "description": "I participated in the third round of KrishiTech Synapse 2026, an IHFC–IIT Delhi programme designed to accelerate deep-tech agricultural innovations from prototype to real-world deployment.\n\nAt the prototype showcase we presented the CropLizer GeoAI Suite, which pairs CropLizer's agronomic models with Bhoomicam's satellite, UAV and IoT infrastructure for season-long crop decisions.\n\nWith: Prof. Idhayachandhiran Ilampooranan and Mukund Narayanan",
       "imageFolder": "KrishiTech_IIT_Delhi",
       "links": [
         {
@@ -37,19 +32,16 @@
           "href": "https://www.ihfc.co.in/archive/krishitech-synapse/",
           "icon": "globe"
         }
-      ],
-      "resolvedImages": [
-        "/KrishiTech_IIT_Delhi/01-team-at-ihfc.webp",
-        "/KrishiTech_IIT_Delhi/02-team-at-ihfc.webp",
-        "/KrishiTech_IIT_Delhi/03-team-at-ihfc.webp",
-        "/KrishiTech_IIT_Delhi/04-croplizer-geoai-suite.webp"
       ]
     },
     {
-      "name": "IN-SPACe Industry Connect - 10",
-      "description": "I represented Bhoomicam at IN-SPACe Industry Connect - 10, the annual Indian space-sector industry meet held on 10-11 June 2026 in Ahmedabad.\n\nBhoomicam showcased its AI-powered geospatial intelligence work and was recognized among the top 3 grantees under the IN-SPACe Department of Space Seed Fund Scheme, with Rs. 40 lakh support for a national pilot on crop pest, disease, and biotic-stress monitoring.",
+      "slug": "in-space-industry-connect-2026",
+      "name": "IN-SPACe Industry Connect 10",
+      "category": "startup",
       "date": "2026-06-11",
       "location": "The Forum, Hotel & Convention, Shela, Ahmedabad",
+      "place": "the-forum-ahmedabad",
+      "description": "I represented Bhoomicam at IN-SPACe Industry Connect - 10, the annual Indian space-sector industry meet held on 10-11 June 2026 in Ahmedabad.\n\nBhoomicam showcased its AI-powered geospatial intelligence work and was recognized among the top 3 grantees under the IN-SPACe Department of Space Seed Fund Scheme, with Rs. 40 lakh support for a national pilot on crop pest, disease, and biotic-stress monitoring.",
       "imageFolder": "INSPACe_Industry_Connect_2026",
       "links": [
         {
@@ -62,25 +54,16 @@
           "href": "https://www.linkedin.com/posts/bhoomicam-private-limited_industry-connect-india-ugcPost-7471549657282805761-Xr4E",
           "icon": "linkedin"
         }
-      ],
-      "resolvedImages": [
-        "/INSPACe_Industry_Connect_2026/01-datawall.webp",
-        "/INSPACe_Industry_Connect_2026/02-seed-fund-stage.webp",
-        "/INSPACe_Industry_Connect_2026/03-astronauts-session.webp",
-        "/INSPACe_Industry_Connect_2026/04-venue.webp",
-        "/INSPACe_Industry_Connect_2026/05-roundtable.webp",
-        "/INSPACe_Industry_Connect_2026/06-hall-session.webp",
-        "/INSPACe_Industry_Connect_2026/07-downstream-poc.webp",
-        "/INSPACe_Industry_Connect_2026/08-mou-session.webp",
-        "/INSPACe_Industry_Connect_2026/09-breakout-session.webp",
-        "/INSPACe_Industry_Connect_2026/10-space-tech-ecosystem.webp"
       ]
     },
     {
-      "name": "IN-SPACe Short-Term Course - Google Earth Engine Lecture",
-      "description": "I delivered a hands-on lecture on \"Working with Google Earth Engine\" for the IN-SPACe Short-Term Skill Development Course at GNEC, IIT Roorkee Greater Noida Campus.\n\nThe session covered data catalogues, time-series datasets, image classification, and practical Earth Engine workflows for space-data applications.\n\nWith: Prof. Siddhartha Khare, IN-SPACe organizers, and course participants",
+      "slug": "in-space-earth-engine-lecture-2026",
+      "name": "IN-SPACe Short-Term Course — Google Earth Engine Lecture",
+      "category": "academic",
       "date": "2026-04-27",
       "location": "GNEC, IIT Roorkee Greater Noida Campus, Noida",
+      "place": "iitr-greater-noida",
+      "description": "I delivered a hands-on lecture on \"Working with Google Earth Engine\" for the IN-SPACe Short-Term Skill Development Course at GNEC, IIT Roorkee Greater Noida Campus.\n\nThe session covered data catalogues, time-series datasets, image classification, and practical Earth Engine workflows for space-data applications.\n\nWith: Prof. Siddhartha Khare, IN-SPACe organizers, and course participants",
       "imageFolder": "INSPACe_GNEC_Workshop_2026",
       "links": [
         {
@@ -88,20 +71,16 @@
           "href": "https://www.linkedin.com/posts/iamakashpandey_googleearthengine-inspace-iitroorkee-activity-7460397383475011584-pR3t",
           "icon": "linkedin"
         }
-      ],
-      "resolvedImages": [
-        "/INSPACe_GNEC_Workshop_2026/01-lecture-wide.webp",
-        "/INSPACe_GNEC_Workshop_2026/02-lecture-title.webp",
-        "/INSPACe_GNEC_Workshop_2026/03-gee-demo.webp",
-        "/INSPACe_GNEC_Workshop_2026/04-classroom-demo.webp",
-        "/INSPACe_GNEC_Workshop_2026/05-hands-on-session.webp"
       ]
     },
     {
+      "slug": "egu-general-assembly-2026",
       "name": "EGU General Assembly 2026",
-      "description": "I presented my PhD research at the European Geosciences Union (EGU) General Assembly 2026 in Vienna, Austria.\n\nMy poster, \"Establishing PhenoCam-based monitoring of wheat and rice phenology in India with satellite and meteorological data,\" focused on combining PhenoCam observations, satellite remote sensing, and meteorological datasets for crop phenology monitoring.\n\nWith: Prof. Siddhartha Khare",
+      "category": "academic",
       "date": "2026-05-08",
       "location": "Austria Center Vienna, Vienna, Austria",
+      "place": "austria-center-vienna",
+      "description": "I presented my PhD research at the European Geosciences Union (EGU) General Assembly 2026 in Vienna, Austria.\n\nMy poster, \"Establishing PhenoCam-based monitoring of wheat and rice phenology in India with satellite and meteorological data,\" focused on combining PhenoCam observations, satellite remote sensing, and meteorological datasets for crop phenology monitoring.\n\nWith: Prof. Siddhartha Khare",
       "imageFolder": "EGU_2026_Visit",
       "links": [
         {
@@ -114,19 +93,16 @@
           "href": "https://www.linkedin.com/posts/siddhartha-khare-503a4429_congratulations-to-akash-kumar-for-presenting-activity-7460679560636837890-8aDT",
           "icon": "linkedin"
         }
-      ],
-      "resolvedImages": [
-        "/EGU_2026_Visit/01-poster-session-wide.webp",
-        "/EGU_2026_Visit/02-poster-session-portrait.webp",
-        "/EGU_2026_Visit/03-conference-poster.webp",
-        "/EGU_2026_Visit/04-poster-session.webp"
       ]
     },
     {
+      "slug": "iisf-2022-bhopal",
       "name": "India International Science Festival (IISF 2022)",
-      "description": "We participated in the India International Science Festival 2022 held from 21–24 January 2023 at Maulana Azad National Institute of Technology Bhopal. The festival included a large Startup Expo where selected startups from different institutes and organizations across India showcased their technologies.\n\nAt the expo, we exhibited Bhoomicam at our booth and demonstrated the platform to visitors, researchers, and industry representatives.\n\nThe event was part of India’s G20 presidency celebrations and the Azadi Ka Amrit Mahotsav.\n\nWith: Tushar Bharadwaj",
+      "category": "startup",
       "date": "2023-01-24",
       "location": "MANIT, Bhopal",
+      "place": "manit-bhopal",
+      "description": "We participated in the India International Science Festival 2022 held from 21–24 January 2023 at Maulana Azad National Institute of Technology Bhopal. The festival included a large Startup Expo where selected startups from different institutes and organizations across India showcased their technologies.\n\nAt the expo, we exhibited Bhoomicam at our booth and demonstrated the platform to visitors, researchers, and industry representatives.\n\nThe event was part of India’s G20 presidency celebrations and the Azadi Ka Amrit Mahotsav.\n\nWith: Tushar Bharadwaj",
       "imageFolder": "IISF_Bhopal",
       "links": [
         {
@@ -134,35 +110,16 @@
           "href": "https://youtube.com/playlist?list=PL5_z3z6Hgdze0dgSv08q1DwdAAhdXp1wS&si=TjLqfmVmRcQNYrgX",
           "icon": "youtube"
         }
-      ],
-      "resolvedImages": [
-        "/IISF_Bhopal/1.webp",
-        "/IISF_Bhopal/2.webp",
-        "/IISF_Bhopal/3.webp",
-        "/IISF_Bhopal/4.webp",
-        "/IISF_Bhopal/5.webp",
-        "/IISF_Bhopal/6.webp",
-        "/IISF_Bhopal/7.webp",
-        "/IISF_Bhopal/8.webp",
-        "/IISF_Bhopal/9.webp",
-        "/IISF_Bhopal/10.webp",
-        "/IISF_Bhopal/11.webp",
-        "/IISF_Bhopal/12.webp",
-        "/IISF_Bhopal/13.webp",
-        "/IISF_Bhopal/14.webp",
-        "/IISF_Bhopal/15.webp",
-        "/IISF_Bhopal/16.webp",
-        "/IISF_Bhopal/17.webp",
-        "/IISF_Bhopal/18.webp",
-        "/IISF_Bhopal/19.webp",
-        "/IISF_Bhopal/20.webp"
       ]
     },
     {
-      "name": "Surveying–Geomatics Karyashala 2023",
-      "description": "I served as the primary coordinator for the \"Hands-on Training on Advance Surveying Instruments\" (Karyashala), a national-level workshop organized by Prof. Siddhartha Khare from 1-11 January 2023.\n\nI was responsible for the end-to-end execution of the 11-day program, managing 25+ selected researchers from across India.\n\nI assisted instructors during practical sessions and guided participants in field demonstrations using instruments such as Total Station, Digital Level, GNSS/GPS receivers, Terrestrial Laser Scanner, and UAV/drone-based photogrammetry systems.\n\nWith: Prof. Siddhartha Khare, Tushar Bharadwaj",
+      "slug": "surveying-karyashala-2023",
+      "name": "Surveying-Geomatics Karyashala 2023",
+      "category": "academic",
       "date": "2023-01-01",
       "location": "Geospatial Engineering, IIT Roorkee",
+      "place": "iit-roorkee",
+      "description": "I served as the primary coordinator for the \"Hands-on Training on Advance Surveying Instruments\" (Karyashala), a national-level workshop organized by Prof. Siddhartha Khare from 1-11 January 2023.\n\nI was responsible for the end-to-end execution of the 11-day program, managing 25+ selected researchers from across India.\n\nI assisted instructors during practical sessions and guided participants in field demonstrations using instruments such as Total Station, Digital Level, GNSS/GPS receivers, Terrestrial Laser Scanner, and UAV/drone-based photogrammetry systems.\n\nWith: Prof. Siddhartha Khare, Tushar Bharadwaj",
       "imageFolder": "Karyashala",
       "links": [
         {
@@ -175,63 +132,16 @@
           "href": "https://www.linkedin.com/feed/update/urn:li:activity:6994651150578794496",
           "icon": "linkedin"
         }
-      ],
-      "resolvedImages": [
-        "/Karyashala/DSC_2035 copy.webp",
-        "/Karyashala/DSC_2044.webp",
-        "/Karyashala/image0.webp",
-        "/Karyashala/IMG_5450.webp",
-        "/Karyashala/IMG_5470.webp",
-        "/Karyashala/IMG_5474.webp",
-        "/Karyashala/IMG_5478.webp",
-        "/Karyashala/IMG_5479.webp",
-        "/Karyashala/IMG_5480.webp",
-        "/Karyashala/IMG_5504.webp",
-        "/Karyashala/IMG_5508.webp",
-        "/Karyashala/IMG_5532.webp",
-        "/Karyashala/IMG_5540.webp",
-        "/Karyashala/IMG_5560.webp",
-        "/Karyashala/IMG_5569.webp",
-        "/Karyashala/IMG_5581.webp",
-        "/Karyashala/IMG_5588.webp",
-        "/Karyashala/IMG_5649.webp",
-        "/Karyashala/IMG_5664.webp",
-        "/Karyashala/IMG_5671.webp",
-        "/Karyashala/IMG_5672.webp",
-        "/Karyashala/IMG_5673.webp",
-        "/Karyashala/IMG_5680.webp",
-        "/Karyashala/IMG_5689.webp",
-        "/Karyashala/IMG_5693.webp",
-        "/Karyashala/IMG_5696.webp",
-        "/Karyashala/IMG-20221105-WA0017.webp",
-        "/Karyashala/IMG-20221204-WA0009.webp",
-        "/Karyashala/IMG-20221204-WA0012.webp",
-        "/Karyashala/IMG-20221218-WA0003.webp",
-        "/Karyashala/IMG-20230104-WA0006.webp",
-        "/Karyashala/IMG-20230104-WA0007.webp",
-        "/Karyashala/IMG-20230104-WA0008.webp",
-        "/Karyashala/IMG-20230104-WA0016.webp",
-        "/Karyashala/IMG-20230113-WA0054.webp",
-        "/Karyashala/IMG-20230113-WA0065.webp",
-        "/Karyashala/IMG-20230113-WA0068.webp",
-        "/Karyashala/IMG-20230113-WA0078.webp",
-        "/Karyashala/IMG20230103101505.webp",
-        "/Karyashala/IMG20230103163201.webp",
-        "/Karyashala/IMG20230104154752.webp",
-        "/Karyashala/IMG20230105105729.webp",
-        "/Karyashala/IMG20230106121225.webp",
-        "/Karyashala/IMG20230107105346.webp",
-        "/Karyashala/IMG20230108102452.webp",
-        "/Karyashala/IMG20230108130404.webp",
-        "/Karyashala/Kaaryashala_Flyer.webp",
-        "/Karyashala/KDSC_2040 copy.webp"
       ]
     },
     {
+      "slug": "survey-camp-2022",
       "name": "UG Civil Survey Camp 2022",
-      "description": "From 27-Nov to 10-Dec-2022, I volunteered in the annual Survey Camp conducted by the Geospatial Division, Civil Engg. Dept., IIT Roorkee. This year under the supervision of Prof. Saurabh Vijay and Prof. Siddhartha Khare. The camp was held at Chandi Ghat, Haridwar, where 2nd year UG students carried out practical field surveying exercises.\n\nIt was more than 125 hours of survey with Total Station, GPS, Drone and Satellite Remote Sensing Data.\n\nDuring the two-week camp, I helped coordinate and guide 180+ UG and PG students in field activities such as measurements, data collection, and spatial mapping.\n\nWith: Prof. Saurabh Vijay, Prof. Siddhartha Khare, Prashant Singh and Volunteering TAs",
+      "category": "academic",
       "date": "2022-12-10",
       "location": "Chandighat, Haridwar, Uttarakhand",
+      "place": "chandighat-haridwar",
+      "description": "From 27-Nov to 10-Dec-2022, I volunteered in the annual Survey Camp conducted by the Geospatial Division, Civil Engg. Dept., IIT Roorkee. This year it ran under the supervision of Prof. Saurabh Vijay and Prof. Siddhartha Khare. The camp was held at Chandi Ghat, Haridwar, where 2nd year UG students carried out practical field surveying exercises.\n\nIt was more than 125 hours of survey with Total Station, GPS, Drone and Satellite Remote Sensing Data.\n\nDuring the two-week camp, I helped coordinate and guide 180+ UG and PG students in field activities such as measurements, data collection, and spatial mapping.\n\nWith: Prof. Saurabh Vijay, Prof. Siddhartha Khare, Prashant Singh and Volunteering TAs",
       "imageFolder": "Survey_Camp",
       "links": [
         {
@@ -239,36 +149,17 @@
           "href": "https://civil.iitr.ac.in/assets/PDF/E%20News%20letter_JULY-DEC%202022.pdf",
           "icon": "file-text"
         }
-      ],
-      "resolvedImages": [
-        "/Survey_Camp/1.webp",
-        "/Survey_Camp/2.webp",
-        "/Survey_Camp/3.webp",
-        "/Survey_Camp/4.webp",
-        "/Survey_Camp/5.webp",
-        "/Survey_Camp/6.webp",
-        "/Survey_Camp/7.webp",
-        "/Survey_Camp/8.webp",
-        "/Survey_Camp/9.webp",
-        "/Survey_Camp/10.webp",
-        "/Survey_Camp/11.webp",
-        "/Survey_Camp/12.webp",
-        "/Survey_Camp/13.webp",
-        "/Survey_Camp/14.webp",
-        "/Survey_Camp/15.webp",
-        "/Survey_Camp/16.webp",
-        "/Survey_Camp/17.webp",
-        "/Survey_Camp/18.webp",
-        "/Survey_Camp/19.webp",
-        "/Survey_Camp/20.webp"
       ]
     },
     {
-      "name": "AABTonics 2022 - National Geospatial Startup Competition",
-      "description": "We participated in AABTonics 2022, a GIS startup competition organized by AABSyS IT Pvt. Ltd.\n\nWe presented the startup idea regarding a geospatial and data-driven solution on improving agricultural monitoring and decision-making using spatial technologies.\n\nOur startup was awarded **1st Prize** and received a cash award of **₹50,000** on 16 Nov 2022 (International GIS Day).\n\nWith: Prof. Siddhartha Khare, Tushar Bharadwaj",
+      "slug": "aabtonics-2022",
+      "name": "AABTonics 2022 — National Geospatial Startup Competition",
+      "category": "startup",
       "date": "2022-09-14",
       "location": "IIT Roorkee",
-      "imageFolder": "Abtonics",
+      "place": "iit-roorkee",
+      "description": "We participated in AABTonics 2022, a GIS startup competition organized by AABSyS IT Pvt. Ltd.\n\nWe presented the startup idea regarding a geospatial and data-driven solution on improving agricultural monitoring and decision-making using spatial technologies.\n\nOur startup was awarded **1st Prize** and received a cash award of **₹50,000** on 16 Nov 2022 (International GIS Day).\n\nWith: Prof. Siddhartha Khare, Tushar Bharadwaj",
+      "imageFolder": "AABTonics",
       "links": [
         {
           "name": "LinkedIn Post",
@@ -280,18 +171,16 @@
           "href": "https://aabsys.com/press-releases/aabsys-successfully-conducts-aabtonics-2022/",
           "icon": "globe"
         }
-      ],
-      "resolvedImages": [
-        "/Abtonics/1.webp",
-        "/Abtonics/2.webp",
-        "/Abtonics/3.webp"
       ]
     },
     {
+      "slug": "iit-roorkee-foundation-day-2022",
       "name": "175th Foundation Day of IIT Roorkee",
-      "description": "We showcased our startup, BhoomiCam, at the Startup Expo 2022, organized during the historic 175th Foundation Day celebrations of IIT Roorkee.\n\nDuring the celebration, a commemorative coin and postal stamp were also released to mark 175 years of IIT Roorkee.\n\nWith: Prof. Siddhartha Khare",
+      "category": "startup",
       "date": "2022-11-25",
       "location": "MAC, IIT Roorkee",
+      "place": "mac-iit-roorkee",
+      "description": "We showcased our startup, Bhoomicam, at the Startup Expo 2022, organized during the historic 175th Foundation Day celebrations of IIT Roorkee.\n\nDuring the celebration, a commemorative coin and postal stamp were also released to mark 175 years of IIT Roorkee.\n\nWith: Prof. Siddhartha Khare",
       "imageFolder": "Foundation_Day_2022",
       "links": [
         {
@@ -299,127 +188,82 @@
           "href": "https://ir.iitr.ac.in/EventsAbroad/index.html",
           "icon": "globe"
         }
-      ],
-      "resolvedImages": [
-        "/Foundation_Day_2022/1.webp",
-        "/Foundation_Day_2022/2.webp",
-        "/Foundation_Day_2022/3.webp",
-        "/Foundation_Day_2022/4.webp",
-        "/Foundation_Day_2022/5.webp",
-        "/Foundation_Day_2022/6.webp",
-        "/Foundation_Day_2022/7.webp",
-        "/Foundation_Day_2022/8.webp"
       ]
     },
     {
+      "slug": "kvk-farmer-outreach-2023",
       "name": "Outreach Program by Krishi Vibhag",
-      "description": "I participated in an outreach program organized by Krishi Vigyan Kendra Dhanauri (Haridwar) where we visited several villages in and around Roorkee to interact directly with farmers and rural communities.\n\nProf. Siddhartha Khare presented and promoted Bhoomicam, explaining how drone-based services, satellite insights, and AI-driven tools can help farmers in crop monitoring, spraying, and better field management.\n\nWith: Prof. Siddhartha Khare, Mr. Umesh Saxena",
+      "category": "academic",
       "date": "2023-05-02",
       "location": "Roorkee, Uttarakhand",
+      "place": "roorkee",
+      "description": "I participated in an outreach program organized by Krishi Vigyan Kendra Dhanauri (Haridwar) where we visited several villages in and around Roorkee to interact directly with farmers and rural communities.\n\nProf. Siddhartha Khare presented and promoted Bhoomicam, explaining how drone-based services, satellite insights, and AI-driven tools can help farmers in crop monitoring, spraying, and better field management.\n\nWith: Prof. Siddhartha Khare, Mr. Umesh Saxena",
       "imageFolder": "KVK_Outreach",
-      "links": [],
-      "resolvedImages": [
-        "/KVK_Outreach/1.webp",
-        "/KVK_Outreach/2.webp",
-        "/KVK_Outreach/3.webp",
-        "/KVK_Outreach/4.webp",
-        "/KVK_Outreach/5.webp",
-        "/KVK_Outreach/6.webp",
-        "/KVK_Outreach/7.webp",
-        "/KVK_Outreach/8.webp",
-        "/KVK_Outreach/9.webp",
-        "/KVK_Outreach/10.webp",
-        "/KVK_Outreach/11.webp"
-      ]
+      "links": []
     },
     {
+      "slug": "world-environment-day-kvk-2023",
       "name": "World Environment Day Program at KVK",
-      "description": "We took part in an outreach and awareness program organized at Krishi Vigyan Kendra Dhanauri, Roorkee (Haridwar) on the occasion of World Environment Day (05-Jun-2023). The event brought together students and scientists from agricultural domain, and local farmers to discuss environmental responsibility in agriculture and the role of modern technologies in sustainable farming.\n\nDuring the program, a plantation (*Vriksha Ropan*) activity was organized as a symbolic and practical step toward environmental conservation.\n\nWith: Prof. Siddhartha Khare, Mr. Umesh Saxena, Tushar Bharadwaj",
+      "category": "academic",
       "date": "2023-06-05",
       "location": "Krishi Vigyan Kendra, Haridwar",
-      "imageFolder": "world_environemnt_day_KVK",
-      "links": [],
-      "resolvedImages": [
-        "/world_environemnt_day_KVK/1.webp",
-        "/world_environemnt_day_KVK/2.webp",
-        "/world_environemnt_day_KVK/3.webp",
-        "/world_environemnt_day_KVK/4.webp",
-        "/world_environemnt_day_KVK/IMG-20230605-WA0003.webp"
-      ]
+      "place": "kvk-dhanauri",
+      "description": "We took part in an outreach and awareness program organized at Krishi Vigyan Kendra Dhanauri, Roorkee (Haridwar) on the occasion of World Environment Day (05-Jun-2023). The event brought together students and scientists from agricultural domain, and local farmers to discuss environmental responsibility in agriculture and the role of modern technologies in sustainable farming.\n\nDuring the program, a plantation (*Vriksha Ropan*) activity was organized as a symbolic and practical step toward environmental conservation.\n\nWith: Prof. Siddhartha Khare, Mr. Umesh Saxena, Tushar Bharadwaj",
+      "imageFolder": "world_environment_day_KVK",
+      "links": []
     },
     {
+      "slug": "agri-startup-conclave-2023",
       "name": "National Agri-Startup Conclave 2023",
-      "description": "I participated in the National Agri-Startup Conclave 2023 organized at Govind Ballabh Pant University of Agriculture and Technology, Pantnagar, Uttarakhand under the IDP-NAHEP program.\nThe event provided a platform for startups to present their solutions, exchange ideas, and interact with students and experts working towards advancing agricultural innovation in India.\n\nDuring the event with my supervisor Prof. Siddhartha Khare, we represented Bhoomicam and presented our technology platform focused on integrating drone & satellite insights. And discussed how such technologies can help farmers improve crop monitoring, optimize resource use, and make more informed decisions for farm management.\n\nWith: Prof. Siddhartha Khare, Prof. Saurabh Vijay",
+      "category": "startup",
       "date": "2023-10-07",
       "location": "GB Pant University, Pantnagar, Uttarakhand",
+      "place": "gbpuat-pantnagar",
+      "description": "I participated in the National Agri-Startup Conclave 2023 organized at Govind Ballabh Pant University of Agriculture and Technology, Pantnagar, Uttarakhand under the IDP-NAHEP program.\nThe event provided a platform for startups to present their solutions, exchange ideas, and interact with students and experts working towards advancing agricultural innovation in India.\n\nDuring the event with my supervisor Prof. Siddhartha Khare, we represented Bhoomicam and presented our technology platform focused on integrating drone & satellite insights. And discussed how such technologies can help farmers improve crop monitoring, optimize resource use, and make more informed decisions for farm management.\n\nWith: Prof. Siddhartha Khare, Prof. Saurabh Vijay",
       "imageFolder": "GB_Pant",
-      "links": [],
-      "resolvedImages": ["/GB_Pant/1.webp", "/GB_Pant/0.webp"]
+      "links": []
     },
     {
+      "slug": "phenocam-installation-kvk-2023",
       "name": "PhenoCam Installation at KVK",
-      "description": "We deployed a CCFC PhenoCam integrated with meteorological sensors to track the crop phenology.\n\nThe PhenoMet station was installed at the experimental farm with rice-wheat rotational cropping.\n\nThe camera was mounted on a tower at a height of approximately 6.5 meters and fixed in a north-facing direction to reduce the influence of direct sunlight.\n\nWith: Prof. Siddhartha Khare, Tushar Bharadwaj, Shreyas Goswami, Apurwa Chaurasia, Sivani and Peeyush.",
+      "category": "academic",
       "date": "2023-11-22",
       "location": "Krishi Vigyan Kendra (KVK) Dhanauri, Uttarakhand",
+      "place": "kvk-dhanauri",
+      "description": "We deployed a CCFC PhenoCam integrated with meteorological sensors to track the crop phenology.\n\nThe PhenoMet station was installed at the experimental farm with rice-wheat rotational cropping.\n\nThe camera was mounted on a tower at a height of approximately 6.5 meters and fixed in a north-facing direction to reduce the influence of direct sunlight.\n\nWith: Prof. Siddhartha Khare, Tushar Bharadwaj, Shreyas Goswami, Apurwa Chaurasia, Sivani Noolu and Peeyush Jasaiwal",
       "imageFolder": "PhenoCam_Installation_KVK",
-      "links": [],
-      "resolvedImages": [
-        "/PhenoCam_Installation_KVK/1.webp",
-        "/PhenoCam_Installation_KVK/2.webp",
-        "/PhenoCam_Installation_KVK/3.webp",
-        "/PhenoCam_Installation_KVK/4.webp",
-        "/PhenoCam_Installation_KVK/5.webp",
-        "/PhenoCam_Installation_KVK/6.webp",
-        "/PhenoCam_Installation_KVK/7.webp",
-        "/PhenoCam_Installation_KVK/8.webp",
-        "/PhenoCam_Installation_KVK/9.webp",
-        "/PhenoCam_Installation_KVK/10.webp",
-        "/PhenoCam_Installation_KVK/11.webp",
-        "/PhenoCam_Installation_KVK/12.webp",
-        "/PhenoCam_Installation_KVK/13.webp",
-        "/PhenoCam_Installation_KVK/14.webp",
-        "/PhenoCam_Installation_KVK/15.webp"
-      ]
+      "links": []
     },
     {
+      "slug": "faridabad-mela-2023",
       "name": "Faridabad Mela Mahotsav 2023",
-      "description": "I represented Bhoomicam at the Faridabad Mela Mahotsav held at Surajkund, Faridabad from 21-24 Dec 2023. The Mahotsav is a large cultural fair that brings together people from different regions to celebrate their heritage, traditions, and community activities.\n\nDuring the event, I presented our startup's agricultural technology platform, which integrates drone services, satellite insights, and AI-based tools to support farmers in precision agriculture.\n\nWith: Peeyush Jasaiwal",
+      "category": "startup",
       "date": "2023-12-23",
       "location": "Surajkund Mela Ground, Faridabad (Haryana)",
+      "place": "surajkund-faridabad",
+      "description": "I represented Bhoomicam at the Faridabad Mela Mahotsav held at Surajkund, Faridabad from 21-24 Dec 2023. The Mahotsav is a large cultural fair that brings together people from different regions to celebrate their heritage, traditions, and community activities.\n\nDuring the event, I presented our startup's agricultural technology platform, which integrates drone services, satellite insights, and AI-based tools to support farmers in precision agriculture.\n\nWith: Peeyush Jasaiwal",
       "imageFolder": "Faridabad_Mela",
-      "links": [],
-      "resolvedImages": [
-        "/Faridabad_Mela/1.webp",
-        "/Faridabad_Mela/2.webp",
-        "/Faridabad_Mela/3.webp",
-        "/Faridabad_Mela/4.webp",
-        "/Faridabad_Mela/5.webp",
-        "/Faridabad_Mela/6.webp",
-        "/Faridabad_Mela/7.webp"
-      ]
+      "links": []
     },
     {
-      "name": "Research Day - Startup Expo 2024",
-      "description": "Participated in Institute Research Day 2024 at IIT Roorkee on 14 March 2024. The event celebrates research and innovation across the institute and coincides with Pi Day and the birthday of Albert Einstein. Research groups, students, and startups showcased their work through posters, demonstrations, and exhibition stalls.\n\nDuring the event, we presented our startup Bhoomicam at the exhibition area and interacted with faculty members, researchers, and students from different departments\n\nWith: Prof. Siddhartha Khare, Shreyas Goswami, Apurwa Chaurasia, and Sivani.",
+      "slug": "research-day-2024",
+      "name": "Research Day 2024 — Startup Expo",
+      "category": "startup",
       "date": "2024-03-14",
       "location": "MAC, IIT Roorkee",
+      "place": "mac-iit-roorkee",
+      "description": "I participated in Institute Research Day 2024 at IIT Roorkee on 14 March 2024. The event celebrates research and innovation across the institute and coincides with Pi Day and the birthday of Albert Einstein. Research groups, students, and startups showcased their work through posters, demonstrations, and exhibition stalls.\n\nDuring the event, we presented our startup Bhoomicam at the exhibition area and interacted with faculty members, researchers, and students from different departments.\n\nWith: Prof. Siddhartha Khare, Shreyas Goswami, Apurwa Chaurasia and Sivani Noolu",
       "imageFolder": "ResearchDay_MAC",
-      "links": [],
-      "resolvedImages": [
-        "/ResearchDay_MAC/1.webp",
-        "/ResearchDay_MAC/2.webp",
-        "/ResearchDay_MAC/3.webp",
-        "/ResearchDay_MAC/5.webp",
-        "/ResearchDay_MAC/6.webp",
-        "/ResearchDay_MAC/7.webp",
-        "/ResearchDay_MAC/0.webp"
-      ]
+      "links": []
     },
     {
-      "name": "TIPS 4.0 – Technology Innovation at IIT Bombay",
-      "description": "I attended the TIPS 4.0 – Technology Innovation in Cyber-Physical Systems held at IIT Bombay on 13–14 May 2024. The event was organised by the Technology Innovation Hub (TIH-IoT).\n\nWe attended the event to represent the BhoomiCam startup. It was a good opportunity to present, interact with startups and explore collaborations. During the event, around 40+ deep-tech startups showcased their technologies, and pitched their ideas to VCs and investors.\n\nWith: Prof. Siddhartha Khare and Shreyas Goswami",
+      "slug": "tips-iit-bombay-2024",
+      "name": "TIPS 4.0 — Technology Innovation at IIT Bombay",
+      "category": "startup",
       "date": "2024-05-13",
       "location": "IIT Bombay",
+      "place": "iit-bombay",
+      "description": "I attended the TIPS 4.0 – Technology Innovation in Cyber-Physical Systems held at IIT Bombay on 13–14 May 2024. The event was organised by the Technology Innovation Hub (TIH-IoT).\n\nWe attended the event to represent the Bhoomicam startup. It was a good opportunity to present, interact with startups and explore collaborations. During the event, around 40+ deep-tech startups showcased their technologies, and pitched their ideas to VCs and investors.\n\nWith: Prof. Siddhartha Khare and Shreyas Goswami",
       "imageFolder": "TIPS_Bombay",
       "links": [
         {
@@ -427,42 +271,16 @@
           "href": "https://www.linkedin.com/posts/siddhartha-khare-503a4429_agridrone-tips-iitbombay-activity-7195786288027893761--mM7",
           "icon": "linkedin"
         }
-      ],
-      "resolvedImages": [
-        "/TIPS_Bombay/1.webp",
-        "/TIPS_Bombay/2.webp",
-        "/TIPS_Bombay/4.webp",
-        "/TIPS_Bombay/6.webp",
-        "/TIPS_Bombay/7.webp",
-        "/TIPS_Bombay/8.webp",
-        "/TIPS_Bombay/9.webp",
-        "/TIPS_Bombay/10.webp",
-        "/TIPS_Bombay/11.webp",
-        "/TIPS_Bombay/12.webp",
-        "/TIPS_Bombay/13.webp",
-        "/TIPS_Bombay/14.webp",
-        "/TIPS_Bombay/15.webp",
-        "/TIPS_Bombay/16.webp",
-        "/TIPS_Bombay/17.webp",
-        "/TIPS_Bombay/18.webp",
-        "/TIPS_Bombay/19.webp",
-        "/TIPS_Bombay/20.webp",
-        "/TIPS_Bombay/21.webp",
-        "/TIPS_Bombay/22.webp",
-        "/TIPS_Bombay/23.webp",
-        "/TIPS_Bombay/24.webp",
-        "/TIPS_Bombay/25.webp",
-        "/TIPS_Bombay/26.webp",
-        "/TIPS_Bombay/27.webp",
-        "/TIPS_Bombay/28.webp",
-        "/TIPS_Bombay/0.webp"
       ]
     },
     {
+      "slug": "tides-startup-day-2024",
       "name": "Startup Day 2024 by TIDES IIT Roorkee",
-      "description": "On 20 July 2024, I attended Startup Day 2024 organised by TIDES, IIT Roorkee. The program focused on showcasing startups, sharing experiences from entrepreneurs, and creating interaction between early-stage founders and the startup ecosystem around IIT Roorkee.\n\nDuring Startup Day, we discussed with Mr. Amit Sinha, ADG, Uttarakhand Police and other defense officers regarding the possible solutions related to geospatial tracking and monitoring of sensitive areas.\n\nWith: Shreyas Goswami",
+      "category": "startup",
       "date": "2024-07-20",
       "location": "IIT Roorkee",
+      "place": "iit-roorkee",
+      "description": "On 20 July 2024, I attended Startup Day 2024 organised by TIDES, IIT Roorkee. The program focused on showcasing startups, sharing experiences from entrepreneurs, and creating interaction between early-stage founders and the startup ecosystem around IIT Roorkee.\n\nDuring Startup Day, we discussed with Mr. Amit Sinha, ADG, Uttarakhand Police and other defense officers regarding the possible solutions related to geospatial tracking and monitoring of sensitive areas.\n\nWith: Shreyas Goswami",
       "imageFolder": "TIDES_StartupDay",
       "links": [
         {
@@ -470,42 +288,27 @@
           "href": "https://www.linkedin.com/posts/siddhartha-khare-503a4429_startup-agridrone-agritech-activity-7220483496950050817-qW-O",
           "icon": "linkedin"
         }
-      ],
-      "resolvedImages": [
-        "/TIDES_StartupDay/1.webp",
-        "/TIDES_StartupDay/2.webp",
-        "/TIDES_StartupDay/3.webp",
-        "/TIDES_StartupDay/4.webp",
-        "/TIDES_StartupDay/5.webp"
       ]
     },
     {
+      "slug": "rutage-smart-village-centre-2024",
       "name": "RuTAGe Smart Village Centre",
-      "description": "The RuTAGe Smart Village Centre (RSVC) was inaugurated on 10 September 2024 at Khoont village, Almora, the birthplace of Govind Ballabh Pant. The centre was set up by IIT Roorkee, with collaboration from Nehir Himalayan Sansthan and other local partners.\n\nRuTAGe works to take technologies developed in institutions like IITs and deploy them in rural areas. At the centre, several were demonstrated, such as a solar-assisted Bageshwari wool charkha, a cooled vegetable vending cart, pico-hydro based cold storage, and a mechanised felt-making device etc.\n\nWith: Dr. Neeraj Pant and Geetu Saini",
+      "category": "academic",
       "date": "2024-09-10",
       "location": "Khoont Village, Almora, Uttarakhand",
+      "place": "khoont-almora",
+      "description": "The RuTAGe Smart Village Centre (RSVC) was inaugurated on 10 September 2024 at Khoont village, Almora, the birthplace of Govind Ballabh Pant. The centre was set up by IIT Roorkee, with collaboration from Nehir Himalayan Sansthan and other local partners.\n\nRuTAGe works to take technologies developed in institutions like IITs and deploy them in rural areas. At the centre, several technologies were demonstrated, such as a solar-assisted Bageshwari wool charkha, a cooled vegetable vending cart, pico-hydro based cold storage, and a mechanised felt-making device.\n\nWith: Dr. Neeraj Pant and Geetu Saini",
       "imageFolder": "RUTAG_Almora",
-      "links": [],
-      "resolvedImages": [
-        "/RUTAG_Almora/1.webp",
-        "/RUTAG_Almora/2.webp",
-        "/RUTAG_Almora/3.webp",
-        "/RUTAG_Almora/4.webp",
-        "/RUTAG_Almora/5.webp",
-        "/RUTAG_Almora/6.webp",
-        "/RUTAG_Almora/7.webp",
-        "/RUTAG_Almora/8.webp",
-        "/RUTAG_Almora/9.webp",
-        "/RUTAG_Almora/10.webp",
-        "/RUTAG_Almora/11.webp",
-        "/RUTAG_Almora/12.webp"
-      ]
+      "links": []
     },
     {
+      "slug": "nasa-space-apps-2024",
       "name": "NASA Space Apps Challenge 2024",
-      "description": "We participated in the 2024 NASA International Space Apps Challenge on 5–6 October 2024.\n\nWe have developed a web tool to access Landsat-8/9 data, which allows users to enter coordinates and quickly get future satellite pass time and pixel reflectance values, which is useful for comparing ground observations with satellite imagery.\n\nWe received the \"Galactic Problem Solver\" certificate from NASA.\n\nWith: Shreyas Goswami, Amarjeet Kumar Mahato, Nitin Lodhi",
+      "category": "academic",
       "date": "2024-10-06",
       "location": "IIT Roorkee",
+      "place": "iit-roorkee",
+      "description": "We participated in the 2024 NASA International Space Apps Challenge on 5–6 October 2024.\n\nWe developed a web tool to access Landsat-8/9 data, which allows users to enter coordinates and quickly get future satellite pass time and pixel reflectance values, which is useful for comparing ground observations with satellite imagery.\n\nWe received the \"Galactic Problem Solver\" certificate from NASA.\n\nWith: Shreyas Goswami, Amarjeet Kumar Mahato, Nitin Lodhi",
       "imageFolder": "NASA_Space_Challenge",
       "links": [
         {
@@ -518,25 +321,16 @@
           "href": "https://github.com/nitDev10per/Space-Apps",
           "icon": "github"
         }
-      ],
-      "resolvedImages": [
-        "/NASA_Space_Challenge/1.webp",
-        "/NASA_Space_Challenge/3.webp",
-        "/NASA_Space_Challenge/4.webp",
-        "/NASA_Space_Challenge/5.webp",
-        "/NASA_Space_Challenge/6.webp",
-        "/NASA_Space_Challenge/7.webp",
-        "/NASA_Space_Challenge/8.webp",
-        "/NASA_Space_Challenge/9.webp",
-        "/NASA_Space_Challenge/10.webp",
-        "/NASA_Space_Challenge/0.webp"
       ]
     },
     {
+      "slug": "nasscom-confluence-2024",
       "name": "NASSCOM Technology Confluence 2024",
-      "description": "I attended the NASSCOM Technology Confluence 2024 at Chandigarh on 12 Nov 2024. It was a good opportunity to interact with entrepreneurs and researchers, and to discuss how technologies like remote sensing and data analytics can support practical solutions in agriculture.\n\nI participated as a representative of IIT Roorkee and also showcased the work of BhoomiCam, an agri-tech startup led by Prof. Siddhartha Khare.\n\nWith: Prof. Vivek Kumar Malik and Shreyas Goswami",
+      "category": "startup",
       "date": "2024-11-12",
       "location": "Hyatt Centric, Sector 17, Chandigarh",
+      "place": "hyatt-centric-chandigarh",
+      "description": "I attended the NASSCOM Technology Confluence 2024 at Chandigarh on 12 Nov 2024. It was a good opportunity to interact with entrepreneurs and researchers, and to discuss how technologies like remote sensing and data analytics can support practical solutions in agriculture.\n\nI participated as a representative of IIT Roorkee and also showcased the work of Bhoomicam, an agri-tech startup led by Prof. Siddhartha Khare.\n\nWith: Prof. Vivek Kumar Malik and Shreyas Goswami",
       "imageFolder": "NASSCOM_Confluence",
       "links": [
         {
@@ -544,25 +338,16 @@
           "href": "https://www.linkedin.com/posts/siddhartha-khare-503a4429_iitroorkee-innovation-incubation-activity-7263442784370528256-VBS9",
           "icon": "linkedin"
         }
-      ],
-      "resolvedImages": [
-        "/NASSCOM_Confluence/1.webp",
-        "/NASSCOM_Confluence/2.webp",
-        "/NASSCOM_Confluence/3.webp",
-        "/NASSCOM_Confluence/4.webp",
-        "/NASSCOM_Confluence/5.webp",
-        "/NASSCOM_Confluence/6.webp",
-        "/NASSCOM_Confluence/7.webp",
-        "/NASSCOM_Confluence/8.webp",
-        "/NASSCOM_Confluence/9.webp",
-        "/NASSCOM_Confluence/10.webp"
       ]
     },
     {
+      "slug": "ieee-ingarss-2024",
       "name": "IEEE InGARSS Conference",
-      "description": "I attended the IEEE InGARSS 2024 conference held at the National Institute of Technology (NIT) Goa. During the conference, I had the opportunity to present a part of my PhD research, where I shared my work and received useful feedback from researchers and participants working in the field of geoscience and remote sensing.\n\nIt was a good experience to interact with fellow researchers, and to connect with students and scientists from different institutions working on similar problems.\n\nWith: Colleagues from Geospatial, IITR",
+      "category": "academic",
       "date": "2024-12-04",
       "location": "NIT Goa",
+      "place": "nit-goa",
+      "description": "I attended the IEEE InGARSS 2024 conference held at the National Institute of Technology (NIT) Goa. During the conference, I had the opportunity to present a part of my PhD research, where I shared my work and received useful feedback from researchers and participants working in the field of geoscience and remote sensing.\n\nIt was a good experience to interact with fellow researchers, and to connect with students and scientists from different institutions working on similar problems.\n\nWith: Colleagues from the Geospatial Engineering Group, IITR",
       "imageFolder": "InGARSS_Goa",
       "links": [
         {
@@ -575,72 +360,27 @@
           "href": "https://www.linkedin.com/posts/iamakashpandey_ingarss2024-ieee-phenocam-activity-7273666158367563776-9zql",
           "icon": "linkedin"
         }
-      ],
-      "resolvedImages": [
-        "/InGARSS_Goa/1.webp",
-        "/InGARSS_Goa/2.webp",
-        "/InGARSS_Goa/3.webp",
-        "/InGARSS_Goa/4.webp",
-        "/InGARSS_Goa/5.webp",
-        "/InGARSS_Goa/6.webp",
-        "/InGARSS_Goa/7.webp",
-        "/InGARSS_Goa/8.webp",
-        "/InGARSS_Goa/9.webp",
-        "/InGARSS_Goa/10.webp",
-        "/InGARSS_Goa/11.webp",
-        "/InGARSS_Goa/12.webp",
-        "/InGARSS_Goa/13.webp",
-        "/InGARSS_Goa/14.webp",
-        "/InGARSS_Goa/15.webp",
-        "/InGARSS_Goa/16.webp",
-        "/InGARSS_Goa/17.webp",
-        "/InGARSS_Goa/18.webp",
-        "/InGARSS_Goa/19.webp",
-        "/InGARSS_Goa/20.webp",
-        "/InGARSS_Goa/21.webp"
       ]
     },
     {
+      "slug": "kashmir-phenocam-sites-2025",
       "name": "PhenoCam Site Selection at Kashmir",
-      "description": "We visited Kashmir for selecting suitable sites for installing PhenoCam. During the visit, we went to the University of Kashmir and met Prof. Rayees Malik and Prof. Manzoor Shah from the Department of Botany. We discussed possible locations and collaboration for setting up the cameras to monitor vegetation phenology.\n\nAs part of the visit, we also travelled to Gulmarg in Baramulla district, Jammu and Kashmir to visit the High Altitude Research Field Station.\n\nWith: Prof. Siddhartha Khare",
+      "category": "academic",
       "date": "2025-02-22",
       "location": "University of Kashmir, Srinagar, J&K",
+      "place": "university-of-kashmir",
+      "description": "We visited Kashmir for selecting suitable sites for installing PhenoCam. During the visit, we went to the University of Kashmir and met Prof. Rayees Malik and Prof. Manzoor Shah from the Department of Botany. We discussed possible locations and collaboration for setting up the cameras to monitor vegetation phenology.\n\nAs part of the visit, we also travelled to Gulmarg in Baramulla district, Jammu and Kashmir to visit the High Altitude Research Field Station.\n\nWith: Prof. Siddhartha Khare",
       "imageFolder": "Kashmir",
-      "links": [],
-      "resolvedImages": [
-        "/Kashmir/1.webp",
-        "/Kashmir/2.webp",
-        "/Kashmir/3.webp",
-        "/Kashmir/4.webp",
-        "/Kashmir/5.webp",
-        "/Kashmir/6.webp",
-        "/Kashmir/7.webp",
-        "/Kashmir/8.webp",
-        "/Kashmir/9.webp",
-        "/Kashmir/11.webp",
-        "/Kashmir/12.webp",
-        "/Kashmir/13.webp",
-        "/Kashmir/14.webp",
-        "/Kashmir/15.webp",
-        "/Kashmir/16.webp",
-        "/Kashmir/17.webp",
-        "/Kashmir/18.webp",
-        "/Kashmir/19.webp",
-        "/Kashmir/20.webp",
-        "/Kashmir/21.webp",
-        "/Kashmir/22.webp",
-        "/Kashmir/24.webp",
-        "/Kashmir/25.webp",
-        "/Kashmir/26.webp",
-        "/Kashmir/27.webp",
-        "/Kashmir/28.webp"
-      ]
+      "links": []
     },
     {
+      "slug": "operation-dronagiri-2025",
       "name": "Operation Dronagiri Program",
-      "description": "Our Startup Bhoomicam has been selected among the **TOP 25** startups in India from over 750+ applications received under the Operation Dronagiri program, organized by Ministry of Science and Technology.\n\nBhoomicam has been awarded a **₹10 Lakh funding grant** under the National Geospatial Startup Challenge.\n\nAs part of this, Bhoomicam will collaborate with local administrative bodies across five districts to deploy its geospatial solutions.\n\nWith: Prof. Siddhartha Khare",
+      "category": "startup",
       "date": "2025-03-17",
       "location": "Navavishkar I-Hub Foundation, IIT Tirupati",
+      "place": "iit-tirupati",
+      "description": "Our Startup Bhoomicam has been selected among the **TOP 25** startups in India from over 750+ applications received under the Operation Dronagiri program, organized by Ministry of Science and Technology.\n\nBhoomicam has been awarded a **₹10 Lakh funding grant** under the National Geospatial Startup Challenge.\n\nAs part of this, Bhoomicam will collaborate with local administrative bodies across five districts to deploy its geospatial solutions.\n\nWith: Prof. Siddhartha Khare",
       "imageFolder": "Dronagiri",
       "links": [
         {
@@ -648,58 +388,27 @@
           "href": "https://www.linkedin.com/posts/siddhartha-khare-503a4429_tides-bhoomicam-operationdronagiri-activity-7308167172218912770-fuxm",
           "icon": "linkedin"
         }
-      ],
-      "resolvedImages": [
-        "/Dronagiri/1.webp",
-        "/Dronagiri/2.webp",
-        "/Dronagiri/3.webp",
-        "/Dronagiri/4.webp",
-        "/Dronagiri/5.webp",
-        "/Dronagiri/6.webp",
-        "/Dronagiri/7.webp",
-        "/Dronagiri/8.webp",
-        "/Dronagiri/9.webp",
-        "/Dronagiri/10.webp",
-        "/Dronagiri/11.webp",
-        "/Dronagiri/12.webp",
-        "/Dronagiri/13.webp",
-        "/Dronagiri/14.webp"
       ]
     },
     {
+      "slug": "surya-drone-tech-dehradun-2025",
       "name": "Drone Tech Expo at Dehradun",
-      "description": "Represented IIT Roorkee's Drone Lab and Bhoomicam in Surya Drone Tech at Dehradun organised by the Central Command of the Indian Army. The exhibition is showcasing state-of-the-art drone technologies developed in the country as well as the application, which are tailored to multi-dimensional military requirements.\n\nWith: Sahil Kundal",
+      "category": "startup",
       "date": "2025-04-30",
       "location": "Dehradun Cantonment, Uttarakhand",
+      "place": "dehradun-cantonment",
+      "description": "I represented IIT Roorkee's Drone Lab and Bhoomicam at Surya Drone Tech in Dehradun, organised by the Central Command of the Indian Army. The exhibition showcased state-of-the-art drone technologies developed in India and their applications for multi-dimensional military requirements.\n\nWith: Sahil Kundal",
       "imageFolder": "Surya_Drone_Tech_Dehradun",
-      "links": [],
-      "resolvedImages": [
-        "/Surya_Drone_Tech_Dehradun/1.webp",
-        "/Surya_Drone_Tech_Dehradun/2.webp",
-        "/Surya_Drone_Tech_Dehradun/4.webp",
-        "/Surya_Drone_Tech_Dehradun/5.webp",
-        "/Surya_Drone_Tech_Dehradun/6.webp",
-        "/Surya_Drone_Tech_Dehradun/7.webp",
-        "/Surya_Drone_Tech_Dehradun/9.webp",
-        "/Surya_Drone_Tech_Dehradun/10.webp",
-        "/Surya_Drone_Tech_Dehradun/14.webp",
-        "/Surya_Drone_Tech_Dehradun/15.webp",
-        "/Surya_Drone_Tech_Dehradun/16.webp",
-        "/Surya_Drone_Tech_Dehradun/17.webp",
-        "/Surya_Drone_Tech_Dehradun/18.webp",
-        "/Surya_Drone_Tech_Dehradun/19.webp",
-        "/Surya_Drone_Tech_Dehradun/20.webp",
-        "/Surya_Drone_Tech_Dehradun/21.webp",
-        "/Surya_Drone_Tech_Dehradun/22.webp",
-        "/Surya_Drone_Tech_Dehradun/23.webp",
-        "/Surya_Drone_Tech_Dehradun/25.webp"
-      ]
+      "links": []
     },
     {
+      "slug": "geospatial-mapathon-2025",
       "name": "Geospatial Mapathon 2025 (Edition V)",
-      "description": "We participated in the FOSSEE Geospatial Mapathon 2025 from 15 March 2025 to 20 July 2025 and were recognized as **winners** in this open-source mapping challenge.\n\nOur project focused on **mapping forest fires caused by Jhum cultivation in Mizoram**. We used open-source QGIS software and satellite data from the Bhuvan portal to analyze how this traditional farming practice impacts the environment.\n\nWe were able to identify areas with high deforestation and frequent seasonal fires.\n\nWith: Shreyas Goswami, Ishfaqul Haque, Akash A.",
+      "category": "academic",
       "date": "2025-07-20",
       "location": "IIT Bombay",
+      "place": "iit-bombay",
+      "description": "We participated in the FOSSEE Geospatial Mapathon 2025 from 15 March 2025 to 20 July 2025 and were recognized as **winners** in this open-source mapping challenge.\n\nOur project focused on **mapping forest fires caused by Jhum cultivation in Mizoram**. We used open-source QGIS software and satellite data from the Bhuvan portal to analyze how this traditional farming practice impacts the environment.\n\nWe were able to identify areas with high deforestation and frequent seasonal fires.\n\nWith: Shreyas Goswami, Ishfaqul Haque, Akash A.",
       "imageFolder": "Mapathon",
       "links": [
         {
@@ -707,19 +416,16 @@
           "href": "https://iitb-aai-mapathon-2025.fossee.in/",
           "icon": "globe"
         }
-      ],
-      "resolvedImages": [
-        "/Mapathon/1.webp",
-        "/Mapathon/2.webp",
-        "/Mapathon/3.webp",
-        "/Mapathon/f228507f-1.webp"
       ]
     },
     {
+      "slug": "jaisalmer-soil-moisture-2025",
       "name": "Soil Moisture Sensors at Jaisalmer",
-      "description": "Visited Jaisalmer (18-29 Aug 2025) to install soil moisture sensors at 28 different locations across arid field sites. This field campaign was part of an ongoing project of Bhoomicam to evaluate the performance of a biofertilizer that claims to improve soil moisture retention under dry sandy soil conditions.\n\nAll sensors were calibrated and geo-tagged for spatial tracking and long-term monitoring.\n\nWith: Sushmit Srivastava",
+      "category": "startup",
       "date": "2025-08-21",
       "location": "Jaisalmer, Rajasthan",
+      "place": "jaisalmer",
+      "description": "I visited Jaisalmer (18–29 Aug 2025) to install soil moisture sensors at 28 different locations across arid field sites. This field campaign was part of an ongoing project of Bhoomicam to evaluate the performance of a biofertilizer that claims to improve soil moisture retention under dry sandy soil conditions.\n\nAll sensors were calibrated and geo-tagged for spatial tracking and long-term monitoring.\n\nWith: Sushmit Srivastava",
       "imageFolder": "Jaisalmer",
       "links": [
         {
@@ -727,113 +433,27 @@
           "href": "https://www.linkedin.com/posts/bhoomicam-private-limited_farmers-smart-ground-activity-7368484756222652417-FH_H",
           "icon": "linkedin"
         }
-      ],
-      "resolvedImages": [
-        "/Jaisalmer/1.webp",
-        "/Jaisalmer/2.webp",
-        "/Jaisalmer/3.webp",
-        "/Jaisalmer/4.webp",
-        "/Jaisalmer/5.webp",
-        "/Jaisalmer/6.webp",
-        "/Jaisalmer/7.webp",
-        "/Jaisalmer/8.webp",
-        "/Jaisalmer/9.webp",
-        "/Jaisalmer/10.webp",
-        "/Jaisalmer/11.webp",
-        "/Jaisalmer/13.webp",
-        "/Jaisalmer/15.webp",
-        "/Jaisalmer/17.webp",
-        "/Jaisalmer/19.webp",
-        "/Jaisalmer/21.webp",
-        "/Jaisalmer/22.webp",
-        "/Jaisalmer/23.webp",
-        "/Jaisalmer/24.webp",
-        "/Jaisalmer/25.webp",
-        "/Jaisalmer/26.webp",
-        "/Jaisalmer/27.webp",
-        "/Jaisalmer/28.webp",
-        "/Jaisalmer/29.webp",
-        "/Jaisalmer/30.webp",
-        "/Jaisalmer/31.webp",
-        "/Jaisalmer/32.webp",
-        "/Jaisalmer/33.webp",
-        "/Jaisalmer/34.webp",
-        "/Jaisalmer/35.webp",
-        "/Jaisalmer/36.webp",
-        "/Jaisalmer/37.webp",
-        "/Jaisalmer/38.webp",
-        "/Jaisalmer/39.webp",
-        "/Jaisalmer/40.webp",
-        "/Jaisalmer/41.webp",
-        "/Jaisalmer/42.webp",
-        "/Jaisalmer/43.webp",
-        "/Jaisalmer/44.webp",
-        "/Jaisalmer/45.webp",
-        "/Jaisalmer/46.webp",
-        "/Jaisalmer/47.webp",
-        "/Jaisalmer/48.webp",
-        "/Jaisalmer/49.webp",
-        "/Jaisalmer/50.webp",
-        "/Jaisalmer/51.webp",
-        "/Jaisalmer/52.webp",
-        "/Jaisalmer/53.webp",
-        "/Jaisalmer/54.webp",
-        "/Jaisalmer/0.webp"
       ]
     },
     {
+      "slug": "ntpc-plantation-health-2025",
       "name": "Plantation Health Assessment at NTPC",
-      "description": "Conducted a detailed plantation health assessment of the 108-hectare green belt at NTPC Solapur using multispectral UAV (Trinity F90+) data. The objective was to evaluate individual tree health across the entire industrial campus.\n\nWith: Gaurav Singh Bareth",
+      "category": "academic",
       "date": "2025-10-12",
       "location": "NTPC Solapur, Maharashtra",
+      "place": "ntpc-solapur",
+      "description": "We conducted a detailed plantation health assessment of the 108-hectare green belt at NTPC Solapur using multispectral UAV (Trinity F90+) data. The objective was to evaluate individual tree health across the entire industrial campus.\n\nWith: Gaurav Singh Bareth",
       "imageFolder": "NTPC_Solapur",
-      "links": [],
-      "resolvedImages": [
-        "/NTPC_Solapur/1.webp",
-        "/NTPC_Solapur/2.webp",
-        "/NTPC_Solapur/3.webp",
-        "/NTPC_Solapur/4.webp",
-        "/NTPC_Solapur/5.webp",
-        "/NTPC_Solapur/6.webp",
-        "/NTPC_Solapur/7.webp",
-        "/NTPC_Solapur/9.webp",
-        "/NTPC_Solapur/12.webp",
-        "/NTPC_Solapur/14.webp",
-        "/NTPC_Solapur/15.webp",
-        "/NTPC_Solapur/16.webp",
-        "/NTPC_Solapur/17.webp",
-        "/NTPC_Solapur/18.webp",
-        "/NTPC_Solapur/19.webp",
-        "/NTPC_Solapur/20.webp",
-        "/NTPC_Solapur/21.webp",
-        "/NTPC_Solapur/22.webp",
-        "/NTPC_Solapur/23.webp",
-        "/NTPC_Solapur/24.webp",
-        "/NTPC_Solapur/25.webp",
-        "/NTPC_Solapur/26.webp",
-        "/NTPC_Solapur/27.webp",
-        "/NTPC_Solapur/28.webp",
-        "/NTPC_Solapur/29.webp",
-        "/NTPC_Solapur/30.webp",
-        "/NTPC_Solapur/31.webp",
-        "/NTPC_Solapur/32.webp",
-        "/NTPC_Solapur/33.webp",
-        "/NTPC_Solapur/34.webp",
-        "/NTPC_Solapur/35.webp",
-        "/NTPC_Solapur/36.webp",
-        "/NTPC_Solapur/37.webp",
-        "/NTPC_Solapur/38.webp",
-        "/NTPC_Solapur/39.webp",
-        "/NTPC_Solapur/40.webp",
-        "/NTPC_Solapur/41.webp",
-        "/NTPC_Solapur/0.webp"
-      ]
+      "links": []
     },
     {
+      "slug": "ai-grand-challenge-2025",
       "name": "NTRO AI Grand Challenge",
-      "description": "Our startup **Bhoomicam**, led by Prof. Siddhartha Khare, has been selected among the **TOP 6 startups nationwide** for Stage 2 of the NCIIPC Startup India AI Grand Challenge 2025.\n\nPS 10: Change Detection in Satellite Imagery\n\nAs part of this national recognition, Bhoomicam has received a **₹3 lakh prize** and a **₹5 lakh development grant**.\n\nWith: Shreyas Goswami",
+      "category": "startup",
       "date": "2025-11-17",
       "location": "IIT Delhi",
+      "place": "iit-delhi",
+      "description": "Our startup **Bhoomicam**, led by Prof. Siddhartha Khare, has been selected among the **TOP 6 startups nationwide** for Stage 2 of the NCIIPC Startup India AI Grand Challenge 2025.\n\nPS 10: Change Detection in Satellite Imagery\n\nAs part of this national recognition, Bhoomicam has received a **₹3 lakh prize** and a **₹5 lakh development grant**.\n\nWith: Shreyas Goswami",
       "imageFolder": "NTRO_Challenge",
       "links": [
         {
@@ -846,45 +466,16 @@
           "href": "https://www.ai-grand-challenge.in/",
           "icon": "globe"
         }
-      ],
-      "resolvedImages": [
-        "/NTRO_Challenge/1.webp",
-        "/NTRO_Challenge/2.webp",
-        "/NTRO_Challenge/3.webp",
-        "/NTRO_Challenge/4.webp",
-        "/NTRO_Challenge/5.webp",
-        "/NTRO_Challenge/7.webp",
-        "/NTRO_Challenge/8.webp",
-        "/NTRO_Challenge/9.webp",
-        "/NTRO_Challenge/10.webp",
-        "/NTRO_Challenge/11.webp",
-        "/NTRO_Challenge/12.webp",
-        "/NTRO_Challenge/13.webp",
-        "/NTRO_Challenge/14.webp",
-        "/NTRO_Challenge/16.webp",
-        "/NTRO_Challenge/17.webp",
-        "/NTRO_Challenge/18.webp",
-        "/NTRO_Challenge/19.webp",
-        "/NTRO_Challenge/20.webp",
-        "/NTRO_Challenge/21.webp",
-        "/NTRO_Challenge/22.webp",
-        "/NTRO_Challenge/24.webp",
-        "/NTRO_Challenge/25.webp",
-        "/NTRO_Challenge/26.webp",
-        "/NTRO_Challenge/27.webp",
-        "/NTRO_Challenge/29.webp",
-        "/NTRO_Challenge/30.webp",
-        "/NTRO_Challenge/32.webp",
-        "/NTRO_Challenge/33.webp",
-        "/NTRO_Challenge/34.webp"
       ]
     },
     {
+      "slug": "geosmart-india-2025",
       "name": "GeoSmart India Conference",
-      "description": "Presented my PhD research at GeoSmart India 2025, one of Asia's premier geospatial conferences.\n\nI had the opportunity to network and share insights on vegetation phenology monitoring using multi-sensor approaches with my collegues from Shiv Nadar University - Dr. Ghanshyam Giri, Manoj Yadav, Apoorva Yadav and junior from MANIT, Bhopal - Pournima.\n\n With: My supervisor -  Prof. Siddhartha Khare",
+      "category": "academic",
       "date": "2025-12-04",
       "location": "Bharat Mandapam, New Delhi",
-      "href": "https://geospatialworld.net/gsi/2025/technical-sessions.php",
+      "place": "bharat-mandapam",
+      "description": "I presented my PhD research at GeoSmart India 2025, one of Asia's premier geospatial conferences.\n\nI had the opportunity to network and share insights on vegetation phenology monitoring using multi-sensor approaches with my colleagues from Shiv Nadar University - Dr. Ghanshyam Giri, Manoj Yadav, Apoorva Yadav and junior from MANIT, Bhopal - Pournima.\n\nWith: my supervisor - Prof. Siddhartha Khare",
       "imageFolder": "GeoSmart_Dec_2025",
       "links": [
         {
@@ -897,33 +488,16 @@
           "href": "https://geospatialworld.net/gsi/2025/technical-sessions.php",
           "icon": "globe"
         }
-      ],
-      "resolvedImages": [
-        "/GeoSmart_Dec_2025/1.webp",
-        "/GeoSmart_Dec_2025/2.webp",
-        "/GeoSmart_Dec_2025/3.webp",
-        "/GeoSmart_Dec_2025/4.webp",
-        "/GeoSmart_Dec_2025/5.webp",
-        "/GeoSmart_Dec_2025/6.webp",
-        "/GeoSmart_Dec_2025/7.webp",
-        "/GeoSmart_Dec_2025/8.webp",
-        "/GeoSmart_Dec_2025/9.webp",
-        "/GeoSmart_Dec_2025/10.webp",
-        "/GeoSmart_Dec_2025/11.webp",
-        "/GeoSmart_Dec_2025/12.webp",
-        "/GeoSmart_Dec_2025/13.webp",
-        "/GeoSmart_Dec_2025/14.webp",
-        "/GeoSmart_Dec_2025/15.webp",
-        "/GeoSmart_Dec_2025/16.webp",
-        "/GeoSmart_Dec_2025/17.webp",
-        "/GeoSmart_Dec_2025/18.webp"
       ]
     },
     {
+      "slug": "100-startups-iit-ropar-2025",
       "name": "100 Startups, 100 Days at IIT Ropar",
-      "description": "Attended the AI Impact Pre-Summit (#100Startups100Days) organized by iHub-AWaDH at IIT Ropar. Our startup **Bhoomicam Private Limited** was awarded a grant support of ₹2 Lakhs.\n\nWe also had the privilege of meeting **Prof. HC Verma**, a renowned physicist and a great teacher who made physics interesting in our school times with his books.\n\nWith: Prof. Siddhartha Khare",
+      "category": "startup",
       "date": "2025-12-16",
       "location": "IIT Ropar, Punjab",
+      "place": "iit-ropar",
+      "description": "I attended the AI Impact Pre-Summit (#100Startups100Days) organized by iHub-AWaDH at IIT Ropar. Our startup **Bhoomicam Private Limited** was awarded a grant support of ₹2 Lakhs.\n\nWe also had the privilege of meeting **Prof. HC Verma**, a renowned physicist and a great teacher who made physics interesting in our school times with his books.\n\nWith: Prof. Siddhartha Khare",
       "imageFolder": "100Startups_IIT_Ropar",
       "links": [
         {
@@ -931,25 +505,16 @@
           "href": "https://www.linkedin.com/posts/indian-institute-of-technology-roorkee_iitroorkee-tidesiitroorkee-startupsuccess-activity-7407025989089783808-wF1Q",
           "icon": "linkedin"
         }
-      ],
-      "resolvedImages": [
-        "/100Startups_IIT_Ropar/1.webp",
-        "/100Startups_IIT_Ropar/2.webp",
-        "/100Startups_IIT_Ropar/3.webp",
-        "/100Startups_IIT_Ropar/4.webp",
-        "/100Startups_IIT_Ropar/5.webp",
-        "/100Startups_IIT_Ropar/6.webp",
-        "/100Startups_IIT_Ropar/7.webp",
-        "/100Startups_IIT_Ropar/8.webp",
-        "/100Startups_IIT_Ropar/9.webp",
-        "/100Startups_IIT_Ropar/10.webp"
       ]
     },
     {
+      "slug": "nrsc-coding-challenge-2025",
       "name": "NRSC Offline Coding Challenge 2025",
-      "description": "We participated in the NRSC Offline EO Data Processing Challenge from 03 June 2025 to 06 July 2025. Our aim was to develop an automated cloud and shadow masking model for Resourcesat-2/2A LISS-IV satellite images using open-source tools.\n\nWe were awarded **Second Winner** in the competition and received certificates along with a scale model of LVM3 as a memento.\n\nWith: Shreyas Goswami, Isfaqul Haque, Akash A.",
+      "category": "academic",
       "date": "2026-01-28",
       "location": "NRSC, ISRO, Hyderabad",
+      "place": "nrsc-hyderabad",
+      "description": "We participated in the NRSC Offline EO Data Processing Challenge from 03 June 2025 to 06 July 2025. Our aim was to develop an automated cloud and shadow masking model for Resourcesat-2/2A LISS-IV satellite images using open-source tools.\n\nWe were awarded **Second Winner** in the competition and received certificates along with a scale model of LVM3 as a memento.\n\nWith: Shreyas Goswami, Isfaqul Haque, Akash A.",
       "imageFolder": "NRSC",
       "links": [
         {
@@ -962,69 +527,18 @@
           "href": "https://github.com/goswamishreyas/NRCC251168/tree/main/NRCC251168_output",
           "icon": "github"
         }
-      ],
-      "resolvedImages": [
-        "/NRSC/1.webp",
-        "/NRSC/2.webp",
-        "/NRSC/3.webp",
-        "/NRSC/4.webp",
-        "/NRSC/5.webp",
-        "/NRSC/6.webp",
-        "/NRSC/7.webp",
-        "/NRSC/8.webp",
-        "/NRSC/9.webp",
-        "/NRSC/10.webp",
-        "/NRSC/11.webp",
-        "/NRSC/12.webp",
-        "/NRSC/13.webp",
-        "/NRSC/14.webp",
-        "/NRSC/15.webp",
-        "/NRSC/16.webp",
-        "/NRSC/17.webp",
-        "/NRSC/18.webp",
-        "/NRSC/19.webp",
-        "/NRSC/20.webp",
-        "/NRSC/21.webp"
       ]
     },
     {
+      "slug": "almora-phenomet-2026",
       "name": "PhenoMet Installation at Almora",
-      "description": "First visited Almora on 30–31 Jan 2026 for site selection in pine and oak dominated forest. Returned again on 14–22 Feb 2026 to install a CCFC PhenoCam with meteorological sensors — PAR, wind, soil moisture, relative humidity, temperature, precipitation, etc.\n\nDuring our visit, we also observed early Rhododendron flowering that typically expected in April–May; and included the tree in our camera's field of view.\n\nWith: Suyash Khare & Gaurav Singh Bareth",
+      "category": "academic",
       "date": "2026-02-14",
       "location": "Sitlakhet, Almora, Uttarakhand",
+      "place": "sitlakhet-almora",
+      "description": "We first visited Almora on 30–31 Jan 2026 to select a site in pine- and oak-dominated forest, and returned on 14–22 Feb 2026 to install a CCFC PhenoCam with meteorological sensors — PAR, wind, soil moisture, relative humidity, temperature, precipitation, etc.\n\nDuring our visit, we also observed early Rhododendron flowering that is typically expected in April–May; and included the tree in our camera's field of view.\n\nWith: Suyash Khare & Gaurav Singh Bareth",
       "imageFolder": "Almora_Phenocam_Installation",
-      "links": [],
-      "resolvedImages": [
-        "/Almora_Phenocam_Installation/1.webp",
-        "/Almora_Phenocam_Installation/2.webp",
-        "/Almora_Phenocam_Installation/3.webp",
-        "/Almora_Phenocam_Installation/4.webp",
-        "/Almora_Phenocam_Installation/5.webp",
-        "/Almora_Phenocam_Installation/6.webp",
-        "/Almora_Phenocam_Installation/7.webp",
-        "/Almora_Phenocam_Installation/8.webp",
-        "/Almora_Phenocam_Installation/9.webp",
-        "/Almora_Phenocam_Installation/10.webp",
-        "/Almora_Phenocam_Installation/11.webp",
-        "/Almora_Phenocam_Installation/12.webp",
-        "/Almora_Phenocam_Installation/13.webp",
-        "/Almora_Phenocam_Installation/14.webp",
-        "/Almora_Phenocam_Installation/15.webp",
-        "/Almora_Phenocam_Installation/16.webp",
-        "/Almora_Phenocam_Installation/17.webp",
-        "/Almora_Phenocam_Installation/18.webp",
-        "/Almora_Phenocam_Installation/21.webp",
-        "/Almora_Phenocam_Installation/22.webp",
-        "/Almora_Phenocam_Installation/23.webp",
-        "/Almora_Phenocam_Installation/24.webp",
-        "/Almora_Phenocam_Installation/25.webp",
-        "/Almora_Phenocam_Installation/26.webp",
-        "/Almora_Phenocam_Installation/27.webp",
-        "/Almora_Phenocam_Installation/28.webp",
-        "/Almora_Phenocam_Installation/29.webp",
-        "/Almora_Phenocam_Installation/31.webp",
-        "/Almora_Phenocam_Installation/33.webp"
-      ]
+      "links": []
     }
   ]
 }

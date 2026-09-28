@@ -2,8 +2,10 @@
   "career": [
     {
       "name": "Bhoomicam Pvt Ltd",
+      "shortName": "Bhoomicam",
       "href": "https://www.bhoomicam.com/",
       "logo": "/img/bhoomicam-mark.webp",
+      "place": "bhoomicam-tides",
       "positions": [
         {
           "title": "Co-Director",
@@ -25,8 +27,10 @@
     },
     {
       "name": "Indian Institute of Technology Roorkee",
+      "shortName": "IIT Roorkee",
       "href": "https://www.iitr.ac.in/",
       "logo": "/img/iitr.webp",
+      "place": "iit-roorkee",
       "positions": [
         {
           "title": "Project Fellow (post-doc)",
@@ -56,8 +60,10 @@
     },
     {
       "name": "BHEL, Yelahanka, Bengaluru",
+      "shortName": "BHEL",
       "href": "https://www.bhel.com/",
       "logo": "/img/bhel.webp",
+      "place": "bhel-yelahanka",
       "positions": [
         {
           "title": "Civil Site Engineer",
@@ -71,8 +77,10 @@
     },
     {
       "name": "DK Architects",
+      "shortName": "DK Architects",
       "href": "https://web.archive.org/web/20201128125716/http://dkarchitects.in/",
       "logo": "/img/dk.webp",
+      "place": null,
       "positions": [
         {
           "title": "Architectural Design Intern",

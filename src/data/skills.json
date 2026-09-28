@@ -119,10 +119,14 @@
               "gradient": "from-[#2D6A4F] to-[#40916C]"
             },
             {
-              "name": "AWS",
+              "name": "Weather Station",
               "logo": "/skills/aws.webp",
-              "model": "Automatic Weather Station",
-              "aliases": ["automatic weather station", "weather station"],
+              "model": "Automatic Weather Station (AWS)",
+              "aliases": [
+                "AWS",
+                "automatic weather station",
+                "weather station"
+              ],
               "experience": "I work with automatic weather stations alongside PhenoCam sites to connect crop development with local weather.",
               "tasks": [
                 "meteorological monitoring",
@@ -373,7 +377,11 @@
               "name": "Pix4D Mapper",
               "logo": "/skills/pix4d.webp",
               "experience": "Pix4D helps me turn overlapping UAV images into orthomosaics, surface models, and survey-ready outputs.",
-              "tasks": ["UAV photogrammetry", "orthomosaics", "surface models"],
+              "tasks": [
+                "UAV photogrammetry",
+                "orthomosaics",
+                "surface models"
+              ],
               "invertDark": true,
               "gradient": "from-[#E01E25] to-[#B0171C]"
             },
@@ -410,7 +418,11 @@
               "name": "AutoCAD 3D",
               "logo": "/skills/autocad.webp",
               "experience": "My civil-engineering training began with AutoCAD for technical drawings and three-dimensional design work.",
-              "tasks": ["technical drafting", "3D modelling", "civil drawings"],
+              "tasks": [
+                "technical drafting",
+                "3D modelling",
+                "civil drawings"
+              ],
               "invertDark": true,
               "gradient": "from-[#E61F25] to-[#B0171C]"
             },

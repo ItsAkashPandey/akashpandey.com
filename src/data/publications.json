@@ -2,6 +2,7 @@
   "publications": [
     {
       "id": 1,
+      "slug": "wheat-phenology-phenocam-2026",
       "title": "Evaluation of PlanetScope and Sentinel-2 Derived Wheat Crop Phenology Using Infrared-Enabled PhenoCam and Field Observations",
       "authors": "Akash Kumar and Siddhartha Khare",
       "year": 2026,
@@ -30,6 +31,7 @@
     },
     {
       "id": 2,
+      "slug": "phenocam-phenology-workflow-aogs-2026",
       "title": "An Automated Workflow for Extracting Land Surface Phenology from Phenocam Time-lapse Images",
       "authors": "Akash Kumar and Siddhartha Khare",
       "year": 2026,
@@ -39,6 +41,7 @@
     },
     {
       "id": 3,
+      "slug": "phenocam-crop-monitoring-egu-2026",
       "title": "Establishing PhenoCam-based Monitoring of Wheat and Rice Phenology in India with Satellite and Meteorological Data",
       "authors": "Akash Kumar and Siddhartha Khare",
       "year": 2026,
@@ -63,6 +66,7 @@
     },
     {
       "id": 4,
+      "slug": "field-segmentation-crop-yield",
       "title": "Deep Learning-Based Field Segmentation and Multitemporal Sentinel-2 Analysis for Crop Yield Estimation in Smallholder Systems of India",
       "authors": "Akash Kumar, S. Goswami, and Siddhartha Khare",
       "year": 2026,
@@ -71,6 +75,7 @@
     },
     {
       "id": 5,
+      "slug": "rice-phenology-climate-2026",
       "title": "Integrating PhenoCam and AWS Data to Quantify Stage-Specific Climatic Impacts on Rice Phenology",
       "authors": "Akash Kumar, Zainab Khan, Siddhartha Khare, Umesh Kumar Saxena, and Purushottam Kumar",
       "year": 2026,
@@ -92,6 +97,7 @@
     },
     {
       "id": 6,
+      "slug": "phenoai-2025",
       "title": "PhenoAI: A deep learning Python framework to process close-range time-lapse PhenoCam data",
       "authors": "Akash Kumar, Siddhartha Khare, and Sergio Rossi",
       "year": 2025,
@@ -121,6 +127,7 @@
     },
     {
       "id": 7,
+      "slug": "black-spruce-phenology-2025",
       "title": "A comparison of PhenoCam and satellite indices with in-situ observations for black spruce in the boreal forest of Quebec, Canada",
       "authors": "Akash Kumar, Ganesh Sai Sivani Noolu, Siddhartha Khare, and Sergio Rossi",
       "year": 2025,
@@ -144,6 +151,7 @@
     },
     {
       "id": 8,
+      "slug": "evergreen-phenology-ingarss-2024",
       "title": "Linking Phenocam Derived Phenology With Satellite and Field Observations in the Evergreen Forest",
       "authors": "Akash Kumar, Noolu G. S. Sivani, Siddhartha Khare, and Sergio Rossi",
       "year": 2024,
@@ -163,6 +171,7 @@
     },
     {
       "id": 9,
+      "slug": "smart-agriculture-platforms-2023",
       "title": "Smart agriculture platforms: Case studies",
       "authors": "Tushar Bharadwaj, Akash Kumar, and Siddhartha Khare",
       "year": 2023,
