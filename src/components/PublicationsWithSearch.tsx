@@ -1,8 +1,41 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import {
+  ChapterIcon,
+  DraftIcon,
+  LegendIcon,
+  PlateIcon,
+  PodiumIcon,
+  SeriesPageIcon,
+  VolumeIcon,
+} from "@/components/icons/FieldIcons";
+import { HighlightText } from "@/components/HighlightedText";
+import ImageLightbox from "@/components/ImageLightbox";
+import StackedImageDeck, { DECK_SIZE } from "@/components/StackedImageDeck";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  publicationHref,
+  publicationLink,
+  publicationVenue,
+} from "@/lib/content-utils";
+import type { Photo } from "@/lib/photo";
+import type { Publication } from "@/lib/schemas";
+import {
+  createSearchDocument,
+  normalizeSearchText,
+  scoreSearchDocument,
+} from "@/lib/search";
+import { useUrlFilters } from "@/lib/use-url-filters";
+import { cn } from "@/lib/utils";
 import {
   ArrowUpDown,
   CalendarDays,
@@ -14,197 +47,150 @@ import {
   Search,
   SlidersHorizontal,
 } from "lucide-react";
-import {
-  ChapterIcon,
-  DraftIcon,
-  PlateIcon,
-  PodiumIcon,
-  SeriesPageIcon,
-  VolumeIcon,
-} from "@/components/icons/FieldIcons";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { HighlightText } from "@/components/HighlightedText";
-import ImageLightbox from "@/components/ImageLightbox";
-import StackedImageDeck, { DECK_SIZE } from "@/components/StackedImageDeck";
-import {
-  createSearchDocument,
-  normalizeSearchText,
-  scoreSearchDocument,
-} from "@/lib/search";
-import { cn } from "@/lib/utils";
+import Image from "next/image";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 
-interface PublicationMedia {
+export type PublicationMediaItem = {
   label: string;
-  image: string;
-  fullImage?: string;
   alt: string;
-}
-
-interface Publication {
-  id: number;
-  title: string;
-  authors: string;
-  year: number;
-  type: "Journal" | "Conference" | "Book" | "Book Chapter" | "Manuscript";
-  journal?: string;
-  journalLogo?: string;
-  journalQuartile?: string;
-  impactFactor?: number;
-  conference?: string;
-  conferenceLogo?: string;
-  book?: string;
-  publisher?: string;
-  publisherLogo?: string;
-  volume?: number;
-  article?: string;
-  pages?: string;
-  doi?: string;
-  preprint?: string;
-  media?: PublicationMedia[];
-  status: "Published" | "Accepted" | "Under Review" | "In Preparation";
-}
-
-interface Props {
-  publications: Publication[];
-}
-
-type SortOption = "newest" | "oldest" | "title";
-type PublicationTypeFilter = "all" | Publication["type"];
-
-const publicationTypeLabels: Record<Publication["type"], string> = {
-  Journal: "Journals",
-  Conference: "Conferences",
-  Book: "Books",
-  "Book Chapter": "Book Chapter",
-  Manuscript: "Manuscripts",
+  photo: Photo;
+  full: Photo;
 };
+
+export type PublicationListItem = Omit<Publication, "media"> & {
+  media: PublicationMediaItem[];
+};
+
+type PublicationType = Publication["type"];
+type SortOption = "newest" | "oldest" | "title";
+type Filters = { query: string; year: string; type: string; sort: string };
+
+const DEFAULT_FILTERS: Filters = {
+  query: "",
+  year: "all",
+  type: "all",
+  sort: "newest",
+};
+const FILTER_KEYS = { query: "q", year: "year", type: "type", sort: "sort" };
+
+const TYPE_ORDER: PublicationType[] = [
+  "Journal",
+  "Conference",
+  "Book Chapter",
+  "Book",
+  "Manuscript",
+];
 
 const typeStyles = {
   Journal: {
-    label: "Journal",
+    label: "Journals",
     Icon: SeriesPageIcon,
-    rail: "bg-emerald-500",
-    chip: "border-emerald-600/35 text-emerald-800 dark:border-emerald-400/30 dark:text-emerald-200",
-    ink: "text-emerald-700 dark:text-emerald-300",
+    rail: "bg-tone-green",
+    chip: "border-tone-green/35 text-tone-green",
+    ink: "text-tone-green",
+    surface: "record-surface--sage",
   },
   Conference: {
-    label: "Conference",
+    label: "Conferences",
     Icon: PodiumIcon,
-    rail: "bg-sky-500",
-    chip: "border-sky-600/35 text-sky-800 dark:border-sky-400/30 dark:text-sky-200",
-    ink: "text-sky-700 dark:text-sky-300",
+    rail: "bg-tone-sky",
+    chip: "border-tone-sky/35 text-tone-sky",
+    ink: "text-tone-sky",
+    surface: "record-surface--blue",
   },
   Book: {
-    label: "Book",
+    label: "Books",
     Icon: VolumeIcon,
-    rail: "bg-amber-500",
-    chip: "border-amber-700/35 text-amber-900 dark:border-amber-400/30 dark:text-amber-200",
-    ink: "text-amber-700 dark:text-amber-300",
+    rail: "bg-tone-teal",
+    chip: "border-tone-teal/35 text-tone-teal",
+    ink: "text-tone-teal",
+    surface: "record-surface--coral",
   },
   "Book Chapter": {
-    label: "Book Chapter",
+    label: "Book chapters",
     Icon: ChapterIcon,
-    rail: "bg-orange-500",
-    chip: "border-orange-700/35 text-orange-900 dark:border-orange-400/30 dark:text-orange-200",
-    ink: "text-orange-700 dark:text-orange-300",
+    rail: "bg-tone-amber",
+    chip: "border-tone-amber/35 text-tone-amber",
+    ink: "text-tone-amber",
+    surface: "record-surface--coral",
   },
   Manuscript: {
-    label: "Manuscript",
+    label: "Manuscripts",
     Icon: DraftIcon,
-    rail: "bg-violet-500",
-    chip: "border-violet-700/35 text-violet-900 dark:border-violet-400/30 dark:text-violet-200",
-    ink: "text-violet-700 dark:text-violet-300",
+    rail: "bg-tone-violet",
+    chip: "border-tone-violet/35 text-tone-violet",
+    ink: "text-tone-violet",
+    surface: "",
   },
 } satisfies Record<
-  Publication["type"],
+  PublicationType,
   {
     label: string;
     Icon: typeof SeriesPageIcon;
     rail: string;
     chip: string;
     ink: string;
+    surface: string;
   }
 >;
 
 const statusStyles = {
-  Published: {
-    Icon: CheckCircle2,
-    className: "text-emerald-700 dark:text-emerald-300",
-    dot: "bg-emerald-500",
-  },
-  Accepted: {
-    Icon: CheckCircle2,
-    className: "text-teal-700 dark:text-teal-300",
-    dot: "bg-teal-500",
-  },
-  "Under Review": {
-    Icon: Clock3,
-    className: "text-sky-700 dark:text-sky-300",
-    dot: "bg-sky-500",
-  },
-  "In Preparation": {
-    Icon: Hourglass,
-    className: "text-amber-700 dark:text-amber-300",
-    dot: "bg-amber-500",
-  },
+  Published: { Icon: CheckCircle2, className: "text-tone-green" },
+  Accepted: { Icon: CheckCircle2, className: "text-tone-teal" },
+  "Under Review": { Icon: Clock3, className: "text-tone-sky" },
+  "In Preparation": { Icon: Hourglass, className: "text-tone-amber" },
 } satisfies Record<
   Publication["status"],
-  { Icon: typeof CheckCircle2; className: string; dot: string }
+  { Icon: typeof CheckCircle2; className: string }
 >;
 
-export default function PublicationsWithSearch({ publications }: Props) {
-  const [query, setQuery] = useState("");
-  const [sortBy, setSortBy] = useState<SortOption>("newest");
-  const [selectedYear, setSelectedYear] = useState<string>("all");
-  const [selectedType, setSelectedType] =
-    useState<PublicationTypeFilter>("all");
-  const normalizedQuery = normalizeSearchText(query);
+export default function PublicationsWithSearch({
+  publications,
+}: {
+  publications: PublicationListItem[];
+}) {
+  const years = useMemo(
+    () =>
+      Array.from(new Set(publications.map((pub) => pub.year))).sort(
+        (a, b) => b - a,
+      ),
+    [publications],
+  );
 
-  const years = useMemo(() => {
-    return Array.from(new Set(publications.map((pub) => pub.year))).sort(
-      (a, b) => b - a,
-    );
-  }, [publications]);
+  const [filters, updateFilters, resetFilters] = useUrlFilters<Filters>(
+    DEFAULT_FILTERS,
+    FILTER_KEYS,
+    (raw) => ({
+      ...(raw.query ? { query: raw.query } : {}),
+      ...(raw.year && years.includes(Number(raw.year)) ? { year: raw.year } : {}),
+      ...(raw.type && TYPE_ORDER.includes(raw.type as PublicationType)
+        ? { type: raw.type }
+        : {}),
+      ...(raw.sort === "oldest" || raw.sort === "title" ? { sort: raw.sort } : {}),
+    }),
+  );
+  const normalizedQuery = normalizeSearchText(filters.query);
 
   const publicationTypes = useMemo(() => {
-    const typeOrder: Publication["type"][] = [
-      "Journal",
-      "Conference",
-      "Book Chapter",
-      "Book",
-      "Manuscript",
-    ];
-    const availableTypes = new Set(publications.map((pub) => pub.type));
-    return typeOrder.filter((type) => availableTypes.has(type));
+    const available = new Set(publications.map((pub) => pub.type));
+    return TYPE_ORDER.filter((type) => available.has(type));
   }, [publications]);
 
   const searchIndex = useMemo(
     () =>
       new Map(
-        publications.map((pub) => {
-          const venue =
-            pub.journal || pub.conference || pub.book || pub.publisher || "";
-          return [
-            pub.id,
-            createSearchDocument([
-              { value: pub.title, weight: 6 },
-              { value: pub.authors, weight: 3 },
-              { value: venue, weight: 3 },
-              { value: pub.type, weight: 2 },
-              { value: pub.status, weight: 2 },
-              { value: pub.year },
-            ]),
-          ];
-        }),
+        publications.map((pub) => [
+          pub.id,
+          createSearchDocument([
+            { value: pub.title, weight: 6 },
+            { value: pub.authors, weight: 3 },
+            { value: publicationVenue(pub), weight: 3 },
+            { value: pub.type, weight: 2 },
+            { value: pub.status, weight: 2 },
+            { value: pub.year },
+          ]),
+        ]),
       ),
     [publications],
   );
@@ -213,65 +199,44 @@ export default function PublicationsWithSearch({ publications }: Props) {
     return publications
       .map((pub) => ({
         pub,
-        score: scoreSearchDocument(
-          searchIndex.get(pub.id) ?? [],
-          normalizedQuery,
-        ),
+        score: scoreSearchDocument(searchIndex.get(pub.id) ?? [], normalizedQuery),
       }))
       .filter(({ pub, score }) => {
         if (normalizedQuery && score === 0) return false;
-        if (selectedYear !== "all" && pub.year !== parseInt(selectedYear)) {
+        if (filters.year !== "all" && pub.year !== Number(filters.year)) {
           return false;
         }
-        if (selectedType !== "all" && pub.type !== selectedType) return false;
-
-        return true;
+        return filters.type === "all" || pub.type === filters.type;
       })
       .sort((a, b) => {
         if (normalizedQuery && b.score !== a.score) return b.score - a.score;
-        switch (sortBy) {
-          case "newest":
-            return b.pub.year - a.pub.year || a.pub.id - b.pub.id;
+        switch (filters.sort as SortOption) {
           case "oldest":
             return a.pub.year - b.pub.year || a.pub.id - b.pub.id;
           case "title":
             return a.pub.title.localeCompare(b.pub.title);
           default:
-            return 0;
+            return b.pub.year - a.pub.year || a.pub.id - b.pub.id;
         }
       })
       .map(({ pub }) => pub);
-  }, [
-    publications,
-    normalizedQuery,
-    searchIndex,
-    selectedYear,
-    selectedType,
-    sortBy,
-  ]);
+  }, [publications, normalizedQuery, searchIndex, filters]);
 
   const typeCounts = useMemo(() => {
-    return publications.reduce(
-      (counts, pub) => {
-        counts[pub.type] = (counts[pub.type] || 0) + 1;
-        return counts;
-      },
-      {} as Partial<Record<Publication["type"], number>>,
-    );
+    const counts: Partial<Record<PublicationType | "all", number>> = {
+      all: publications.length,
+    };
+    for (const pub of publications) counts[pub.type] = (counts[pub.type] ?? 0) + 1;
+    return counts;
   }, [publications]);
-
-  const resetFilters = () => {
-    setQuery("");
-    setSelectedYear("all");
-    setSelectedType("all");
-    setSortBy("newest");
-  };
 
   const isFiltered =
     normalizedQuery !== "" ||
-    selectedYear !== "all" ||
-    selectedType !== "all" ||
-    sortBy !== "newest";
+    filters.year !== "all" ||
+    filters.type !== "all" ||
+    filters.sort !== "newest";
+
+  const formatOptions: (PublicationType | "all")[] = ["all", ...publicationTypes];
 
   return (
     <div className="grid min-w-0 gap-5 lg:grid-cols-[232px_minmax(0,1fr)] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-8">
@@ -279,10 +244,10 @@ export default function PublicationsWithSearch({ publications }: Props) {
         <div className="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-4">
           <div>
             <div className="flex items-center gap-2">
-              <SlidersHorizontal className="size-4" />
+              <SlidersHorizontal className="size-4" aria-hidden />
               <h2 className="text-sm font-semibold">Library</h2>
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">
+            <p className="text-muted-foreground mt-1 text-xs" aria-live="polite">
               {filtered.length} publication{filtered.length !== 1 ? "s" : ""}
             </p>
           </div>
@@ -302,47 +267,43 @@ export default function PublicationsWithSearch({ publications }: Props) {
 
         <div className="flex flex-col gap-5">
           <div className="flex min-w-0 flex-col gap-1.5">
-            <Label
-              htmlFor="publication-search"
-              className="text-muted-foreground px-1 text-[9px] font-semibold uppercase"
-            >
+            <Label htmlFor="publication-search" className="filter-label">
               Search
             </Label>
             <div className="relative min-w-0">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
-                <Search className="text-muted-foreground size-3.5" />
+                <Search className="text-muted-foreground size-3.5" aria-hidden />
               </span>
               <Input
                 id="publication-search"
                 type="search"
                 placeholder="Title, author, venue"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                value={filters.query}
+                onChange={(event) => updateFilters({ query: event.target.value })}
                 className="border-border/60 bg-background/70 h-10 rounded-lg pl-10 text-sm shadow-none"
               />
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <p className="text-muted-foreground px-1 text-[9px] font-semibold uppercase">
-              Format
-            </p>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="filter-label mb-2">Format</legend>
             <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
-              {publicationTypes.map((type) => {
-                const config = typeStyles[type];
+              {formatOptions.map((type) => {
+                const config =
+                  type === "all"
+                    ? { label: "All formats", Icon: LegendIcon, ink: "text-foreground/80" }
+                    : typeStyles[type];
                 const Icon = config.Icon;
+                const selected = filters.type === type;
                 return (
                   <button
                     key={type}
                     type="button"
-                    onClick={() =>
-                      setSelectedType((current) =>
-                        current === type ? "all" : type,
-                      )
-                    }
+                    aria-pressed={selected}
+                    onClick={() => updateFilters({ type })}
                     className={cn(
                       "group flex min-w-0 items-center gap-2.5 rounded-lg border p-2 text-left transition-colors",
-                      selectedType === type
+                      selected
                         ? "border-foreground/25 bg-foreground/[0.055] shadow-sm"
                         : "hover:border-border/70 hover:bg-muted/55 border-transparent",
                     )}
@@ -357,27 +318,27 @@ export default function PublicationsWithSearch({ publications }: Props) {
                     </span>
                     <span className="min-w-0">
                       <span className="block truncate text-xs font-semibold">
-                        {publicationTypeLabels[type]}
+                        {config.label}
                       </span>
-                      <span className="text-muted-foreground block text-[10px]">
-                        {typeCounts[type]} items
+                      <span className="text-muted-foreground block text-[11px]">
+                        {typeCounts[type] ?? 0} items
                       </span>
                     </span>
                   </button>
                 );
               })}
             </div>
-          </div>
+          </fieldset>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <div className="flex min-w-0 flex-col gap-1.5">
-              <Label
-                htmlFor="year-filter"
-                className="text-muted-foreground px-1 text-[9px] font-semibold uppercase"
-              >
+              <Label htmlFor="year-filter" className="filter-label">
                 Year
               </Label>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <Select
+                value={filters.year}
+                onValueChange={(year) => updateFilters({ year })}
+              >
                 <SelectTrigger
                   className="border-border/60 bg-background/70 h-10 w-full rounded-lg shadow-none"
                   id="year-filter"
@@ -397,15 +358,12 @@ export default function PublicationsWithSearch({ publications }: Props) {
             </div>
 
             <div className="flex min-w-0 flex-col gap-1.5">
-              <Label
-                htmlFor="sort-filter"
-                className="text-muted-foreground px-1 text-[9px] font-semibold uppercase"
-              >
+              <Label htmlFor="sort-filter" className="filter-label">
                 Order
               </Label>
               <Select
-                value={sortBy}
-                onValueChange={(value) => setSortBy(value as SortOption)}
+                value={filters.sort}
+                onValueChange={(sort) => updateFilters({ sort })}
               >
                 <SelectTrigger
                   className="border-border/60 bg-background/70 h-10 w-full rounded-lg shadow-none"
@@ -427,16 +385,18 @@ export default function PublicationsWithSearch({ publications }: Props) {
 
       <div className="min-w-0 space-y-4">
         {filtered.length === 0 ? (
-          <div className="bg-muted/55 text-muted-foreground rounded-lg px-6 py-16 text-center text-sm">
-            No publications found matching your criteria.
+          <div className="bg-muted/55 text-muted-foreground flex flex-col items-center gap-3 rounded-lg px-6 py-16 text-center text-sm">
+            No publications match these filters.
+            <Button type="button" variant="outline" size="sm" onClick={resetFilters}>
+              Clear filters
+            </Button>
           </div>
         ) : (
-          filtered.map((pub, index) => (
+          filtered.map((pub) => (
             <PublicationCard
               key={pub.id}
-              index={index}
               publication={pub}
-              query={normalizedQuery}
+              query={filters.query.trim()}
             />
           ))
         )}
@@ -446,38 +406,27 @@ export default function PublicationsWithSearch({ publications }: Props) {
 }
 
 function PublicationCard({
-  index,
   publication,
   query,
 }: {
-  index: number;
-  publication: Publication;
+  publication: PublicationListItem;
   query: string;
 }) {
   const typeConfig = typeStyles[publication.type];
-  const venue =
-    publication.journal ||
-    publication.conference ||
-    publication.book ||
-    publication.publisher;
+  const venue = publicationVenue(publication);
   const logo =
     publication.journalLogo ||
     publication.conferenceLogo ||
     publication.publisherLogo;
-  const actionHref = publication.preprint || publication.doi;
-  const actionLabel = publication.preprint ? "Open preprint" : "Open paper";
-  const hasMedia = Boolean(publication.media?.length);
-  const recordTone = [
-    "record-surface--sage",
-    "record-surface--blue",
-    "record-surface--coral",
-  ][index % 3];
+  const link = publicationLink(publication);
+  const hasMedia = publication.media.length > 0;
 
   return (
     <article
+      id={publication.slug}
       className={cn(
-        "record-surface group relative overflow-hidden rounded-md p-4 transition-shadow duration-200 hover:shadow-[8px_12px_34px_rgba(12,35,36,0.1)]",
-        recordTone,
+        "record-surface group relative scroll-mt-24 overflow-hidden rounded-lg p-4 transition-shadow duration-200 hover:shadow-[8px_12px_34px_hsl(var(--foreground)/0.1)]",
+        typeConfig.surface,
       )}
     >
       <div
@@ -488,8 +437,13 @@ function PublicationCard({
       />
 
       <header className="border-border/65 border-b pb-3">
-        <h2 className="group-hover:text-primary text-lg leading-snug font-semibold text-balance transition-colors sm:text-xl">
-          <HighlightText text={publication.title} query={query} />
+        <h2 className="text-lg leading-snug font-semibold text-balance sm:text-xl">
+          <Link
+            href={publicationHref(publication.slug)}
+            className="hover:text-ink transition-colors"
+          >
+            <HighlightText text={publication.title} query={query} />
+          </Link>
         </h2>
       </header>
 
@@ -510,10 +464,9 @@ function PublicationCard({
               {logo ? (
                 <Image
                   src={logo}
-                  alt={venue}
+                  alt=""
                   width={36}
                   height={36}
-                  loading="eager"
                   className="bg-card size-9 shrink-0 rounded-sm object-contain p-1"
                 />
               ) : (
@@ -530,12 +483,12 @@ function PublicationCard({
                 <p className="text-[13px] leading-snug font-semibold text-pretty">
                   <HighlightText text={venue} query={query} />
                 </p>
-                <div className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px]">
+                <div className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px]">
                   {publication.impactFactor && (
                     <span>IF {publication.impactFactor}</span>
                   )}
                   {publication.journalQuartile && (
-                    <span className="font-semibold text-emerald-700 dark:text-emerald-300">
+                    <span className="text-tone-green font-semibold">
                       {publication.journalQuartile}
                     </span>
                   )}
@@ -551,40 +504,51 @@ function PublicationCard({
 
         <div className="flex min-w-0 flex-col gap-4">
           <div>
-            <p className="text-muted-foreground text-[9px] font-semibold uppercase">
-              Authors
-            </p>
+            <p className="text-muted-foreground text-xs font-semibold">Authors</p>
             <p className="mt-1.5 text-sm leading-relaxed">
               <HighlightText text={publication.authors} query={query} />
             </p>
           </div>
 
-          <div>
-            {actionHref ? (
-              <Link
-                href={actionHref}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            {link ? (
+              <a
+                href={link.href}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="text-primary hover:text-primary/75 inline-flex h-8 items-center gap-1.5 border-b border-current text-xs font-semibold transition-colors"
               >
-                <span>{actionLabel}</span>
-                <ExternalLink className="size-3.5" />
-              </Link>
+                <span>{link.label}</span>
+                <ExternalLink className="size-3.5" aria-hidden />
+              </a>
             ) : (
               <span className="text-muted-foreground inline-flex h-8 items-center text-xs">
                 Link pending
               </span>
             )}
+            {publication.doi && publication.preprint && (
+              <a
+                href={publication.preprint}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground inline-flex h-8 items-center gap-1.5 text-xs font-medium transition-colors"
+              >
+                Preprint
+                <ExternalLink className="size-3" aria-hidden />
+              </a>
+            )}
           </div>
         </div>
 
-        {hasMedia && publication.media && (
+        {hasMedia && (
           // In one column this is the last grid cell, which stranded the figure
-          // at the very bottom of the card, a full screen below the paper it
-          // belongs to. Below the three-column breakpoint it moves up under the
-          // title instead, where a figure belongs.
+          // at the very bottom of the card. Below the three-column breakpoint
+          // it moves up under the title instead, where a figure belongs.
           <div className="border-border/55 order-first flex min-w-0 justify-center border-b pb-4 lg:order-none lg:block lg:border-t-0 lg:border-b-0 lg:border-l lg:pt-0 lg:pl-4">
-            <PublicationMediaPreview media={publication.media} />
+            <PublicationMediaPreview
+              media={publication.media}
+              title={publication.title}
+            />
           </div>
         )}
       </div>
@@ -596,7 +560,7 @@ function PublicationMetadata({
   publication,
   query,
 }: {
-  publication: Publication;
+  publication: PublicationListItem;
   query: string;
 }) {
   const typeConfig = typeStyles[publication.type];
@@ -605,7 +569,7 @@ function PublicationMetadata({
   const StatusIcon = statusConfig.Icon;
 
   return (
-    <div className="flex flex-row flex-wrap items-center gap-x-2 gap-y-1.5 text-[10px] md:flex-col md:items-start">
+    <div className="flex flex-row flex-wrap items-center gap-x-2 gap-y-1.5 text-[11px] md:flex-col md:items-start">
       <span
         className={cn(
           "inline-flex items-center gap-1.5 rounded-sm border px-2 py-1 font-semibold",
@@ -613,7 +577,7 @@ function PublicationMetadata({
         )}
       >
         <TypeIcon className="size-3" />
-        <HighlightText text={typeConfig.label} query={query} />
+        <HighlightText text={publication.type} query={query} />
       </span>
       <span
         className={cn(
@@ -632,17 +596,23 @@ function PublicationMetadata({
   );
 }
 
-function PublicationMediaPreview({ media }: { media: PublicationMedia[] }) {
+export function PublicationMediaPreview({
+  media,
+  title,
+}: {
+  media: PublicationMediaItem[];
+  title: string;
+}) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const fullImages = media.map((item) => item.fullImage || item.image);
 
   return (
     <>
       <div className="flex items-center justify-center overflow-visible">
         <StackedImageDeck
-          images={media.map((item) => item.image)}
+          photos={media.map((item) => item.photo)}
           labels={media.map((item) => item.label)}
-          alt={media[0]?.alt ?? "Publication visual"}
+          alt={title}
+          alts={media.map((item) => item.alt)}
           imageWidth={264}
           imageHeight={198}
           sizes="264px"
@@ -655,7 +625,8 @@ function PublicationMediaPreview({ media }: { media: PublicationMedia[] }) {
       </div>
       {lightboxIndex !== null && (
         <ImageLightbox
-          images={fullImages}
+          photos={media.map((item) => item.full)}
+          alt={title}
           currentIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
           onNavigate={setLightboxIndex}

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "How this portfolio handles KASI chat, contact messages, NASA imagery, CelesTrak orbital data, location permission, and theme preferences.",
+    "How this site handles Kasi chat messages, contact form messages, map location permission, and theme preferences.",
   alternates: { canonical: "/privacy" },
 };
 

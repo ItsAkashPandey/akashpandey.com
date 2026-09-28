@@ -11,5 +11,13 @@ export default defineConfig([
       "react-hooks/static-components": "off",
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    // generated or copied from node_modules
+    "public/_img/**",
+    "public/maplibre/**",
+  ]),
 ]);

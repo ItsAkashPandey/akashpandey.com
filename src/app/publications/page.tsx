@@ -1,13 +1,12 @@
-"use client";
-
-import publicationsData from "@/data/publications.json";
 import PublicationsWithSearch from "@/components/PublicationsWithSearch";
+import { getPublications } from "@/lib/content";
+import { toPublicationListItem } from "@/lib/publication-items";
+import { jsonLdProps, publicationsSchema } from "@/lib/structured-data";
 
 export default function PublicationsPage() {
-  const publications = publicationsData.publications as any[];
-
   return (
     <article className="page-shell">
+      <script {...jsonLdProps(publicationsSchema(getPublications()))} />
       <header className="page-heading">
         <h1 className="title">my publications.</h1>
         <p className="page-lede text-balance">
@@ -17,7 +16,9 @@ export default function PublicationsPage() {
         </p>
       </header>
 
-      <PublicationsWithSearch publications={publications as any} />
+      <PublicationsWithSearch
+        publications={getPublications().map(toPublicationListItem)}
+      />
     </article>
   );
 }

@@ -1,9 +1,16 @@
+import fs from "node:fs";
+import path from "node:path";
 import ReactMarkdown from "react-markdown";
-import { PRIVACY_CONTENT } from "@/data/static-content";
 
-export default async function PrivacyPage() {
-  const privacyContent = PRIVACY_CONTENT;
+/** Rendered straight from src/data/privacy.md at build time. */
+function readPrivacyPolicy() {
+  return fs.readFileSync(
+    path.join(process.cwd(), "src", "data", "privacy.md"),
+    "utf-8",
+  );
+}
 
+export default function PrivacyPage() {
   return (
     <article className="page-shell">
       <header className="page-heading">
@@ -11,7 +18,7 @@ export default async function PrivacyPage() {
       </header>
 
       <div className="prose dark:prose-invert">
-        <ReactMarkdown>{privacyContent}</ReactMarkdown>
+        <ReactMarkdown>{readPrivacyPolicy()}</ReactMarkdown>
       </div>
     </article>
   );

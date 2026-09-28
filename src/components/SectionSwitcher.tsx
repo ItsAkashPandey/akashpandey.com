@@ -20,10 +20,10 @@ export const sectionSwitcherTriggerClass =
  * the site. The colour coding survives — it just lives in the stroke now.
  */
 const toneClasses = {
-  sky: "text-sky-700 dark:text-sky-300",
-  emerald: "text-emerald-700 dark:text-emerald-300",
-  rose: "text-rose-700 dark:text-rose-300",
-  ocean: "text-cyan-800 dark:text-cyan-300",
+  sky: "text-tone-sky",
+  green: "text-tone-green",
+  rose: "text-tone-rose",
+  teal: "text-tone-teal",
 };
 
 export function SectionSwitcherVisual({
@@ -55,7 +55,7 @@ export function SectionSwitcherVisual({
             {title}
           </span>
           {typeof count === "number" && (
-            <span className="bg-muted text-muted-foreground hidden shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold tabular-nums sm:inline-flex">
+            <span className="bg-muted text-muted-foreground hidden shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums sm:inline-flex">
               {count}
             </span>
           )}

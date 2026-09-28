@@ -5,21 +5,11 @@ import siteData from "@/data/site.json";
 import {
   jsonLdProps,
   personSchema,
-  profilePageSchema,
   websiteSchema,
 } from "@/lib/structured-data";
 import { cn } from "@/lib/utils";
 import type { Metadata, Viewport } from "next";
-import {
-  Calistoga,
-  Inter,
-  Noto_Sans_Arabic,
-  Noto_Sans_Bengali,
-  Noto_Sans_Devanagari,
-  Noto_Sans_Gurmukhi,
-  Noto_Sans_Hebrew,
-  Noto_Sans_Tamil,
-} from "next/font/google";
+import { Calistoga, Inter } from "next/font/google";
 import "yet-another-react-lightbox/styles.css";
 import "./globals.css";
 
@@ -34,72 +24,24 @@ const calistoga = Calistoga({
   weight: ["400"],
 });
 
-/**
- * The intro greets in each language's own script. Inter carries none of these,
- * and the system fonts that do (Nirmala UI, Kohinoor, Noto) are per-platform
- * gambles — on a machine without them the greeting renders as empty boxes.
- * Only Devanagari is preloaded: it is the greeting the loader holds on.
- * CJK is left to the system, since those families are tens of megabytes.
- */
-const notoDevanagari = Noto_Sans_Devanagari({
-  subsets: ["devanagari"],
-  weight: ["500", "600"],
-  variable: "--font-devanagari",
-});
-const notoBengali = Noto_Sans_Bengali({
-  subsets: ["bengali"],
-  weight: ["500", "600"],
-  variable: "--font-bengali",
-  preload: false,
-});
-const notoTamil = Noto_Sans_Tamil({
-  subsets: ["tamil"],
-  weight: ["500", "600"],
-  variable: "--font-tamil",
-  preload: false,
-});
-const notoGurmukhi = Noto_Sans_Gurmukhi({
-  subsets: ["gurmukhi"],
-  weight: ["500", "600"],
-  variable: "--font-gurmukhi",
-  preload: false,
-});
-const notoArabic = Noto_Sans_Arabic({
-  subsets: ["arabic"],
-  weight: ["500", "600"],
-  variable: "--font-arabic",
-  preload: false,
-});
-const notoHebrew = Noto_Sans_Hebrew({
-  subsets: ["hebrew"],
-  weight: ["500", "600"],
-  variable: "--font-hebrew",
-  preload: false,
-});
-
-const scriptFontVariables = [
-  notoDevanagari.variable,
-  notoBengali.variable,
-  notoTamil.variable,
-  notoGurmukhi.variable,
-  notoArabic.variable,
-  notoHebrew.variable,
-];
+const description =
+  "Dr. Akash Kumar, geospatial researcher at IIT Roorkee: crop and vegetation phenology with PhenoCams, UAVs and satellite remote sensing, precision agriculture, and the Bhoomicam startup.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteData.url),
   title: {
-    default: "Akash Kumar Pandey | Geospatial Research Portfolio",
-    template: "%s | Akash Kumar Pandey",
+    default: "Dr. Akash Kumar | Geospatial Researcher, IIT Roorkee",
+    template: "%s | Dr. Akash Kumar",
   },
-  description:
-    "Akash Kumar Pandey's portfolio for geospatial analysis, remote sensing, UAV mapping, PhenoCam research, vegetation phenology, and precision agriculture.",
-  applicationName: "Akash Kumar Pandey Portfolio",
-  authors: [{ name: "Akash Kumar Pandey", url: siteData.url }],
-  creator: "Akash Kumar Pandey",
-  publisher: "Akash Kumar Pandey",
+  description,
+  applicationName: "Dr. Akash Kumar",
+  authors: [{ name: "Akash Kumar", url: siteData.url }],
+  creator: "Akash Kumar",
+  publisher: "Akash Kumar",
   keywords: [
-    "Akash Kumar Pandey",
+    "Dr. Akash Kumar",
+    "Akash Kumar",
+    "Akash Pandey",
     "geospatial research",
     "remote sensing",
     "precision agriculture",
@@ -107,33 +49,29 @@ export const metadata: Metadata = {
     "PhenoCam",
     "UAV mapping",
     "IIT Roorkee",
+    "Bhoomicam",
   ],
   alternates: {
     canonical: "/",
+    types: {
+      "application/rss+xml": [
+        { url: "/activities/feed.xml", title: "Activities · Dr. Akash Kumar" },
+      ],
+    },
   },
+  // Each route segment adds its own preview image (opengraph-image.tsx).
   openGraph: {
     type: "website",
     locale: "en_US",
     url: siteData.url,
-    siteName: "Akash Kumar Pandey",
-    title: "Akash Kumar Pandey | Geospatial Research Portfolio",
-    description:
-      "Portfolio and research work in geospatial analysis, remote sensing, PhenoCam, UAV mapping, and precision agriculture.",
-    images: [
-      {
-        url: "/img/akashpandey.com_screenshot.webp",
-        width: 1200,
-        height: 630,
-        alt: "Akash Kumar Pandey portfolio website preview",
-      },
-    ],
+    siteName: "Dr. Akash Kumar",
+    title: "Dr. Akash Kumar | Geospatial Researcher, IIT Roorkee",
+    description,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Akash Kumar Pandey | Geospatial Research Portfolio",
-    description:
-      "Geospatial analysis, remote sensing, PhenoCam, UAV mapping, and precision agriculture research portfolio.",
-    images: ["/img/akashpandey.com_screenshot.webp"],
+    title: "Dr. Akash Kumar | Geospatial Researcher, IIT Roorkee",
+    description,
   },
   robots: {
     index: true,
@@ -154,14 +92,16 @@ export const metadata: Metadata = {
     apple: "/favicon-192.png",
   },
   manifest: "/manifest.json",
-  other: {
-    "last-modified": siteData.lastUpdated,
-  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // The paper colour of each theme (--background), for the browser chrome.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8f7f4" },
+    { media: "(prefers-color-scheme: dark)", color: "#231e1a" },
+  ],
 };
 
 export default function RootLayout({
@@ -172,26 +112,23 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* The site had no structured data at all, so nothing tied the domain
-            to the person, the affiliation or the profiles that already rank
-            for the name. */}
-        <script {...jsonLdProps(personSchema)} />
+        <script {...jsonLdProps(personSchema())} />
         <script {...jsonLdProps(websiteSchema)} />
-        <script {...jsonLdProps(profilePageSchema)} />
       </head>
       <body
         className={cn(
           "bg-background min-h-screen font-sans antialiased",
           inter.variable,
           calistoga.variable,
-          ...scriptFontVariables,
         )}
         suppressHydrationWarning
       >
         <Providers>
           <Header />
           <div className="site-shell relative z-10 flex flex-col">
-            <main className="grow">{children}</main>
+            <main id="main" className="grow">
+              {children}
+            </main>
           </div>
           <Footer />
         </Providers>

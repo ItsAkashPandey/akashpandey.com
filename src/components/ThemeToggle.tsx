@@ -1,43 +1,54 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/Button";
 
+const ORDER = ["light", "dark", "system"] as const;
+type Choice = (typeof ORDER)[number];
+
+const LABELS: Record<Choice, string> = {
+  light: "Light theme",
+  dark: "Dark theme",
+  system: "Match your device",
+};
+
+/**
+ * Cycles light → dark → system. next-themes owns the class on <html> and the
+ * stored choice; this only asks it to change.
+ */
 export default function ThemeToggle() {
-  const { setTheme, resolvedTheme } = useTheme();
-  const [isDark, setIsDark] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains("dark"));
-  }, [resolvedTheme]);
-
-  const toggleTheme = () => {
-    const root = document.documentElement;
-    const nextTheme = root.classList.contains("dark") ? "light" : "dark";
-    root.classList.remove("light", "dark");
-    root.classList.add(nextTheme);
-    root.style.colorScheme = nextTheme;
-    window.localStorage.setItem("theme", nextTheme);
-    setIsDark(nextTheme === "dark");
-    setTheme(nextTheme);
-  };
+  const current: Choice = mounted && ORDER.includes(theme as Choice)
+    ? (theme as Choice)
+    : "system";
+  const next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length];
+  const Icon = current === "light" ? Sun : current === "dark" ? Moon : Monitor;
 
   return (
     <Button
       size="icon"
       variant="ghost"
       className="header-icon-button"
-      onClick={toggleTheme}
-      title={isDark ? "Use light theme" : "Use dark theme"}
+      onClick={() => setTheme(next)}
+      title={`${LABELS[current]}. Switch to: ${LABELS[next].toLowerCase()}`}
     >
-      {isDark ? (
-        <Sun className="size-4 text-amber-300" />
-      ) : (
-        <Moon className="size-4 text-sky-700" />
-      )}
-      <span className="sr-only">Theme Toggle</span>
+      <Icon
+        className={
+          current === "light"
+            ? "text-tone-amber size-4"
+            : current === "dark"
+              ? "text-tone-sky size-4"
+              : "text-muted-foreground size-4"
+        }
+      />
+      <span className="sr-only">
+        {LABELS[current]}. Switch to {LABELS[next].toLowerCase()}
+      </span>
     </Button>
   );
 }
