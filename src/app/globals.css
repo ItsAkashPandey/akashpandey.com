@@ -361,14 +361,6 @@
     z-index: 1;
   }
 
-  /* Below-the-fold sections are in the HTML (for search engines and people
-     without JavaScript) but the browser skips laying them out until they
-     come near the screen. */
-  .defer-render {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 640px;
-  }
-
   /* Degrees and posts used to sit in one undivided run with nothing but
      padding between them. A single rule now travels the length of the list and
      every entry hangs its mark on it, with a hairline closing each entry off —

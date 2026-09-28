@@ -38,6 +38,19 @@ test.describe("home page", () => {
     await expect(cityHeading).not.toHaveText(firstCity);
   });
 
+  test("a jump down to the globe stays put and starts it", async ({ page }) => {
+    const frame = page.locator(".globe-frame");
+    // Straight there, the way a link or a scrollbar drag goes, without
+    // passing the sections above.
+    await frame.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(1_000);
+    await expect(frame).toBeInViewport();
+    await expect(frame.locator("canvas").locator("..")).toHaveClass(
+      /opacity-100/,
+      { timeout: 20_000 },
+    );
+  });
+
   test("Person JSON-LD names Akash Kumar", async ({ page }) => {
     const scripts = page.locator('script[type="application/ld+json"]');
     const payloads = await scripts.allTextContents();
