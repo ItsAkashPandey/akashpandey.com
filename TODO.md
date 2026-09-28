@@ -92,7 +92,7 @@ phone sizes; these need eyes:
       version.
 - [ ] Put https://www.akashpandey.com in the website field on ORCID, Google
       Scholar, ResearchGate, LinkedIn and GitHub.
-- [ ] Some activities are field visits rather than events; maybe `Article`
+- [x] Some activities are field visits rather than events; maybe `Article`
       instead of `Event` in the structured data for those.
 
 ## Settings in Vercel

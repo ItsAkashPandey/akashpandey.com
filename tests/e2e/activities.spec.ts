@@ -63,6 +63,18 @@ test.describe("activities", () => {
     expect(types).toContain("BreadcrumbList");
   });
 
+  test("fieldwork is marked up as an article, not an event", async ({
+    page,
+  }) => {
+    await page.goto("/activities/jaisalmer-soil-moisture-2025");
+    const payloads = await page
+      .locator('script[type="application/ld+json"]')
+      .allTextContents();
+    const types = payloads.map((raw) => JSON.parse(raw)["@type"]);
+    expect(types).toContain("Article");
+    expect(types).not.toContain("Event");
+  });
+
   test("an unknown activity slug 404s", async ({ page }) => {
     const response = await page.goto("/activities/does-not-exist");
     expect(response?.status()).toBe(404);

@@ -68,39 +68,65 @@ export default async function ActivityPage({ params }: Params) {
   const photos = getPhotos(images, Infinity);
   const place = getPlace(activity.place);
 
-  const eventSchema = {
-    "@context": "https://schema.org",
-    "@type": "Event",
-    name: activity.name,
-    startDate: activity.date,
-    description: truncate(
-      plainText(splitDescription(activity.description).body),
-      300,
-    ),
-    url: `${siteData.url}${activityHref(slug)}`,
-    eventStatus: "https://schema.org/EventScheduled",
-    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    location: {
-      "@type": "Place",
-      name: activity.location,
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: place.city,
-        addressCountry: place.country,
-      },
-      geo: {
-        "@type": "GeoCoordinates",
-        longitude: place.coordinates[0],
-        latitude: place.coordinates[1],
-      },
+  const url = `${siteData.url}${activityHref(slug)}`;
+  const description = truncate(
+    plainText(splitDescription(activity.description).body),
+    300,
+  );
+  const image = images.slice(0, 3).map((src) => `${siteData.url}${src}`);
+  const where = {
+    "@type": "Place",
+    name: activity.location,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: place.city,
+      addressCountry: place.country,
     },
-    image: images.slice(0, 3).map((src) => `${siteData.url}${src}`),
-    performer: { "@id": `${siteData.url}/#akash` },
+    geo: {
+      "@type": "GeoCoordinates",
+      longitude: place.coordinates[0],
+      latitude: place.coordinates[1],
+    },
   };
+
+  // Fieldwork was never something to attend, so it goes in as an article
+  // about the visit rather than as an event.
+  const activitySchema =
+    activity.kind === "fieldwork"
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: activity.name,
+          description,
+          url,
+          mainEntityOfPage: url,
+          datePublished: activity.date,
+          image,
+          author: {
+            "@type": "Person",
+            "@id": `${siteData.url}/#akash`,
+            name: "Akash Kumar",
+            url: siteData.url,
+          },
+          contentLocation: where,
+        }
+      : {
+          "@context": "https://schema.org",
+          "@type": "Event",
+          name: activity.name,
+          startDate: activity.date,
+          description,
+          url,
+          eventStatus: "https://schema.org/EventScheduled",
+          eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+          location: where,
+          image,
+          performer: { "@id": `${siteData.url}/#akash` },
+        };
 
   return (
     <article className="page-shell">
-      <script {...jsonLdProps(eventSchema)} />
+      <script {...jsonLdProps(activitySchema)} />
       <script
         {...jsonLdProps(
           breadcrumbSchema([
