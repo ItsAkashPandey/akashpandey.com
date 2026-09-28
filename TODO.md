@@ -65,7 +65,7 @@ phone sizes; these need eyes:
       set (`base-uri`, `form-action`, `frame-ancestors`, `object-src`). A full
       policy needs per-request nonces, which would make the static pages
       dynamic.
-- [ ] MapLibre 6 downloads its shared module twice on `/contact` (page +
+- [x] MapLibre 6 downloads its shared module twice on `/contact` (page +
       worker). Revisit when Turbopack can bundle the worker.
 - [ ] `npx tsc` got slow (~3 min) since `@types/three`. Live with it or look
       at project references.
