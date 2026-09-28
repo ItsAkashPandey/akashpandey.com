@@ -1,6 +1,7 @@
 @config "../../tailwind.config.ts";
 @import "tailwindcss";
-@import "maplibre-gl/dist/maplibre-gl.css";
+/* In the base layer so the map styles further down can override it. */
+@import "maplibre-gl/dist/maplibre-gl.css" layer(base);
 
 @layer base {
   :root {
@@ -143,6 +144,39 @@
 
   html {
     scrollbar-gutter: stable;
+    /* The parts the browser draws (scrollbars, the text caret, checkboxes,
+       selected text) take the site's ink instead of the system blue. */
+    scrollbar-color: hsl(var(--foreground) / 0.3) transparent;
+    caret-color: hsl(var(--accent-ink));
+    accent-color: hsl(var(--accent-ink));
+  }
+
+  ::selection {
+    background-color: hsl(var(--accent-ink) / 0.2);
+    color: hsl(var(--foreground));
+  }
+
+  /* A fallback ring for anything that doesn't style its own focus; the
+     components that do (buttons, inputs) override it with their utilities. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  a {
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: from-font;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
   }
 
   body {
@@ -523,8 +557,12 @@
     font-size: 11px;
   }
 
+  /* Underlined so the credits read as links without relying on colour. */
   .map-frame .maplibregl-ctrl-attrib a {
-    color: inherit;
+    color: hsl(var(--foreground) / 0.85);
+    text-decoration: underline;
+    text-decoration-color: hsl(var(--foreground) / 0.35);
+    text-underline-offset: 2px;
   }
 
   .dark .map-frame .maplibregl-ctrl-attrib-button {

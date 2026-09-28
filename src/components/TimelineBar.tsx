@@ -170,10 +170,7 @@ export default function TimelineBar({
   if (!stops.length) return null;
 
   return (
-    <aside
-      aria-label="Activity date scrubber"
-      className="sticky top-24 hidden h-[calc(100dvh-8rem)] lg:block"
-    >
+    <div className="sticky top-24 hidden h-[calc(100dvh-8rem)] lg:block">
       <div
         ref={trackRef}
         role="slider"
@@ -187,7 +184,13 @@ export default function TimelineBar({
         onPointerDown={(event) => {
           setScrubbing(true);
           event.currentTarget.setPointerCapture(event.pointerId);
-          scrubToPointer(event.clientY);
+          // A year label or a tick jumps to that exact entry; anywhere else
+          // on the track picks the nearest one.
+          const entry = (event.target as HTMLElement)
+            .closest("[data-entry]")
+            ?.getAttribute("data-entry");
+          if (entry) selectEntry(entry);
+          else scrubToPointer(event.clientY);
         }}
         onPointerMove={(event) => {
           if (scrubbing) scrubToPointer(event.clientY);
@@ -239,20 +242,20 @@ export default function TimelineBar({
                   isActive ? "bg-ink/80" : "bg-border",
                 )}
               />
-              <button
-                type="button"
-                tabIndex={-1}
-                onClick={() => selectEntry(year.firstId)}
+              {/* Marks, not buttons: the track itself is the slider, and
+                  controls nested inside a slider confuse screen readers. */}
+              <span
+                aria-hidden
+                data-entry={year.firstId}
                 className={cn(
-                  "absolute top-1/2 right-[17px] -translate-y-1/2 rounded-sm px-1 py-0.5 text-[11px] font-bold tabular-nums transition-colors duration-200",
+                  "absolute top-1/2 right-[17px] -translate-y-1/2 cursor-pointer rounded-sm px-1 py-0.5 text-[11px] font-bold tabular-nums transition-colors duration-200",
                   isActive
                     ? "bg-background/85 text-ink shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
                 )}
-                aria-current={isActive ? "date" : undefined}
               >
                 {year.year}
-              </button>
+              </span>
             </div>
           );
         })}
@@ -260,15 +263,13 @@ export default function TimelineBar({
         {stops.map((stop) => {
           const isActive = stop === activeStop;
           return (
-            <button
+            <span
               key={`${stop.year}-${stop.shortLabel}`}
-              type="button"
-              tabIndex={-1}
-              onClick={() => selectEntry(stop.id)}
-              aria-label={`Go to ${stop.label}`}
+              aria-hidden
+              data-entry={stop.id}
               title={stop.label}
               className={cn(
-                "absolute right-0 z-10 h-3 w-5 -translate-y-1/2 before:absolute before:top-1/2 before:right-0 before:-translate-y-1/2 before:rounded-full before:transition-all before:duration-150",
+                "absolute right-0 z-10 h-3 w-5 -translate-y-1/2 cursor-pointer before:absolute before:top-1/2 before:right-0 before:-translate-y-1/2 before:rounded-full before:transition-all before:duration-150",
                 isActive
                   ? "before:bg-ink before:h-0.5 before:w-[18px] before:shadow-[0_0_0_3px_hsl(var(--accent-ink)/0.1)]"
                   : "before:bg-muted-foreground/35 hover:before:bg-foreground before:h-px before:w-2 hover:before:w-4",
@@ -291,6 +292,6 @@ export default function TimelineBar({
           </motion.div>
         )}
       </div>
-    </aside>
+    </div>
   );
 }

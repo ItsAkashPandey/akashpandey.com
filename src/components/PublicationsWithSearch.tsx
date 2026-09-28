@@ -240,7 +240,11 @@ export default function PublicationsWithSearch({
 
   return (
     <div className="grid min-w-0 gap-5 lg:grid-cols-[232px_minmax(0,1fr)] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-8">
-      <aside className="filter-rail rounded-lg p-4 lg:sticky lg:top-24">
+      <div
+        role="search"
+        aria-label="Filter publications"
+        className="filter-rail rounded-lg p-4 lg:sticky lg:top-24"
+      >
         <div className="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -381,7 +385,7 @@ export default function PublicationsWithSearch({
             </div>
           </div>
         </div>
-      </aside>
+      </div>
 
       <div className="min-w-0 space-y-4">
         {filtered.length === 0 ? (
@@ -456,7 +460,7 @@ function PublicationCard({
             "lg:grid-cols-[minmax(210px,250px)_minmax(0,1fr)_264px] lg:items-start",
         )}
       >
-        <aside className="flex min-w-0 flex-col gap-3 md:pr-2">
+        <div className="flex min-w-0 flex-col gap-3 md:pr-2">
           <PublicationMetadata publication={publication} query={query} />
 
           {venue && (
@@ -500,7 +504,7 @@ function PublicationCard({
               </div>
             </div>
           )}
-        </aside>
+        </div>
 
         <div className="flex min-w-0 flex-col gap-4">
           <div>

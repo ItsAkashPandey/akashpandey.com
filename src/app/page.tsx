@@ -111,7 +111,7 @@ export default function Home() {
     .slice(0, RECENT_COUNT);
 
   return (
-    <article className="mx-auto -mt-2 flex w-full max-w-6xl flex-col gap-10 pb-16 sm:gap-12">
+    <article className="mx-auto mt-6 flex w-full max-w-6xl flex-col gap-10 pb-16 sm:mt-8 sm:gap-12">
       <script {...jsonLdProps(profilePageSchema)} />
       <section className="record-surface relative flex flex-col gap-1 overflow-hidden rounded-lg p-3 sm:p-5">
         <div className="flex flex-col gap-6 px-2 py-2 sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-10 sm:px-4 sm:py-4">

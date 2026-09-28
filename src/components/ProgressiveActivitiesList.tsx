@@ -290,7 +290,11 @@ export default function ProgressiveActivitiesList({
 
   return (
     <div className="relative grid min-w-0 gap-5 lg:grid-cols-[232px_minmax(0,1fr)_76px] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)_84px] xl:gap-8">
-      <aside className="filter-rail rounded-lg p-4 lg:sticky lg:top-24">
+      <div
+        role="search"
+        aria-label="Filter activities"
+        className="filter-rail rounded-lg p-4 lg:sticky lg:top-24"
+      >
         <div className="border-border/50 mb-4 flex items-center justify-between gap-3 border-b pb-4">
           <div>
             <div className="flex items-center gap-2">
@@ -431,7 +435,7 @@ export default function ProgressiveActivitiesList({
             </div>
           </div>
         </div>
-      </aside>
+      </div>
 
       <div className="flex min-w-0 flex-col gap-5">
         <section className="relative z-10 flex min-w-0 flex-col gap-6">
