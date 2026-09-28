@@ -23,6 +23,13 @@ const nextConfig = {
   env: {
     SITE_LAST_UPDATED: lastUpdated(),
   },
+  experimental: {
+    // Next 16.3 keeps Turbopack's build work in .next/cache, which Vercel
+    // restores between deploys. A build on the previous deploy's cache kept
+    // the old globals.css output, so CSS changes never shipped. Compiling
+    // from scratch costs about ten seconds.
+    turbopackFileSystemCacheForBuild: false,
+  },
   async headers() {
     return [
       {
