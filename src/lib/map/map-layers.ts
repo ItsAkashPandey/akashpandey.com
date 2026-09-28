@@ -13,7 +13,8 @@ function emptyLines(): GeoJSON.FeatureCollection<GeoJSON.LineString> {
  * and whoever is looking at the page.
  */
 export function ensureResearchLayers(map: MapLibreMap, theme: MapTheme) {
-  if (!map.isStyleLoaded()) return;
+  // Only needs the style parsed, not every tile loaded (see map-style.ts).
+  if (!map.getLayer("ground")) return;
 
   if (!map.getSource(CONNECTION_SOURCE)) {
     map.addSource(CONNECTION_SOURCE, { type: "geojson", data: emptyLines() });
