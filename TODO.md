@@ -55,7 +55,7 @@ phone sizes; these need eyes:
 
 ## Code
 
-- [ ] Prettier pass: `npx prettier --write .` touches ~76 files (class order,
+- [x] Prettier pass: `npx prettier --write .` touches ~76 files (class order,
       line breaks). Do it as its own "Format" commit so it doesn't bury real
       changes.
 - [ ] The home page `<h1>` is the greeting ("hi, akash here"); the name is
@@ -127,5 +127,5 @@ phone sizes; these need eyes:
   extra headers; Speed Insights (cookieless).
 - Accessibility: axe scans clean on the main pages; focus ring, selection and
   scrollbar colours; underlined map credits.
-- Tests: 52 unit tests (`npm test`), 20 end-to-end tests on desktop and
+- Tests: 58 unit tests (`npm test`), 27 end-to-end tests on desktop and
   phone sizes (`npm run test:e2e`).
