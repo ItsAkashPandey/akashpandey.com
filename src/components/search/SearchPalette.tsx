@@ -4,7 +4,7 @@ import { useChatbot } from "@/contexts/ChatContext";
 import type { SearchEntry } from "@/lib/search-index";
 import { cn } from "@/lib/utils";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Command } from "cmdk";
+import { Command, defaultFilter } from "cmdk";
 import {
   BookOpen,
   Briefcase,
@@ -19,10 +19,48 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 const EMAIL = "akash_k@ce.iitr.ac.in";
 const THEMES = ["light", "dark", "system"] as const;
+
+type Match = { value: string; keywords?: string[] };
+
+/** What each quick action matches on. */
+const ACTIONS = {
+  kasi: {
+    value: "Ask Kasi, the chat about Akash",
+    keywords: ["chat", "question", "assistant"],
+  },
+  theme: {
+    value: "Switch theme",
+    keywords: ["dark", "light", "mode", "colour"],
+  },
+  email: { value: "Copy email address", keywords: ["mail", "contact", EMAIL] },
+} satisfies Record<string, Match>;
+type ActionId = keyof typeof ACTIONS;
+
+const entryMatch = (entry: SearchEntry): Match => ({
+  value: `${entry.title} ${entry.detail}`,
+  keywords: entry.keywords,
+});
+
+/**
+ * The palette filters and orders its own results, with cmdk's scoring, and
+ * leaves cmdk the keyboard. cmdk 1.1.1 sorts by moving DOM nodes as the
+ * query changes, before the items that only now match have rendered, so a
+ * pasted query listed those in file order; and its group sorting never finds
+ * the groups, so Enter on "Vienna" opened the home page.
+ */
+function rank<T>(items: T[], query: string, match: (item: T) => Match) {
+  const scored = items.map((item) => {
+    const { value, keywords } = match(item);
+    return { item, score: query ? defaultFilter(value, query, keywords) : 1 };
+  });
+  return query
+    ? scored.filter(({ score }) => score > 0).sort((a, b) => b.score - a.score)
+    : scored;
+}
 
 const GROUP_ICONS: Record<SearchEntry["group"], LucideIcon> = {
   Pages: Compass,
@@ -100,12 +138,87 @@ export default function SearchPalette({
   const nextTheme =
     THEMES[(THEMES.indexOf((theme as (typeof THEMES)[number]) ?? "system") + 1) % THEMES.length];
 
-  const groups = entries
-    ? (Object.keys(GROUP_ICONS) as SearchEntry["group"][]).map((group) => ({
-        group,
-        items: entries.filter((entry) => entry.group === group),
-      }))
-    : [];
+  // Quick actions (group: null) and the groups, each holding only what
+  // matches, best match first. The sort is stable, so with nothing typed
+  // everything keeps its fixed order.
+  const sections = useMemo(
+    () =>
+      [
+        {
+          group: null,
+          results: rank(
+            Object.keys(ACTIONS) as ActionId[],
+            query,
+            (id) => ACTIONS[id],
+          ),
+        },
+        ...(Object.keys(GROUP_ICONS) as SearchEntry["group"][]).map(
+          (group) => ({
+            group,
+            results: rank(
+              entries?.filter((entry) => entry.group === group) ?? [],
+              query,
+              entryMatch,
+            ),
+          }),
+        ),
+      ]
+        .filter(({ results }) => results.length > 0)
+        .sort((a, b) => b.results[0].score - a.results[0].score),
+    [entries, query],
+  );
+
+  const actionItems: Record<ActionId, ReactNode> = {
+    kasi: (
+      <Command.Item
+        key="kasi"
+        {...ACTIONS.kasi}
+        onSelect={() => {
+          onOpenChange(false);
+          setChatOpen(true);
+        }}
+        className={itemClass}
+      >
+        <MessageCircle className="text-tone-teal size-4 shrink-0" aria-hidden />
+        <span>Ask Kasi</span>
+      </Command.Item>
+    ),
+    theme: (
+      <Command.Item
+        key="theme"
+        {...ACTIONS.theme}
+        onSelect={() => setTheme(nextTheme)}
+        className={itemClass}
+      >
+        <SunMoon className="text-tone-amber size-4 shrink-0" aria-hidden />
+        <span>Switch theme</span>
+        <span className="text-muted-foreground ml-auto text-xs">
+          to {nextTheme}
+        </span>
+      </Command.Item>
+    ),
+    email: (
+      <Command.Item
+        key="email"
+        {...ACTIONS.email}
+        onSelect={() => {
+          void navigator.clipboard
+            ?.writeText(EMAIL)
+            .then(() => setCopied(true));
+        }}
+        className={itemClass}
+      >
+        <Copy className="text-tone-sky size-4 shrink-0" aria-hidden />
+        <span>Copy email address</span>
+        <span
+          className="text-muted-foreground ml-auto text-xs"
+          aria-live="polite"
+        >
+          {copied ? "Copied" : EMAIL}
+        </span>
+      </Command.Item>
+    ),
+  };
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -119,6 +232,7 @@ export default function SearchPalette({
           <Command
             label="Search the site"
             loop
+            shouldFilter={false}
             className="[&_[cmdk-group-heading]]:text-muted-foreground flex flex-col [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold"
           >
             <div className="border-border/70 flex items-center gap-2 border-b px-3">
@@ -149,54 +263,21 @@ export default function SearchPalette({
                 Nothing matches “{query}”.
               </Command.Empty>
 
-              <Command.Group heading="Quick actions">
-                <Command.Item
-                  value="Ask Kasi, the chat about Akash"
-                  keywords={["chat", "question", "assistant"]}
-                  onSelect={() => {
-                    onOpenChange(false);
-                    setChatOpen(true);
-                  }}
-                  className={itemClass}
-                >
-                  <MessageCircle className="text-tone-teal size-4 shrink-0" aria-hidden />
-                  <span>Ask Kasi</span>
-                </Command.Item>
-                <Command.Item
-                  value="Switch theme"
-                  keywords={["dark", "light", "mode", "colour"]}
-                  onSelect={() => setTheme(nextTheme)}
-                  className={itemClass}
-                >
-                  <SunMoon className="text-tone-amber size-4 shrink-0" aria-hidden />
-                  <span>Switch theme</span>
-                  <span className="text-muted-foreground ml-auto text-xs">to {nextTheme}</span>
-                </Command.Item>
-                <Command.Item
-                  value="Copy email address"
-                  keywords={["mail", "contact", EMAIL]}
-                  onSelect={() => {
-                    void navigator.clipboard?.writeText(EMAIL).then(() => setCopied(true));
-                  }}
-                  className={itemClass}
-                >
-                  <Copy className="text-tone-sky size-4 shrink-0" aria-hidden />
-                  <span>Copy email address</span>
-                  <span className="text-muted-foreground ml-auto text-xs" aria-live="polite">
-                    {copied ? "Copied" : EMAIL}
-                  </span>
-                </Command.Item>
-              </Command.Group>
-
-              {groups.map(({ group, items }) => {
-                const Icon = GROUP_ICONS[group];
+              {sections.map((section) => {
+                if (section.group === null) {
+                  return (
+                    <Command.Group key="actions" heading="Quick actions">
+                      {section.results.map(({ item }) => actionItems[item])}
+                    </Command.Group>
+                  );
+                }
+                const Icon = GROUP_ICONS[section.group];
                 return (
-                  <Command.Group key={group} heading={group}>
-                    {items.map((entry) => (
+                  <Command.Group key={section.group} heading={section.group}>
+                    {section.results.map(({ item: entry }) => (
                       <Command.Item
                         key={`${entry.href}-${entry.title}`}
-                        value={`${entry.title} ${entry.detail}`}
-                        keywords={entry.keywords}
+                        {...entryMatch(entry)}
                         onSelect={() => go(entry)}
                         className={cn(itemClass, "items-start")}
                       >

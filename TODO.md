@@ -48,7 +48,7 @@ phone sizes; these need eyes:
 - [ ] Globe on a real phone: a sideways swipe turns it, an up/down swipe still
       scrolls the page, tapping a dot selects that city, and it stays smooth on
       a mid-range phone.
-- [ ] Search palette on a Mac shows ⌘K; try a paper title, a tool alias
+- [x] Search palette on a Mac shows ⌘K; try a paper title, a tool alias
       (e.g. "UAV"), a city.
 - [ ] Kasi on a phone: keyboard doesn't cover the input, Hindi typing works,
       "Clear chat" works, answers link to the right pages.
