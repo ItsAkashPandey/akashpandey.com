@@ -95,7 +95,8 @@ export async function appendChatLogRows(
       if (!databaseUrl && !filePath) {
         return {
           status: "error",
-          error: error instanceof Error ? error.message : "Chat log webhook failed",
+          error:
+            error instanceof Error ? error.message : "Chat log webhook failed",
         };
       }
     }

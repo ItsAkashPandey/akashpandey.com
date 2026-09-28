@@ -26,7 +26,10 @@ describe("content data", () => {
   it("has photos for every activity folder", () => {
     for (const activity of getActivities()) {
       if (activity.imageFolder) {
-        expect(getActivityImages(activity).length, activity.slug).toBeGreaterThan(0);
+        expect(
+          getActivityImages(activity).length,
+          activity.slug,
+        ).toBeGreaterThan(0);
       }
     }
   });
@@ -55,13 +58,16 @@ describe("contact map points", () => {
   });
 
   it("includes the KVK farmer outreach that used to be dropped", () => {
-    const hrefs = data.points.flatMap((point) => point.items.map((item) => item.href));
+    const hrefs = data.points.flatMap((point) =>
+      point.items.map((item) => item.href),
+    );
     expect(hrefs).toContain("/activities/kvk-farmer-outreach-2023");
   });
 
   it("links popups to the permanent activity pages", () => {
     for (const point of data.points.filter((p) => p.category === "activity")) {
-      for (const item of point.items) expect(item.href).toMatch(/^\/activities\/[a-z0-9-]+$/);
+      for (const item of point.items)
+        expect(item.href).toMatch(/^\/activities\/[a-z0-9-]+$/);
     }
   });
 });
@@ -76,13 +82,18 @@ describe("buildGlobeData", () => {
   });
 
   it("puts the home dot on the campus", () => {
-    expect(globe.stops[0].coordinates).toEqual(getPlace(HOME_PLACE_ID).coordinates);
+    expect(globe.stops[0].coordinates).toEqual(
+      getPlace(HOME_PLACE_ID).coordinates,
+    );
     expect(globe.stops[0].distanceKm).toBe(0);
   });
 
   it("keeps every activity, role and programme", () => {
     const items = globe.stops.reduce((sum, stop) => sum + stop.items.length, 0);
-    const points = buildMapData().points.reduce((sum, point) => sum + point.items.length, 0);
+    const points = buildMapData().points.reduce(
+      (sum, point) => sum + point.items.length,
+      0,
+    );
     expect(items).toBe(points);
   });
 

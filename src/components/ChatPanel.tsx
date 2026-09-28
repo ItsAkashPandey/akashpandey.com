@@ -101,7 +101,9 @@ export default function ChatPanel({ isExpanded }: { isExpanded: boolean }) {
   const updateMessage = useCallback(
     (id: string, patch: (message: ChatMessageShape) => ChatMessageShape) => {
       setMessages((previous) =>
-        previous.map((message) => (message.id === id ? patch(message) : message)),
+        previous.map((message) =>
+          message.id === id ? patch(message) : message,
+        ),
       );
     },
     [],
@@ -132,7 +134,10 @@ export default function ChatPanel({ isExpanded }: { isExpanded: boolean }) {
         setMessages((previous) =>
           previous.filter((item) => item.id !== assistantId || item.content),
         );
-        updateMessage(assistantId, (message) => ({ ...message, pending: false }));
+        updateMessage(assistantId, (message) => ({
+          ...message,
+          pending: false,
+        }));
       };
 
       try {
@@ -161,16 +166,20 @@ export default function ChatPanel({ isExpanded }: { isExpanded: boolean }) {
           setVisitorName(decodeURIComponent(namedVisitor));
         }
 
-        if (response.headers.get("Content-Type")?.includes("application/json")) {
+        if (
+          response.headers.get("Content-Type")?.includes("application/json")
+        ) {
           const data = (await response.json()) as {
             reply?: string;
             visitorName?: string | null;
             signature?: string;
           };
-          if (data.visitorName && !visitorName) setVisitorName(data.visitorName);
+          if (data.visitorName && !visitorName)
+            setVisitorName(data.visitorName);
           updateMessage(assistantId, (message) => ({
             ...message,
-            content: data.reply?.trim() || "Sorry, I don't have an answer for that.",
+            content:
+              data.reply?.trim() || "Sorry, I don't have an answer for that.",
             signature: data.signature,
             pending: false,
           }));
@@ -179,7 +188,9 @@ export default function ChatPanel({ isExpanded }: { isExpanded: boolean }) {
 
         // Streamed answer: NDJSON events. Text is painted at most once per
         // frame, so a fast stream doesn't re-render Markdown for every token.
-        const reader = response.body!.pipeThrough(new TextDecoderStream()).getReader();
+        const reader = response
+          .body!.pipeThrough(new TextDecoderStream())
+          .getReader();
         let buffer = "";
         let pendingText = "";
         let frame = 0;
@@ -226,7 +237,10 @@ export default function ChatPanel({ isExpanded }: { isExpanded: boolean }) {
         }
         cancelAnimationFrame(frame);
         flush();
-        updateMessage(assistantId, (message) => ({ ...message, pending: false }));
+        updateMessage(assistantId, (message) => ({
+          ...message,
+          pending: false,
+        }));
       } catch {
         fail("Could not reach Kasi. Check your connection and try again.");
       } finally {

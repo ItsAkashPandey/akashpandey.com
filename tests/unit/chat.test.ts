@@ -1,13 +1,19 @@
 import { sheetSafe } from "@/lib/chat-log";
 import { signReply, verifyReply } from "@/lib/chat-signing";
-import { ageOn, cardsForReply, findRelevantActivities } from "@/lib/site-knowledge";
+import {
+  ageOn,
+  cardsForReply,
+  findRelevantActivities,
+} from "@/lib/site-knowledge";
 import { inferVisitorName } from "@/lib/visitor-name";
 import { describe, expect, it } from "vitest";
 
 describe("inferVisitorName", () => {
   it("accepts explicit introductions", () => {
     expect(inferVisitorName("I'm Rahul")).toBe("Rahul");
-    expect(inferVisitorName("hi, my name is priya sharma.")).toBe("Priya Sharma");
+    expect(inferVisitorName("hi, my name is priya sharma.")).toBe(
+      "Priya Sharma",
+    );
   });
 
   it("does not treat questions or topics as names", () => {
@@ -21,7 +27,9 @@ describe("inferVisitorName", () => {
 
 describe("retrieval", () => {
   it("finds drone work across activities", () => {
-    const slugs = findRelevantActivities("Which drones has he flown?").map((a) => a.slug);
+    const slugs = findRelevantActivities("Which drones has he flown?").map(
+      (a) => a.slug,
+    );
     expect(slugs).toContain("ntpc-plantation-health-2025");
   });
 
@@ -31,9 +39,10 @@ describe("retrieval", () => {
   });
 
   it("uses the previous question for follow-ups", () => {
-    const slugs = findRelevantActivities("and the prize?", "Tell me about AABTonics").map(
-      (a) => a.slug,
-    );
+    const slugs = findRelevantActivities(
+      "and the prize?",
+      "Tell me about AABTonics",
+    ).map((a) => a.slug);
     expect(slugs).toContain("aabtonics-2022");
   });
 
@@ -63,7 +72,9 @@ describe("chat safety", () => {
     process.env.CHAT_SIGNING_SECRET = "test-secret";
     const signature = signReply("conversation-1", "A reply");
     expect(verifyReply("conversation-1", "A reply", signature)).toBe(true);
-    expect(verifyReply("conversation-1", "An edited reply", signature)).toBe(false);
+    expect(verifyReply("conversation-1", "An edited reply", signature)).toBe(
+      false,
+    );
     expect(verifyReply("conversation-2", "A reply", signature)).toBe(false);
     expect(verifyReply("conversation-1", "A reply", undefined)).toBe(false);
   });

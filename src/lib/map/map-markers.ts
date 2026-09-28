@@ -87,10 +87,7 @@ export function createClusterMarker(counts: ClusterCounts) {
   const parts = categories
     .filter((key) => counts[key] > 0)
     .map((key) => countLabel(key, counts[key]));
-  const summary = [
-    counts.home ? "Akash is based here" : "",
-    parts.join(", "),
-  ]
+  const summary = [counts.home ? "Akash is based here" : "", parts.join(", ")]
     .filter(Boolean)
     .join(". ");
   const size = total >= 20 ? 44 : total >= 8 ? 38 : 32;
@@ -114,7 +111,8 @@ export function createClusterMarker(counts: ClusterCounts) {
   ring.style.background = stops.length
     ? `conic-gradient(${stops.join(", ")})`
     : HOME_ACCENT;
-  if (counts.home) ring.style.boxShadow = `0 0 0 3px ${HOME_ACCENT}, 0 2px 8px rgb(0 0 0 / 0.3)`;
+  if (counts.home)
+    ring.style.boxShadow = `0 0 0 3px ${HOME_ACCENT}, 0 2px 8px rgb(0 0 0 / 0.3)`;
 
   const face = document.createElement("span");
   face.className =

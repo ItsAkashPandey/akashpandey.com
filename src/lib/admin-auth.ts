@@ -92,7 +92,9 @@ function signingKey(secret: string) {
     .update(process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD || "")
     .digest("hex");
   return createHmac("sha256", secret)
-    .update(`admin-session:${credential}:${process.env.ADMIN_SESSION_VERSION ?? "1"}`)
+    .update(
+      `admin-session:${credential}:${process.env.ADMIN_SESSION_VERSION ?? "1"}`,
+    )
     .digest();
 }
 
@@ -121,7 +123,8 @@ export function decodeAdminSessionCookieValue(
   const [payloadB64, signatureB64, extra] = value.split(".");
   if (!payloadB64 || !signatureB64 || extra !== undefined) return null;
 
-  if (!timingSafeStringEqual(signatureB64, sign(payloadB64, secret))) return null;
+  if (!timingSafeStringEqual(signatureB64, sign(payloadB64, secret)))
+    return null;
 
   try {
     const payload = JSON.parse(
@@ -146,7 +149,9 @@ export const ADMIN_SESSION_MAX_AGE = SESSION_SECONDS;
 export async function readAdminSession() {
   const cookieStore = await cookies();
   const value = cookieStore.get(COOKIE_NAME)?.value;
-  return value ? decodeAdminSessionCookieValue(value, getAdminSessionSecret()) : null;
+  return value
+    ? decodeAdminSessionCookieValue(value, getAdminSessionSecret())
+    : null;
 }
 
 /** A 401 response when there is no valid admin session, otherwise null. */

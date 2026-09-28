@@ -1,4 +1,7 @@
-import { slugFromHash, type ActivityListItem } from "@/components/ProgressiveActivitiesList";
+import {
+  slugFromHash,
+  type ActivityListItem,
+} from "@/components/ProgressiveActivitiesList";
 import { getActivities } from "@/lib/content";
 import { getHighlightTerms } from "@/lib/search";
 import { describe, expect, it } from "vitest";
@@ -18,7 +21,9 @@ describe("activity deep links", () => {
   const activities = getActivities() as ActivityListItem[];
 
   it("accepts a permanent slug", () => {
-    expect(slugFromHash("#nasa-space-apps-2024", activities)).toBe("nasa-space-apps-2024");
+    expect(slugFromHash("#nasa-space-apps-2024", activities)).toBe(
+      "nasa-space-apps-2024",
+    );
   });
 
   it("maps the old #activity-N links onto slugs", () => {

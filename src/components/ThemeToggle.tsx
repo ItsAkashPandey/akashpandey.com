@@ -23,9 +23,8 @@ export default function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const current: Choice = mounted && ORDER.includes(theme as Choice)
-    ? (theme as Choice)
-    : "system";
+  const current: Choice =
+    mounted && ORDER.includes(theme as Choice) ? (theme as Choice) : "system";
   const next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length];
   const Icon = current === "light" ? Sun : current === "dark" ? Moon : Monitor;
 

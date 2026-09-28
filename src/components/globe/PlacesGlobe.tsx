@@ -10,10 +10,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GlobeMarker, GlobeScene, GlobeTheme } from "./globe-scene";
 
 const ITEMS_SHOWN = 4;
-const CATEGORY_ORDER: MarkerCategory[] = ["experience", "education", "activity"];
+const CATEGORY_ORDER: MarkerCategory[] = [
+  "experience",
+  "education",
+  "activity",
+];
 
 /** "28 26% 12%" from a CSS custom property, as numbers. */
-function readHsl(style: CSSStyleDeclaration, name: string): [number, number, number] {
+function readHsl(
+  style: CSSStyleDeclaration,
+  name: string,
+): [number, number, number] {
   const [h = 0, s = 0, l = 0] = style
     .getPropertyValue(name)
     .trim()
@@ -64,9 +71,11 @@ export default function PlacesGlobe({ data }: { data: GlobeData }) {
   const [index, setIndex] = useState(0);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [hover, setHover] = useState<{ id: string; x: number; y: number } | null>(
-    null,
-  );
+  const [hover, setHover] = useState<{
+    id: string;
+    x: number;
+    y: number;
+  } | null>(null);
 
   const markers = useMemo(() => stops.map(markerFor), [stops]);
   const indexById = useMemo(
@@ -105,7 +114,8 @@ export default function PlacesGlobe({ data }: { data: GlobeData }) {
         canvas,
         markers,
         theme: readTheme(),
-        reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)")
+          .matches,
         onHover: (id, x, y) => setHover(id ? { id, x, y } : null),
         onSelect: (id) => {
           const position = indexById.get(id);
@@ -136,7 +146,9 @@ export default function PlacesGlobe({ data }: { data: GlobeData }) {
       cleanups.push(() => visible.disconnect());
 
       document.addEventListener("visibilitychange", setActive);
-      cleanups.push(() => document.removeEventListener("visibilitychange", setActive));
+      cleanups.push(() =>
+        document.removeEventListener("visibilitychange", setActive),
+      );
 
       // next-themes flips the class on <html>; read the colours again.
       const theme = new MutationObserver(() => scene?.setTheme(readTheme()));
@@ -185,7 +197,8 @@ export default function PlacesGlobe({ data }: { data: GlobeData }) {
   }, [index, ready, stops]);
 
   const step = useCallback(
-    (delta: number) => setIndex((current) => (current + delta + stops.length) % stops.length),
+    (delta: number) =>
+      setIndex((current) => (current + delta + stops.length) % stops.length),
     [stops.length],
   );
 
@@ -255,7 +268,10 @@ export default function PlacesGlobe({ data }: { data: GlobeData }) {
             type="button"
             onClick={() => step(-1)}
             aria-label="Previous place"
-            className={cn(buttonVariants({ variant: "outline", size: "icon" }), "rounded-full")}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "icon" }),
+              "rounded-full",
+            )}
           >
             <ChevronLeft aria-hidden />
           </button>
@@ -263,7 +279,10 @@ export default function PlacesGlobe({ data }: { data: GlobeData }) {
             type="button"
             onClick={() => step(1)}
             aria-label="Next place"
-            className={cn(buttonVariants({ variant: "outline", size: "icon" }), "rounded-full")}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "icon" }),
+              "rounded-full",
+            )}
           >
             <ChevronRight aria-hidden />
           </button>
@@ -299,7 +318,10 @@ export default function PlacesGlobe({ data }: { data: GlobeData }) {
             style={{ left: hover.x, top: hover.y }}
           >
             <span className="font-semibold">{hovered.city}</span>
-            <span className="text-muted-foreground"> · {countsText(hovered)}</span>
+            <span className="text-muted-foreground">
+              {" "}
+              · {countsText(hovered)}
+            </span>
           </div>
         )}
       </div>

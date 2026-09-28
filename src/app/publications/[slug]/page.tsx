@@ -37,7 +37,9 @@ function summary(publication: Publication) {
  * Highwire tags, which Google Scholar reads to list a paper and link this
  * page as a version of it. Only for work that is out or accepted.
  */
-function scholarTags(publication: Publication): Record<string, string | string[]> {
+function scholarTags(
+  publication: Publication,
+): Record<string, string | string[]> {
   if (publication.status !== "Published" && publication.status !== "Accepted") {
     return {};
   }
@@ -48,14 +50,18 @@ function scholarTags(publication: Publication): Record<string, string | string[]
     citation_publication_date: String(publication.year),
   };
   if (publication.journal) tags.citation_journal_title = publication.journal;
-  if (publication.conference) tags.citation_conference_title = publication.conference;
+  if (publication.conference)
+    tags.citation_conference_title = publication.conference;
   if (publication.book) tags.citation_inbook_title = publication.book;
   if (publication.publisher) tags.citation_publisher = publication.publisher;
   if (publication.volume) tags.citation_volume = String(publication.volume);
   if (firstPage) tags.citation_firstpage = firstPage.trim();
   if (lastPage) tags.citation_lastpage = lastPage.trim();
   if (publication.doi) {
-    tags.citation_doi = publication.doi.replace(/^https?:\/\/(dx\.)?doi\.org\//, "");
+    tags.citation_doi = publication.doi.replace(
+      /^https?:\/\/(dx\.)?doi\.org\//,
+      "",
+    );
   }
   return tags;
 }
@@ -150,8 +156,12 @@ export default async function PublicationPage({ params }: Params) {
         {venue && (
           <p className="text-muted-foreground text-sm">
             {venue}
-            {publication.journalQuartile ? ` · ${publication.journalQuartile}` : ""}
-            {publication.impactFactor ? ` · IF ${publication.impactFactor}` : ""}
+            {publication.journalQuartile
+              ? ` · ${publication.journalQuartile}`
+              : ""}
+            {publication.impactFactor
+              ? ` · IF ${publication.impactFactor}`
+              : ""}
           </p>
         )}
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -185,7 +195,10 @@ export default async function PublicationPage({ params }: Params) {
           aria-label="Figures"
           className="record-surface flex justify-center rounded-lg p-6"
         >
-          <PublicationMediaPreview media={item.media} title={publication.title} />
+          <PublicationMediaPreview
+            media={item.media}
+            title={publication.title}
+          />
         </section>
       )}
 

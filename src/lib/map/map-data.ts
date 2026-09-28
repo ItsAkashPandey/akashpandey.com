@@ -10,7 +10,10 @@ import type { Experience } from "@/lib/schemas";
  * other.
  */
 function slug(text: string) {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 /**
@@ -40,7 +43,10 @@ export function buildMapData(): MapData {
     }
     point.items.push({
       title: activity.name,
-      when: formatActivityDate(activity.date, { month: "short", year: "numeric" }),
+      when: formatActivityDate(activity.date, {
+        month: "short",
+        year: "numeric",
+      }),
       href: activityHref(activity.slug),
     });
   }

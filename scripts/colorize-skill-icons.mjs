@@ -68,7 +68,10 @@ function duotoneRamp(brand) {
 
   const factor = SHADOW_LUMINANCE / light;
   const shadow = Object.fromEntries(
-    channels.map((key) => [key, Math.min(255, Math.round(brand[key] * factor))]),
+    channels.map((key) => [
+      key,
+      Math.min(255, Math.round(brand[key] * factor)),
+    ]),
   );
 
   const towardsPaper = Math.min(

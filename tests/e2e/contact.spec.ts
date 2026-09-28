@@ -54,7 +54,9 @@ test.describe("contact page", () => {
     await page.goto("/contact");
   });
 
-  test("submitting the empty form shows validation messages", async ({ page }) => {
+  test("submitting the empty form shows validation messages", async ({
+    page,
+  }) => {
     await page.getByRole("button", { name: "Send message" }).click();
 
     await expect(page.getByText("Name is required.")).toBeVisible();

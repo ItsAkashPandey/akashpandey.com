@@ -32,10 +32,17 @@ export type GlobeData = {
   abroad: string[];
 };
 
-const CATEGORY_ORDER: MarkerCategory[] = ["experience", "education", "activity"];
+const CATEGORY_ORDER: MarkerCategory[] = [
+  "experience",
+  "education",
+  "activity",
+];
 
 function slug(text: string) {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 /**
@@ -48,7 +55,8 @@ export function buildGlobeData(): GlobeData {
   const byCity = new Map<string, GlobeStop & { weight: Map<string, number> }>();
 
   const points = [...buildMapData().points].sort(
-    (a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category),
+    (a, b) =>
+      CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category),
   );
 
   for (const point of points) {
@@ -69,7 +77,10 @@ export function buildGlobeData(): GlobeData {
       byCity.set(id, stop);
     }
     stop.counts[point.category] += point.items.length;
-    stop.weight.set(point.place, (stop.weight.get(point.place) ?? 0) + point.items.length);
+    stop.weight.set(
+      point.place,
+      (stop.weight.get(point.place) ?? 0) + point.items.length,
+    );
     for (const item of point.items) {
       stop.items.push({ ...item, category: point.category, place: place.name });
     }
@@ -84,7 +95,8 @@ export function buildGlobeData(): GlobeData {
     return {
       ...stop,
       coordinates,
-      distanceKm: Math.round(distanceKm(home.coordinates, coordinates) / 10) * 10,
+      distanceKm:
+        Math.round(distanceKm(home.coordinates, coordinates) / 10) * 10,
     };
   });
 
@@ -108,13 +120,17 @@ export function buildGlobeData(): GlobeData {
   }
 
   const inIndia = tour.filter((stop) => stop.country === "India");
-  const byLatitude = [...inIndia].sort((a, b) => b.coordinates[1] - a.coordinates[1]);
+  const byLatitude = [...inIndia].sort(
+    (a, b) => b.coordinates[1] - a.coordinates[1],
+  );
 
   return {
     stops: tour,
     countries: new Set(tour.map((stop) => stop.country)).size,
     north: byLatitude[0]?.city ?? "",
     south: byLatitude.at(-1)?.city ?? "",
-    abroad: tour.filter((stop) => stop.country !== "India").map((stop) => stop.city),
+    abroad: tour
+      .filter((stop) => stop.country !== "India")
+      .map((stop) => stop.city),
   };
 }

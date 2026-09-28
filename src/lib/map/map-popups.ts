@@ -30,7 +30,9 @@ const CATEGORIES = Object.keys(CATEGORY_LABELS) as MarkerCategory[];
 function rows(items: MapItem[]) {
   return items
     .map(
-      (item) => `<li><a class="map-popup-row" href="${escapeHtml(item.href)}" data-internal>
+      (
+        item,
+      ) => `<li><a class="map-popup-row" href="${escapeHtml(item.href)}" data-internal>
         <span class="map-popup-text">
           <span class="map-popup-name">${escapeHtml(item.title)}</span>
           <span class="map-popup-date">${escapeHtml(item.when)}</span>
@@ -74,8 +76,7 @@ export function groupPopupHtml(points: MapPoint[], includesHome: boolean) {
     const items = inCategory.flatMap((point) =>
       point.items.map((item) => ({
         ...item,
-        when:
-          labels.length > 1 ? `${item.when} · ${point.label}` : item.when,
+        when: labels.length > 1 ? `${item.when} · ${point.label}` : item.when,
       })),
     );
     return `<li class="map-popup-section" data-category="${category}">

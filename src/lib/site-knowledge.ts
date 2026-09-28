@@ -39,7 +39,10 @@ export function getProfileText() {
   if (profileText === null) {
     try {
       profileText = fs
-        .readFileSync(path.join(process.cwd(), "src", "data", "profile.md"), "utf-8")
+        .readFileSync(
+          path.join(process.cwd(), "src", "data", "profile.md"),
+          "utf-8",
+        )
         .trim();
     } catch {
       profileText =
@@ -63,7 +66,10 @@ export function ageOn(today: Date, birthDate = BIRTH_DATE) {
   return age;
 }
 
-function positionLine(org: Experience, position: Experience["positions"][number]) {
+function positionLine(
+  org: Experience,
+  position: Experience["positions"][number],
+) {
   const details = position.description?.join(" ") ?? "";
   return `- ${position.title}, ${org.shortName} (${org.name}), ${position.start} – ${
     position.end ?? "Present"
@@ -218,7 +224,9 @@ function getActivityIndex() {
   activityIndex ??= getActivities().map((activity) => ({
     activity,
     name: new Set(words(activity.name)),
-    place: new Set(words(`${activity.location} ${getPlace(activity.place).name}`)),
+    place: new Set(
+      words(`${activity.location} ${getPlace(activity.place).name}`),
+    ),
     body: new Set(words(activity.description)),
   }));
   return activityIndex;
@@ -236,7 +244,8 @@ export function findRelevantActivities(
 ) {
   const terms = queryTerms(`${message} ${previousQuestion}`);
   const years = new Set(message.match(/\b20\d{2}\b/g) ?? []);
-  const wantsRecent = /\b(recent|recently|latest|newest|last|current|now)\b/i.test(message);
+  const wantsRecent =
+    /\b(recent|recently|latest|newest|last|current|now)\b/i.test(message);
 
   const scored = getActivityIndex().map((entry, index) => {
     let score = 0;
@@ -282,9 +291,13 @@ export function buildKnowledge(
   return {
     relevant,
     // The same for every question.
-    facts: ["# Profile", getProfileText(), "", "# From the website's data", getFactSheet()].join(
-      "\n",
-    ),
+    facts: [
+      "# Profile",
+      getProfileText(),
+      "",
+      "# From the website's data",
+      getFactSheet(),
+    ].join("\n"),
     // Changes from question to question.
     context: [
       `Today is ${today.toISOString().slice(0, 10)}. Akash is ${ageOn(today)} years old.`,
@@ -307,7 +320,9 @@ export function cardsForReply(reply: string): ChatUiCard[] {
   const cards: ChatUiCard[] = [];
   const seen = new Set<string>();
 
-  for (const [, href] of reply.matchAll(/\]\((\/(?:activities|publications)\/[a-z0-9-]+)\)/g)) {
+  for (const [, href] of reply.matchAll(
+    /\]\((\/(?:activities|publications)\/[a-z0-9-]+)\)/g,
+  )) {
     if (seen.has(href) || cards.length >= 2) continue;
     seen.add(href);
     const slug = href.split("/").pop()!;
@@ -321,7 +336,10 @@ export function cardsForReply(reply: string): ChatUiCard[] {
         meta: `${formatActivityDate(activity.date, { month: "short", year: "numeric" })} · ${
           getPlace(activity.place).name
         }`,
-        subtitle: truncate(plainText(splitDescription(activity.description).body), 140),
+        subtitle: truncate(
+          plainText(splitDescription(activity.description).body),
+          140,
+        ),
       });
     } else {
       const publication = getPublication(slug);
@@ -329,7 +347,11 @@ export function cardsForReply(reply: string): ChatUiCard[] {
       cards.push({
         title: publication.title,
         href,
-        meta: [publication.year, publicationVenue(publication), publication.status]
+        meta: [
+          publication.year,
+          publicationVenue(publication),
+          publication.status,
+        ]
           .filter(Boolean)
           .join(" · "),
       });

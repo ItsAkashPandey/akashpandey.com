@@ -20,8 +20,16 @@ export default function NotFound() {
               icon={<ArrowLeftIcon className="size-4" />}
               position="left"
             />
-            <LinkWithIcon href="/activities" text="activities" position="left" />
-            <LinkWithIcon href="/publications" text="publications" position="left" />
+            <LinkWithIcon
+              href="/activities"
+              text="activities"
+              position="left"
+            />
+            <LinkWithIcon
+              href="/publications"
+              text="publications"
+              position="left"
+            />
           </div>
         </div>
       </section>

@@ -163,11 +163,15 @@ export default function PublicationsWithSearch({
     FILTER_KEYS,
     (raw) => ({
       ...(raw.query ? { query: raw.query } : {}),
-      ...(raw.year && years.includes(Number(raw.year)) ? { year: raw.year } : {}),
+      ...(raw.year && years.includes(Number(raw.year))
+        ? { year: raw.year }
+        : {}),
       ...(raw.type && TYPE_ORDER.includes(raw.type as PublicationType)
         ? { type: raw.type }
         : {}),
-      ...(raw.sort === "oldest" || raw.sort === "title" ? { sort: raw.sort } : {}),
+      ...(raw.sort === "oldest" || raw.sort === "title"
+        ? { sort: raw.sort }
+        : {}),
     }),
   );
   const normalizedQuery = normalizeSearchText(filters.query);
@@ -199,7 +203,10 @@ export default function PublicationsWithSearch({
     return publications
       .map((pub) => ({
         pub,
-        score: scoreSearchDocument(searchIndex.get(pub.id) ?? [], normalizedQuery),
+        score: scoreSearchDocument(
+          searchIndex.get(pub.id) ?? [],
+          normalizedQuery,
+        ),
       }))
       .filter(({ pub, score }) => {
         if (normalizedQuery && score === 0) return false;
@@ -226,7 +233,8 @@ export default function PublicationsWithSearch({
     const counts: Partial<Record<PublicationType | "all", number>> = {
       all: publications.length,
     };
-    for (const pub of publications) counts[pub.type] = (counts[pub.type] ?? 0) + 1;
+    for (const pub of publications)
+      counts[pub.type] = (counts[pub.type] ?? 0) + 1;
     return counts;
   }, [publications]);
 
@@ -236,7 +244,10 @@ export default function PublicationsWithSearch({
     filters.type !== "all" ||
     filters.sort !== "newest";
 
-  const formatOptions: (PublicationType | "all")[] = ["all", ...publicationTypes];
+  const formatOptions: (PublicationType | "all")[] = [
+    "all",
+    ...publicationTypes,
+  ];
 
   return (
     <div className="grid min-w-0 gap-5 lg:grid-cols-[232px_minmax(0,1fr)] lg:items-start xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-8">
@@ -251,7 +262,10 @@ export default function PublicationsWithSearch({
               <SlidersHorizontal className="size-4" aria-hidden />
               <h2 className="text-sm font-semibold">Library</h2>
             </div>
-            <p className="text-muted-foreground mt-1 text-xs" aria-live="polite">
+            <p
+              className="text-muted-foreground mt-1 text-xs"
+              aria-live="polite"
+            >
               {filtered.length} publication{filtered.length !== 1 ? "s" : ""}
             </p>
           </div>
@@ -276,14 +290,19 @@ export default function PublicationsWithSearch({
             </Label>
             <div className="relative min-w-0">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
-                <Search className="text-muted-foreground size-3.5" aria-hidden />
+                <Search
+                  className="text-muted-foreground size-3.5"
+                  aria-hidden
+                />
               </span>
               <Input
                 id="publication-search"
                 type="search"
                 placeholder="Title, author, venue"
                 value={filters.query}
-                onChange={(event) => updateFilters({ query: event.target.value })}
+                onChange={(event) =>
+                  updateFilters({ query: event.target.value })
+                }
                 className="border-border/60 bg-background/70 h-10 rounded-lg pl-10 text-sm shadow-none"
               />
             </div>
@@ -295,7 +314,11 @@ export default function PublicationsWithSearch({
               {formatOptions.map((type) => {
                 const config =
                   type === "all"
-                    ? { label: "All formats", Icon: LegendIcon, ink: "text-foreground/80" }
+                    ? {
+                        label: "All formats",
+                        Icon: LegendIcon,
+                        ink: "text-foreground/80",
+                      }
                     : typeStyles[type];
                 const Icon = config.Icon;
                 const selected = filters.type === type;
@@ -391,7 +414,12 @@ export default function PublicationsWithSearch({
         {filtered.length === 0 ? (
           <div className="bg-muted/55 text-muted-foreground flex flex-col items-center gap-3 rounded-lg px-6 py-16 text-center text-sm">
             No publications match these filters.
-            <Button type="button" variant="outline" size="sm" onClick={resetFilters}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={resetFilters}
+            >
               Clear filters
             </Button>
           </div>
@@ -508,7 +536,9 @@ function PublicationCard({
 
         <div className="flex min-w-0 flex-col gap-4">
           <div>
-            <p className="text-muted-foreground text-xs font-semibold">Authors</p>
+            <p className="text-muted-foreground text-xs font-semibold">
+              Authors
+            </p>
             <p className="mt-1.5 text-sm leading-relaxed">
               <HighlightText text={publication.authors} query={query} />
             </p>

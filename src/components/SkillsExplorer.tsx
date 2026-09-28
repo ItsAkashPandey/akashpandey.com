@@ -34,16 +34,26 @@ export type SkillCategoryView = Omit<SkillCategory, "subcategories"> & {
   subcategories: { name: string; tools: SkillToolView[] }[];
 };
 
-const subcategoryConfig: Record<string, { Icon: typeof Plane; tone: string }> = {
-  UAVs: { Icon: Plane, tone: "text-tone-amber bg-tone-amber/10" },
-  "Ground Sensors": { Icon: RadioTower, tone: "text-tone-rose bg-tone-rose/10" },
-  GPS: { Icon: MapPin, tone: "text-tone-sky bg-tone-sky/10" },
-  Surveying: { Icon: Ruler, tone: "text-tone-slate bg-tone-slate/10" },
-  Programming: { Icon: Code2, tone: "text-tone-violet bg-tone-violet/10" },
-  "Geospatial Analysis": { Icon: Globe2, tone: "text-tone-green bg-tone-green/10" },
-  Photogrammetry: { Icon: Camera, tone: "text-tone-teal bg-tone-teal/10" },
-  "Civil Engineering": { Icon: Building2, tone: "text-tone-amber bg-tone-amber/10" },
-};
+const subcategoryConfig: Record<string, { Icon: typeof Plane; tone: string }> =
+  {
+    UAVs: { Icon: Plane, tone: "text-tone-amber bg-tone-amber/10" },
+    "Ground Sensors": {
+      Icon: RadioTower,
+      tone: "text-tone-rose bg-tone-rose/10",
+    },
+    GPS: { Icon: MapPin, tone: "text-tone-sky bg-tone-sky/10" },
+    Surveying: { Icon: Ruler, tone: "text-tone-slate bg-tone-slate/10" },
+    Programming: { Icon: Code2, tone: "text-tone-violet bg-tone-violet/10" },
+    "Geospatial Analysis": {
+      Icon: Globe2,
+      tone: "text-tone-green bg-tone-green/10",
+    },
+    Photogrammetry: { Icon: Camera, tone: "text-tone-teal bg-tone-teal/10" },
+    "Civil Engineering": {
+      Icon: Building2,
+      tone: "text-tone-amber bg-tone-amber/10",
+    },
+  };
 
 function categoryLabel(value: string) {
   return value === "instrument handling" ? "Field instruments" : "Software";
@@ -167,7 +177,11 @@ export default function SkillsExplorer({
         </TabsList>
 
         {categories.map((category) => (
-          <TabsContent key={category.id} value={String(category.id)} className="mt-0">
+          <TabsContent
+            key={category.id}
+            value={String(category.id)}
+            className="mt-0"
+          >
             <section className="grid gap-5 px-1 pb-6 lg:grid-cols-[minmax(0,1fr)_264px] lg:items-center">
               <div className="min-w-0">
                 <h2 className="font-serif text-3xl leading-tight sm:text-4xl">
@@ -217,7 +231,9 @@ export default function SkillsExplorer({
                         <SubcategoryIcon className="size-4" aria-hidden />
                       </span>
                       <div>
-                        <h3 className="text-sm font-bold">{subcategory.name}</h3>
+                        <h3 className="text-sm font-bold">
+                          {subcategory.name}
+                        </h3>
                         <p className="text-muted-foreground text-xs">
                           {subcategory.tools.length} tools
                         </p>

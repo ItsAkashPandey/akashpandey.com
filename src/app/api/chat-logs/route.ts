@@ -78,7 +78,9 @@ async function readWebhook(
   }
   if (token) legacy.searchParams.set("token", token);
   const legacyResponse = await fetch(legacy, { cache: "no-store" });
-  const legacyJson = (await legacyResponse.json().catch(() => null)) as WebhookRead;
+  const legacyJson = (await legacyResponse
+    .json()
+    .catch(() => null)) as WebhookRead;
   if (!legacyResponse.ok || legacyJson?.error) {
     throw new Error(
       legacyJson?.error || `Webhook read failed (${legacyResponse.status})`,

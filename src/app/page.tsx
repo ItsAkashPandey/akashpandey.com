@@ -82,7 +82,11 @@ function latestDegree() {
   }`;
 }
 
-const SkillTile = ({ skill }: { skill: ReturnType<typeof getAllTools>[number] }) => (
+const SkillTile = ({
+  skill,
+}: {
+  skill: ReturnType<typeof getAllTools>[number];
+}) => (
   <Link
     href={`/skills#${toolSlug(skill.name)}`}
     className="group/tool flex flex-col items-center gap-1.5 transition-transform duration-200 hover:-translate-y-0.5 sm:gap-2"

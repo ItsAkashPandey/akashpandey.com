@@ -15,9 +15,12 @@ export default function ContactPage() {
       <header className="page-heading">
         <h1 className="title">contact me.</h1>
         <p className="page-lede">
-          For collaborations, research questions, talks, or just a hello, drop
-          a message below or email{" "}
-          <a className="link-ink font-semibold" href="mailto:akash_k@ce.iitr.ac.in">
+          For collaborations, research questions, talks, or just a hello, drop a
+          message below or email{" "}
+          <a
+            className="link-ink font-semibold"
+            href="mailto:akash_k@ce.iitr.ac.in"
+          >
             akash_k@ce.iitr.ac.in
           </a>
           .

@@ -30,7 +30,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }
 
-  if (typeof username !== "string" || typeof password !== "string" || !username || !password) {
+  if (
+    typeof username !== "string" ||
+    typeof password !== "string" ||
+    !username ||
+    !password
+  ) {
     return NextResponse.json(
       { error: "Missing username or password" },
       { status: 400 },

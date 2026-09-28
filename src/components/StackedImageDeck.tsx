@@ -395,7 +395,12 @@ export default function StackedImageDeck({
   // directions at idle priority, so a swipe lands on an image already decoded.
   useEffect(() => {
     if (!nearViewport || photos.length < 2) return;
-    const rendering = { sizes, width: imageWidth, height: imageHeight, quality };
+    const rendering = {
+      sizes,
+      width: imageWidth,
+      height: imageHeight,
+      quality,
+    };
     const neighbours = [
       photos[wrapDeckIndex(frontIndex + 1, photos.length)],
       photos[wrapDeckIndex(frontIndex - 1, photos.length)],
@@ -409,7 +414,15 @@ export default function StackedImageDeck({
     }
     const timer = setTimeout(run, 200);
     return () => clearTimeout(timer);
-  }, [photos, frontIndex, nearViewport, sizes, imageWidth, imageHeight, quality]);
+  }, [
+    photos,
+    frontIndex,
+    nearViewport,
+    sizes,
+    imageWidth,
+    imageHeight,
+    quality,
+  ]);
 
   /** Everything behind the front card, back-most first. */
   const behind = useMemo(() => {

@@ -34,13 +34,15 @@ describe("parseCollaborators", () => {
     const people = parseCollaborators(
       "Prof. Vivek Kumar Malik, Sivani, Peeyush and Akash A.",
     );
-    expect(people.every((person) => person.kind === "person" && person.verified)).toBe(
-      true,
-    );
+    expect(
+      people.every((person) => person.kind === "person" && person.verified),
+    ).toBe(true);
   });
 
   it("does not turn a group description into a person", () => {
-    const [group] = parseCollaborators("Colleagues from the Geospatial Engineering Group, IITR");
+    const [group] = parseCollaborators(
+      "Colleagues from the Geospatial Engineering Group, IITR",
+    );
     // A known LinkedIn page wins; otherwise it would be a plain group.
     expect(group.kind === "group" || group.kind === "person").toBe(true);
     expect(parseCollaborators("IN-SPACe organizers")[0].kind).toBe("group");
@@ -56,7 +58,13 @@ describe("parseCollaborators", () => {
   });
 
   it("keeps the supervisor role separate from the name", () => {
-    const [person] = parseCollaborators("my supervisor - Prof. Siddhartha Khare");
-    expect(person).toMatchObject({ kind: "person", role: "my supervisor", verified: true });
+    const [person] = parseCollaborators(
+      "my supervisor - Prof. Siddhartha Khare",
+    );
+    expect(person).toMatchObject({
+      kind: "person",
+      role: "my supervisor",
+      verified: true,
+    });
   });
 });

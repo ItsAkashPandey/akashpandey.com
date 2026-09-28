@@ -13,7 +13,10 @@ function normalise(value: string | null) {
  * An id that matches nothing, or no param at all, returns no points, so a
  * stale or mistyped link just leaves the map at its opening view.
  */
-export function focusedMapPoints(points: MapPoint[], search: string): MapPoint[] {
+export function focusedMapPoints(
+  points: MapPoint[],
+  search: string,
+): MapPoint[] {
   const params = new URLSearchParams(search);
 
   const place = normalise(params.get("place"));

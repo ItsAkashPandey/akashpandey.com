@@ -28,7 +28,9 @@ const land = feature(topology, topology.objects.land);
 const x = (lon) => (((lon + 180) / 360) * WIDTH).toFixed(1);
 const y = (lat) => (((90 - lat) / 180) * HEIGHT).toFixed(1);
 const ring = (points) =>
-  points.map(([lon, lat], i) => `${i ? "L" : "M"}${x(lon)} ${y(lat)}`).join("") + "Z";
+  points
+    .map(([lon, lat], i) => `${i ? "L" : "M"}${x(lon)} ${y(lat)}`)
+    .join("") + "Z";
 
 const paths = [];
 for (const { geometry } of land.features) {

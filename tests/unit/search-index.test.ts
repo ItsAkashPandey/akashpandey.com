@@ -24,7 +24,9 @@ describe("buildSearchIndex", () => {
   });
 
   it("has no duplicate rows", () => {
-    const keys = index.map((entry) => `${entry.group}|${entry.title}|${entry.detail}`);
+    const keys = index.map(
+      (entry) => `${entry.group}|${entry.title}|${entry.detail}`,
+    );
     expect(new Set(keys).size).toBe(keys.length);
   });
 

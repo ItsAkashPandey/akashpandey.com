@@ -75,7 +75,9 @@ function getSheet() {
   }
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(HEADERS);
-    sheet.getRange(1, 1, sheet.getMaxRows(), HEADERS.length).setNumberFormat("@");
+    sheet
+      .getRange(1, 1, sheet.getMaxRows(), HEADERS.length)
+      .setNumberFormat("@");
   }
   return sheet;
 }
@@ -93,7 +95,10 @@ function prune(sheet) {
   if (lastRow < 2) return;
   const stamps = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
   let expired = 0;
-  while (expired < stamps.length && new Date(stamps[expired][0]).getTime() < cutoff) {
+  while (
+    expired < stamps.length &&
+    new Date(stamps[expired][0]).getTime() < cutoff
+  ) {
     expired++;
   }
   if (expired) sheet.deleteRows(2, expired);
@@ -151,7 +156,9 @@ function doPost(e) {
       sheet.clear();
       sheet.getDataRange().clearDataValidations();
       sheet.appendRow(HEADERS);
-      sheet.getRange(1, 1, sheet.getMaxRows(), HEADERS.length).setNumberFormat("@");
+      sheet
+        .getRange(1, 1, sheet.getMaxRows(), HEADERS.length)
+        .setNumberFormat("@");
       return json({ reset: true });
     }
 

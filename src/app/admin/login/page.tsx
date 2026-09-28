@@ -69,7 +69,6 @@ function AdminLoginContent() {
         onSubmit={onSubmit}
         className="record-surface relative w-full overflow-hidden rounded-lg p-5 sm:p-6"
       >
-
         <div className="flex items-start gap-3">
           <div className="bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-lg">
             <ShieldCheck className="size-5" />

@@ -106,7 +106,10 @@ export function PodiumIcon(props: IconProps) {
       <rect x="3.6" y="4.4" width="16.8" height="10.4" rx="1.4" />
       <path d="M12 14.8v4.6" />
       <path d="M8.4 19.4h7.2" />
-      <path d="M7.4 11.2c1.4 0 1.9-3.2 3.2-3.2s1.8 2.2 3.1 2.2 1.5-1.8 2.4-1.8" opacity=".7" />
+      <path
+        d="M7.4 11.2c1.4 0 1.9-3.2 3.2-3.2s1.8 2.2 3.1 2.2 1.5-1.8 2.4-1.8"
+        opacity=".7"
+      />
     </Field>
   );
 }

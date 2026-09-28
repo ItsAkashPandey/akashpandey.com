@@ -48,7 +48,10 @@ export function publicationLink(
 }
 
 export function publicationVenue(
-  publication: Pick<Publication, "journal" | "conference" | "book" | "publisher">,
+  publication: Pick<
+    Publication,
+    "journal" | "conference" | "book" | "publisher"
+  >,
 ) {
   return (
     publication.journal ||

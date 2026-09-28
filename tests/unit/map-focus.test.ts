@@ -8,7 +8,15 @@ function point(
   city: string,
   category: MarkerCategory = "activity",
 ): MapPoint {
-  return { id, category, place, city, coordinates: [0, 0], label: id, items: [] };
+  return {
+    id,
+    category,
+    place,
+    city,
+    coordinates: [0, 0],
+    label: id,
+    items: [],
+  };
 }
 
 // Roorkee is deliberately over-represented: it is the one city where a
@@ -18,7 +26,12 @@ function point(
 const points: MapPoint[] = [
   point("activity:kvk-dhanauri", "kvk-dhanauri", "haridwar"),
   point("education:iit-roorkee:phd", "iit-roorkee", "roorkee", "education"),
-  point("experience:iit-roorkee:postdoc", "iit-roorkee", "roorkee", "experience"),
+  point(
+    "experience:iit-roorkee:postdoc",
+    "iit-roorkee",
+    "roorkee",
+    "experience",
+  ),
   point("activity:mac-iit-roorkee", "mac-iit-roorkee", "roorkee"),
   point("activity:austria-center-vienna", "austria-center-vienna", "vienna"),
 ];
@@ -59,17 +72,17 @@ describe("focusedMapPoints", () => {
   });
 
   it("matches regardless of case or stray whitespace", () => {
-    expect(idsOf(focusedMapPoints(points, "?place=%20KVK-Dhanauri%20"))).toEqual([
-      "activity:kvk-dhanauri",
-    ]);
+    expect(
+      idsOf(focusedMapPoints(points, "?place=%20KVK-Dhanauri%20")),
+    ).toEqual(["activity:kvk-dhanauri"]);
     expect(idsOf(focusedMapPoints(points, "?city=VIENNA"))).toEqual([
       "activity:austria-center-vienna",
     ]);
   });
 
   it("prefers place over city when both are given", () => {
-    expect(idsOf(focusedMapPoints(points, "?place=kvk-dhanauri&city=vienna"))).toEqual([
-      "activity:kvk-dhanauri",
-    ]);
+    expect(
+      idsOf(focusedMapPoints(points, "?place=kvk-dhanauri&city=vienna")),
+    ).toEqual(["activity:kvk-dhanauri"]);
   });
 });

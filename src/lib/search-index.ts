@@ -80,7 +80,9 @@ export function buildSearchIndex(): SearchEntry[] {
     entries.push({
       group: "Publications",
       title: publication.title,
-      detail: [publication.type, venue, publication.year].filter(Boolean).join(" · "),
+      detail: [publication.type, venue, publication.year]
+        .filter(Boolean)
+        .join(" · "),
       href: publicationHref(publication.slug),
       keywords: [publication.authors, publication.status],
     });
@@ -92,20 +94,22 @@ export function buildSearchIndex(): SearchEntry[] {
         entries.push({
           group: "Skills",
           title: tool.name,
-          detail: tool.model && tool.model !== tool.name
-            ? `${tool.model} · ${subcategory.name}`
-            : subcategory.name,
+          detail:
+            tool.model && tool.model !== tool.name
+              ? `${tool.model} · ${subcategory.name}`
+              : subcategory.name,
           href: `/skills#${toolSlug(tool.name)}`,
-          keywords: [category.mainCategory, ...(tool.aliases ?? []), ...tool.tasks.slice(0, 3)],
+          keywords: [
+            category.mainCategory,
+            ...(tool.aliases ?? []),
+            ...tool.tasks.slice(0, 3),
+          ],
         });
       }
     }
   }
 
-  const addPositions = (
-    orgs: ReturnType<typeof getCareer>,
-    href: string,
-  ) => {
+  const addPositions = (orgs: ReturnType<typeof getCareer>, href: string) => {
     for (const org of orgs) {
       for (const position of org.positions) {
         entries.push({
