@@ -1,23 +1,42 @@
-import React, { lazy, Suspense, useMemo } from "react";
-import { LucideProps } from "lucide-react";
-import dynamicIconImports from "lucide-react/dynamicIconImports";
+import type { IconName } from "@/lib/icon-names";
+import {
+  Book,
+  CircleUserRound,
+  FileText,
+  FlaskConical,
+  Github,
+  Globe,
+  GraduationCap,
+  Linkedin,
+  Mail,
+  Youtube,
+  type LucideIcon,
+  type LucideProps,
+} from "lucide-react";
 
-const fallback = <div style={{ background: "#ddd", width: 24, height: 24 }} />;
+/**
+ * A fixed map instead of lucide's dynamic import table: the data only ever
+ * uses these ten, and importing them directly renders on the server with no
+ * loading placeholder and no loader for the other thousand icons.
+ */
+const ICONS = {
+  book: Book,
+  "circle-user-round": CircleUserRound,
+  "file-text": FileText,
+  "flask-conical": FlaskConical,
+  github: Github,
+  globe: Globe,
+  "graduation-cap": GraduationCap,
+  linkedin: Linkedin,
+  mail: Mail,
+  youtube: Youtube,
+} satisfies Record<IconName, LucideIcon>;
 
 interface IconProps extends Omit<LucideProps, "ref"> {
-  name: keyof typeof dynamicIconImports;
+  name: IconName;
 }
 
-const Icon = ({ name, ...props }: IconProps) => {
-  // Memoize the lazy component to prevent re-creation on every render
-  // which causes flickering when parent components re-render
-  const LucideIcon = useMemo(() => lazy(dynamicIconImports[name]), [name]);
-
-  return (
-    <Suspense fallback={fallback}>
-      <LucideIcon {...props} />
-    </Suspense>
-  );
-};
-
-export default Icon;
+export default function Icon({ name, ...props }: IconProps) {
+  const LucideIcon = ICONS[name];
+  return <LucideIcon aria-hidden {...props} />;
+}

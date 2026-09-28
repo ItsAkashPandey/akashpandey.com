@@ -1,0 +1,148 @@
+{
+  "iit-roorkee": {
+    "name": "IIT Roorkee",
+    "city": "Roorkee",
+    "coordinates": [77.8957348, 29.8661656]
+  },
+  "mac-iit-roorkee": {
+    "name": "MAC, IIT Roorkee",
+    "city": "Roorkee",
+    "coordinates": [77.8963333, 29.8700825]
+  },
+  "bhoomicam-tides": {
+    "name": "Bhoomicam, TIDES IIT Roorkee",
+    "city": "Roorkee",
+    "coordinates": [77.894, 29.867]
+  },
+  "roorkee": {
+    "name": "Roorkee",
+    "city": "Roorkee",
+    "coordinates": [77.888, 29.8543]
+  },
+  "kvk-dhanauri": {
+    "name": "KVK Dhanauri, Haridwar",
+    "city": "Haridwar",
+    "coordinates": [77.9544155, 29.9434663]
+  },
+  "chandighat-haridwar": {
+    "name": "Chandighat, Haridwar",
+    "city": "Haridwar",
+    "coordinates": [78.1756826, 29.9295001]
+  },
+  "dehradun-cantonment": {
+    "name": "Dehradun Cantonment",
+    "city": "Dehradun",
+    "coordinates": [78.0246529, 30.35331]
+  },
+  "gbpuat-pantnagar": {
+    "name": "GB Pant University, Pantnagar",
+    "city": "Pantnagar",
+    "coordinates": [79.4911716, 29.0233513]
+  },
+  "khoont-almora": {
+    "name": "Khoont, Almora",
+    "city": "Almora",
+    "coordinates": [79.63, 29.66]
+  },
+  "sitlakhet-almora": {
+    "name": "Sitlakhet, Almora",
+    "city": "Almora",
+    "coordinates": [79.54376, 29.59442]
+  },
+  "iitr-greater-noida": {
+    "name": "IIT Roorkee Greater Noida Campus",
+    "city": "Greater Noida",
+    "coordinates": [77.4908, 28.4628]
+  },
+  "ihfc-iit-delhi": {
+    "name": "IHFC, IIT Delhi",
+    "city": "New Delhi",
+    "coordinates": [77.1879874, 28.5436553]
+  },
+  "iit-delhi": {
+    "name": "IIT Delhi",
+    "city": "New Delhi",
+    "coordinates": [77.1960787, 28.5456443]
+  },
+  "bharat-mandapam": {
+    "name": "Bharat Mandapam, New Delhi",
+    "city": "New Delhi",
+    "coordinates": [77.2424337, 28.6196234]
+  },
+  "surajkund-faridabad": {
+    "name": "Surajkund, Faridabad",
+    "city": "Faridabad",
+    "coordinates": [77.2858065, 28.4866308]
+  },
+  "miet-meerut": {
+    "name": "MIET, Meerut",
+    "city": "Meerut",
+    "coordinates": [77.6410032, 28.973047]
+  },
+  "hyatt-centric-chandigarh": {
+    "name": "Chandigarh",
+    "city": "Chandigarh",
+    "coordinates": [76.78381, 30.74455]
+  },
+  "iit-ropar": {
+    "name": "IIT Ropar",
+    "city": "Ropar",
+    "coordinates": [76.4729772, 30.9659501]
+  },
+  "university-of-kashmir": {
+    "name": "University of Kashmir, Srinagar",
+    "city": "Srinagar",
+    "coordinates": [74.8367448, 34.133915]
+  },
+  "jaisalmer": {
+    "name": "Jaisalmer",
+    "city": "Jaisalmer",
+    "coordinates": [70.9124888, 26.9116615]
+  },
+  "the-forum-ahmedabad": {
+    "name": "Ahmedabad",
+    "city": "Ahmedabad",
+    "coordinates": [72.4542309, 23.0062125]
+  },
+  "manit-bhopal": {
+    "name": "MANIT Bhopal",
+    "city": "Bhopal",
+    "coordinates": [77.4045416, 23.2134131]
+  },
+  "iit-bombay": {
+    "name": "IIT Bombay",
+    "city": "Mumbai",
+    "coordinates": [72.9149702, 19.1326186]
+  },
+  "ntpc-solapur": {
+    "name": "NTPC Solapur",
+    "city": "Solapur",
+    "coordinates": [75.9839786, 17.5498258]
+  },
+  "nrsc-hyderabad": {
+    "name": "NRSC, Hyderabad",
+    "city": "Hyderabad",
+    "coordinates": [78.4499355, 17.4668554]
+  },
+  "nit-goa": {
+    "name": "NIT Goa",
+    "city": "Goa",
+    "coordinates": [73.9777114, 15.4131665]
+  },
+  "iit-tirupati": {
+    "name": "IIT Tirupati",
+    "city": "Tirupati",
+    "coordinates": [79.5899932, 13.712786]
+  },
+  "bhel-yelahanka": {
+    "name": "BHEL, Yelahanka, Bengaluru",
+    "city": "Bengaluru",
+    "coordinates": [77.5811889, 13.0978039]
+  },
+  "austria-center-vienna": {
+    "name": "Austria Center Vienna",
+    "city": "Vienna",
+    "country": "Austria",
+    "coordinates": [16.4146333, 48.2350802]
+  }
+}
