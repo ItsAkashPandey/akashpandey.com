@@ -171,9 +171,13 @@ export default function Home() {
         </div>
       </section>
 
+      {/* No content-visibility on these sections. It held 640px for each
+          until scrolled near, but on a phone they run to 2,000px, so a jump
+          down the page landed in the wrong place and slid away. Skipping
+          them saved no measurable time. */}
       <section
         id="experience"
-        className="paper-band paper-band--sage defer-render scroll-mt-20"
+        className="paper-band paper-band--sage scroll-mt-20"
       >
         <div className="flex flex-col gap-5">
           <SectionHeading title="the path so far" />
@@ -181,7 +185,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="paper-band paper-band--paper defer-render">
+      <section className="paper-band paper-band--paper">
         <div className="flex flex-col gap-7">
           <SectionHeading
             title="skills & tools"
@@ -224,7 +228,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="paper-band paper-band--blue defer-render">
+      <section className="paper-band paper-band--blue">
         <div className="flex flex-col gap-7">
           <SectionHeading
             title="recent publications"
@@ -294,7 +298,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="paper-band paper-band--coral defer-render">
+      <section className="paper-band paper-band--coral">
         <div className="flex flex-col gap-7">
           <SectionHeading
             title="recent activities"
@@ -311,7 +315,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="paper-band paper-band--blue defer-render">
+      <section className="paper-band paper-band--blue">
         <div className="flex flex-col gap-7">
           <SectionHeading
             title="places along the way"
