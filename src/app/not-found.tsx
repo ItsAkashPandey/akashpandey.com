@@ -1,35 +1,30 @@
-import { ArrowLeftIcon } from "@radix-ui/react-icons";
-import LinkWithIcon from "../components/LinkWithIcon";
+import LinkWithIcon from "@/components/LinkWithIcon";
+import { ArrowLeftIcon } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <article className="mt-8 flex flex-col gap-8 pb-16">
-      <div className="min-h-full px-4 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8">
-        <div className="mx-auto max-w-max">
-          <section className="sm:flex">
-            <p className="title text-muted-foreground">404</p>
-            <div className="sm:ml-6">
-              <div className="sm:border-l sm:border-gray-200 sm:pl-6">
-                <h1 className="title sm:text-5xl">
-                  cannot find <i>leh</i>...
-                </h1>
-                <p className="mt-1 text-base text-muted-foreground">
-                  Maybe I renamed or deleted the page <i>liao</i>. Try again{" "}
-                  <i>lor</i>.
-                </p>
-              </div>
-              <div className="mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6">
-                <LinkWithIcon
-                  href="/"
-                  text="back to home"
-                  icon={<ArrowLeftIcon className="size-5" />}
-                  position="left"
-                />
-              </div>
-            </div>
-          </section>
+    <article className="page-shell">
+      <section className="flex flex-col gap-6 py-10 sm:flex-row sm:items-start sm:py-20">
+        <p className="title text-muted-foreground">404</p>
+        <div className="border-border flex flex-col gap-3 sm:border-l sm:pl-6">
+          <h1 className="title sm:text-5xl">page not found.</h1>
+          <p className="text-muted-foreground max-w-prose text-base">
+            The link may be old, or the page may have moved. Activities and
+            papers have permanent addresses now, so the list pages are a good
+            place to look.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <LinkWithIcon
+              href="/"
+              text="home"
+              icon={<ArrowLeftIcon className="size-4" />}
+              position="left"
+            />
+            <LinkWithIcon href="/activities" text="activities" position="left" />
+            <LinkWithIcon href="/publications" text="publications" position="left" />
+          </div>
         </div>
-      </div>
+      </section>
     </article>
   );
 }

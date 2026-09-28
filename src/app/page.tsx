@@ -1,46 +1,37 @@
-import Experience from "@/components/Experience";
-import LinkWithIcon from "@/components/LinkWithIcon";
 import Activities from "@/components/Activities";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { ArrowRightIcon, FileDown, ExternalLink, Wrench } from "lucide-react";
-import Link from "next/link";
-import dynamic from "next/dynamic";
-
-import homeContent from "@/data/home.json";
-import publicationsData from "@/data/publications.json";
-import skillsData from "@/data/skills.json";
-
-import LazySection from "@/components/LazySection";
-import SkillLogoTile from "@/components/SkillLogoTile";
+import ChatPromptButton from "@/components/ChatPromptButton";
+import Experience from "@/components/Experience";
+import PlacesGlobe from "@/components/globe/PlacesGlobe";
+import LinkWithIcon from "@/components/LinkWithIcon";
 import SectionHeading from "@/components/SectionHeading";
+import SkillLogoTile from "@/components/SkillLogoTile";
+import Socials from "@/components/Socials";
+import SwipeCards from "@/components/SwipeCards";
+import { Badge } from "@/components/ui/Badge";
+import { buttonVariants } from "@/components/ui/Button";
+import homeContent from "@/data/home.json";
+import {
+  getAllTools,
+  getCareer,
+  getEducation,
+  getPublications,
+} from "@/lib/content";
+import {
+  publicationHref,
+  publicationLink,
+  toolSlug,
+} from "@/lib/content-utils";
+import { buildGlobeData } from "@/lib/globe-data";
+import { getPhotos } from "@/lib/photos";
+import { jsonLdProps, profilePageSchema } from "@/lib/structured-data";
+import { cn } from "@/lib/utils";
+import { ArrowRightIcon, ExternalLink, FileDown, Wrench } from "lucide-react";
+import Link from "next/link";
+import { Fragment } from "react";
 
-const SwipeCards = dynamic(() => import("@/components/SwipeCards"), {
-  loading: () => (
-    <div className="bg-muted/55 h-[233px] w-[175px] animate-pulse rounded-lg" />
-  ),
-});
+const RECENT_COUNT = 2;
 
-const Socials = dynamic(() => import("@/components/Socials"), {
-  loading: () => (
-    <div className="bg-muted/40 h-8 w-40 animate-pulse rounded-md" />
-  ),
-});
-
-const ChatPromptButton = dynamic(
-  () => import("@/components/ChatPromptButton"),
-  {
-    loading: () => (
-      <div className="bg-muted/40 mt-6 h-6 w-60 animate-pulse rounded-md" />
-    ),
-  },
-);
-
-const AKASH_BIRTH_YEAR = 1998;
-const LIMIT = 2; // max show 2
-
-// Derive featured skills from centralized skills data to ensure consistent brand colors/gradients
-const featuredSkillNames = [
+const FEATURED_SKILLS = [
   "Python",
   "LaTeX",
   "Google Earth Engine",
@@ -48,96 +39,151 @@ const featuredSkillNames = [
   "CloudCompare",
   "PhenoCam",
   "Trinity F90+",
-  "AWS",
+  "Weather Station",
   "FARO TLS",
 ];
 
-// Flat list of all tools from all categories
-const allTools = skillsData.skills.flatMap((cat) =>
-  cat.subcategories.flatMap((sub) => sub.tools),
+const MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ");
+
+/** "Jul 2026" -> a sortable number. */
+function monthValue(value: string) {
+  const [month, year] = value.split(" ");
+  return Number(year) * 12 + Math.max(0, MONTHS.indexOf(month));
+}
+
+/** "Project Fellow (post-doc) at IIT Roorkee and Co-Director at Bhoomicam". */
+function CurrentRoles() {
+  const roles = getCareer()
+    .flatMap((org) =>
+      org.positions
+        .filter((position) => position.end === "Present")
+        .map((position) => ({
+          title: position.title,
+          org: org.shortName,
+          start: monthValue(position.start),
+        })),
+    )
+    .sort((a, b) => b.start - a.start);
+  return roles.map((role, index) => (
+    <Fragment key={`${role.title}-${role.org}`}>
+      {index > 0 && (index === roles.length - 1 ? " and " : ", ")}
+      {/* Keeps "Co-Director" from breaking at its hyphen. */}
+      <span className="whitespace-nowrap">{role.title}</span> at {role.org}
+    </Fragment>
+  ));
+}
+
+function latestDegree() {
+  const [school] = getEducation();
+  const degree = school?.positions[0];
+  if (!degree) return "";
+  return `${degree.title}, ${school.shortName}${
+    degree.end && degree.end !== "Present" ? ` (${degree.end.slice(-4)})` : ""
+  }`;
+}
+
+const SkillTile = ({ skill }: { skill: ReturnType<typeof getAllTools>[number] }) => (
+  <Link
+    href={`/skills#${toolSlug(skill.name)}`}
+    className="group/tool flex flex-col items-center gap-1.5 transition-transform duration-200 hover:-translate-y-0.5 sm:gap-2"
+  >
+    <SkillLogoTile
+      logo={skill.logo}
+      name={skill.name}
+      className="size-11 sm:size-16"
+      imageClassName="p-1.5 sm:p-2.5"
+    />
+    <span className="text-foreground/85 max-w-[76px] text-center text-[11px] leading-tight font-semibold sm:max-w-[110px] sm:text-sm">
+      {skill.name}
+    </span>
+  </Link>
 );
 
-// Map the featured names to their full tool objects from skills.json
-const featuredSkills = featuredSkillNames
-  .map((name) => allTools.find((tool) => tool.name === name))
-  .filter(Boolean) as any[];
-
 export default function Home() {
-  const currentAge = new Date().getFullYear() - AKASH_BIRTH_YEAR;
-  const recentPublications = publicationsData.publications
-    .filter((pub) => pub.status === "Published")
+  const { introduction, portraits } = homeContent;
+  const tools = getAllTools();
+  const featuredSkills = FEATURED_SKILLS.map((name) =>
+    tools.find((tool) => tool.name === name),
+  ).filter((tool) => tool !== undefined);
+  const recentPublications = getPublications()
+    .filter((publication) => publication.status === "Published")
     .sort((a, b) => b.year - a.year)
-    .slice(0, LIMIT);
-
-  // Count total skills
-  const totalSkills = skillsData.skills.reduce(
-    (acc, cat) =>
-      acc + cat.subcategories.reduce((a, sub) => a + sub.tools.length, 0),
-    0,
-  );
+    .slice(0, RECENT_COUNT);
 
   return (
     <article className="mx-auto -mt-2 flex w-full max-w-6xl flex-col gap-10 pb-16 sm:gap-12">
+      <script {...jsonLdProps(profilePageSchema)} />
       <section className="record-surface relative flex flex-col gap-1 overflow-hidden rounded-lg p-3 sm:p-5">
         <div className="flex flex-col gap-6 px-2 py-2 sm:flex-row-reverse sm:items-center sm:justify-between sm:gap-10 sm:px-4 sm:py-4">
-          <SwipeCards className="mx-auto shrink-0 sm:mx-0" />
+          <SwipeCards
+            photos={getPhotos(portraits)}
+            alt="Akash Kumar"
+            priority
+            className="mx-auto shrink-0 sm:mx-0"
+          />
 
           <div className="flex min-w-0 flex-1 flex-col items-center text-center sm:max-w-3xl sm:items-start sm:text-left">
-            <h1 className="title text-3xl leading-tight text-balance sm:text-5xl">
-              {homeContent.introduction.greeting.replace(" 👋", "")}
-              <span className="ml-1 inline-block origin-bottom-right hover:animate-[wave_1.3s_ease-in-out]">
+            <h1 className="title text-[1.9rem] leading-tight text-balance sm:text-[2.6rem]">
+              {introduction.greeting}
+              <span
+                aria-hidden
+                className="ml-2 inline-block origin-bottom-right hover:animate-[wave_1.3s_ease-in-out]"
+              >
                 👋
               </span>
             </h1>
 
-            {/* Title, then one line at lede size, then the detail. The two
-                lines used to be the same size, which left a cliff from the
-                display type straight down to body copy. */}
             <p className="mt-3 max-w-xl text-lg leading-snug font-medium text-balance sm:text-xl">
-              I work in the geospatial domain.
+              {introduction.lede}
             </p>
 
             <p className="text-muted-foreground mx-auto mt-3 max-w-2xl text-sm text-balance sm:mx-0 sm:text-base">
-              focused on vegetation phenology using PhenoCam, UAV and Satellite
-              data.
+              <span className="text-foreground font-semibold">
+                {introduction.name}
+              </span>
+              , <CurrentRoles />. {latestDegree()}.
             </p>
 
             <div className="mx-auto w-full max-w-md sm:mx-0">
-              <ChatPromptButton
-                chatPrompt={homeContent.introduction.chatPrompt}
-              />
+              <ChatPromptButton chatPrompt={introduction.chatPrompt} />
             </div>
 
-            <section className="mt-6 flex w-full flex-wrap items-center justify-center gap-2 px-0 sm:justify-start sm:gap-4">
-              <Link href="/resume.pdf" target="_blank" rel="noreferrer">
-                <Button
-                  variant="outline"
-                  className="h-[32px] px-2 py-1 text-[11px] sm:h-full sm:px-4 sm:py-3 sm:text-sm"
-                >
-                  <span className="font-semibold">Resume</span>
-                  <FileDown className="ml-1 size-3.5 sm:ml-2 sm:size-5" />
-                </Button>
-              </Link>
-              <Socials variant="hero" />
-            </section>
+            <div className="mt-6 flex w-full flex-wrap items-center justify-center gap-3 sm:justify-start sm:gap-4">
+              <a
+                href="/resume.pdf"
+                target="_blank"
+                rel="noopener"
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "h-9 px-3 text-sm sm:h-10 sm:px-4",
+                )}
+              >
+                <span className="font-semibold">Resume</span>
+                <FileDown className="size-4" aria-hidden />
+              </a>
+              <Socials />
+            </div>
           </div>
         </div>
       </section>
 
-      <LazySection heightHint={260} className="paper-band paper-band--sage">
-        <section className="flex flex-col gap-5">
+      <section
+        id="experience"
+        className="paper-band paper-band--sage defer-render scroll-mt-20"
+      >
+        <div className="flex flex-col gap-5">
           <SectionHeading title="the path so far" />
           <Experience />
-        </section>
-      </LazySection>
+        </div>
+      </section>
 
-      <LazySection heightHint={350} className="paper-band paper-band--paper">
-        <section className="flex flex-col gap-7">
+      <section className="paper-band paper-band--paper defer-render">
+        <div className="flex flex-col gap-7">
           <SectionHeading
             title="skills & tools"
             detail={
               <Badge variant="secondary" className="text-xs">
-                {totalSkills}+
+                {tools.length}
               </Badge>
             }
             action={
@@ -145,7 +191,7 @@ export default function Home() {
                 href="/skills"
                 position="right"
                 icon={<ArrowRightIcon className="size-5" />}
-                text="view more"
+                text="view all"
               />
             }
           />
@@ -154,56 +200,28 @@ export default function Home() {
             <div className="relative z-10 flex flex-col gap-6">
               <div className="flex flex-wrap justify-center gap-1.5 sm:gap-6">
                 {featuredSkills.slice(0, 5).map((skill) => (
-                  <div
-                    key={skill.name}
-                    className="group/tool flex flex-col items-center gap-1.5 transition-transform duration-200 hover:-translate-y-0.5 sm:gap-2"
-                  >
-                    <SkillLogoTile
-                      logo={skill.logo}
-                      name={skill.name}
-                      className="size-11 sm:size-16"
-                      imageClassName="p-1.5 sm:p-2.5"
-                    />
-                    <span className="text-foreground/85 max-w-[72px] text-center text-[10px] leading-tight font-semibold sm:max-w-[110px] sm:text-sm">
-                      {skill.name}
-                    </span>
-                  </div>
+                  <SkillTile key={skill.name} skill={skill} />
                 ))}
               </div>
-
               <div className="flex flex-wrap justify-center gap-1.5 sm:gap-6">
                 {featuredSkills.slice(5).map((skill) => (
-                  <div
-                    key={skill.name}
-                    className="group/tool flex flex-col items-center gap-1.5 transition-transform duration-200 hover:-translate-y-0.5 sm:gap-2"
-                  >
-                    <SkillLogoTile
-                      logo={skill.logo}
-                      name={skill.name}
-                      className="size-11 sm:size-16"
-                      imageClassName="p-1.5 sm:p-2.5"
-                    />
-                    <span className="text-foreground/85 max-w-[72px] text-center text-[10px] leading-tight font-semibold sm:max-w-[110px] sm:text-sm">
-                      {skill.name}
-                    </span>
-                  </div>
+                  <SkillTile key={skill.name} skill={skill} />
                 ))}
               </div>
             </div>
 
             <div className="text-muted-foreground mt-6 flex items-center justify-center gap-2 text-center text-sm">
-              <Wrench className="size-4 shrink-0" />
+              <Wrench className="size-4 shrink-0" aria-hidden />
               <span>
-                and many more tools across UAVs, Surveying, GIS & Civil
-                Engineering
+                and more across UAVs, surveying, GIS and civil engineering
               </span>
             </div>
           </div>
-        </section>
-      </LazySection>
+        </div>
+      </section>
 
-      <LazySection heightHint={300} className="paper-band paper-band--blue">
-        <section className="flex flex-col gap-7">
+      <section className="paper-band paper-band--blue defer-render">
+        <div className="flex flex-col gap-7">
           <SectionHeading
             title="recent publications"
             action={
@@ -211,67 +229,69 @@ export default function Home() {
                 href="/publications"
                 position="right"
                 icon={<ArrowRightIcon className="size-5" />}
-                text="view more"
+                text="view all"
               />
             }
           />
           <div className="flex flex-col gap-4">
-            {recentPublications.map((pub) => (
-              <div
-                key={pub.id}
-                className="group border-border/70 border-b py-5 last:border-b-0"
-              >
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-base leading-snug font-semibold">
-                    {pub.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm">{pub.authors}</p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge
-                      variant="secondary"
-                      className="text-[10px] tracking-wide uppercase"
-                    >
-                      {pub.type}
-                    </Badge>
-                    {pub.journal && (
+            {recentPublications.map((publication) => {
+              const link = publicationLink(publication);
+              return (
+                <div
+                  key={publication.id}
+                  className="border-border/70 border-b py-5 last:border-b-0"
+                >
+                  <div className="flex flex-col gap-3">
+                    <h3 className="text-base leading-snug font-semibold">
+                      <Link
+                        href={publicationHref(publication.slug)}
+                        className="hover:text-ink transition-colors"
+                      >
+                        {publication.title}
+                      </Link>
+                    </h3>
+                    <p className="text-muted-foreground text-sm">
+                      {publication.authors}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary" className="text-[11px]">
+                        {publication.type}
+                      </Badge>
+                      {(publication.journal || publication.conference) && (
+                        <Badge variant="outline" className="text-xs">
+                          {publication.journal || publication.conference}
+                        </Badge>
+                      )}
                       <Badge variant="outline" className="text-xs">
-                        {pub.journal}
+                        {publication.year}
                       </Badge>
-                    )}
-                    {pub.conference && (
-                      <Badge variant="outline" className="text-xs">
-                        {pub.conference}
-                      </Badge>
-                    )}
-                    <Badge variant="outline" className="text-xs">
-                      {pub.year}
-                    </Badge>
-                    {pub.journalQuartile && (
-                      <Badge className="bg-green-500/10 text-xs text-green-700 dark:text-green-300">
-                        {pub.journalQuartile}
-                      </Badge>
+                      {publication.journalQuartile && (
+                        <Badge className="bg-tone-green/10 text-tone-green text-xs">
+                          {publication.journalQuartile}
+                        </Badge>
+                      )}
+                    </div>
+                    {link && (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="link-ink inline-flex w-fit items-center gap-2 text-sm font-medium underline-offset-4 transition-colors hover:underline"
+                      >
+                        <span>{link.label}</span>
+                        <ExternalLink className="size-3.5" aria-hidden />
+                      </a>
                     )}
                   </div>
-                  {pub.doi && (
-                    <Link
-                      href={pub.doi}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="link-ink inline-flex w-fit items-center gap-2 text-sm font-medium underline-offset-4 transition-colors hover:underline"
-                    >
-                      <span>View Publication</span>
-                      <ExternalLink className="size-3.5" />
-                    </Link>
-                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </section>
-      </LazySection>
+        </div>
+      </section>
 
-      <LazySection heightHint={400} className="paper-band paper-band--coral">
-        <section className="flex flex-col gap-7">
+      <section className="paper-band paper-band--coral defer-render">
+        <div className="flex flex-col gap-7">
           <SectionHeading
             title="recent activities"
             action={
@@ -279,13 +299,30 @@ export default function Home() {
                 href="/activities"
                 position="right"
                 icon={<ArrowRightIcon className="size-5" />}
-                text="view more"
+                text="view all"
               />
             }
           />
-          <Activities limit={LIMIT} />
-        </section>
-      </LazySection>
+          <Activities limit={RECENT_COUNT} />
+        </div>
+      </section>
+
+      <section className="paper-band paper-band--blue defer-render">
+        <div className="flex flex-col gap-7">
+          <SectionHeading
+            title="places along the way"
+            action={
+              <LinkWithIcon
+                href="/contact#map"
+                position="right"
+                icon={<ArrowRightIcon className="size-5" />}
+                text="full map"
+              />
+            }
+          />
+          <PlacesGlobe data={buildGlobeData()} />
+        </div>
+      </section>
     </article>
   );
 }

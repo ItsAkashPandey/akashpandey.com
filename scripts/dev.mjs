@@ -44,7 +44,18 @@ const port = Number.isInteger(requested)
   ? requested
   : await findPort(Number(process.env.DEV_PORT_START) || 3000);
 
-const args = ["dev", "--turbo", "-p", String(port)];
+// Pre-sized gallery photos (public/_img; cached, so after the first run this
+// takes well under a second) and the map's worker files (public/maplibre).
+for (const script of ["scripts/build-images.mjs", "scripts/copy-maplibre-worker.mjs"]) {
+  await new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [script], { stdio: "inherit" });
+    child.on("exit", (code) =>
+      code === 0 ? resolve() : reject(new Error(`${script} failed`)),
+    );
+  });
+}
+
+const args = ["dev", "-p", String(port)];
 if (lan) args.push("-H", "0.0.0.0");
 
 console.log(`next dev on port ${port}${lan ? " (bound for LAN)" : ""}`);

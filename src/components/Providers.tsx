@@ -1,6 +1,7 @@
 "use client";
 
 import { ChatProvider } from "@/contexts/ChatContext";
+import { MotionConfig } from "framer-motion";
 import dynamic from "next/dynamic";
 import { ThemeProvider, useTheme } from "next-themes";
 import React, { useEffect } from "react";
@@ -16,12 +17,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       defaultTheme="system"
       disableTransitionOnChange
     >
-      <ThemeColorUpdater />
-      <ChatProvider>
-        {children}
-        <Chat />
-      </ChatProvider>
-      <ToastProvider />
+      {/* Swipes, springs and fades step aside for prefers-reduced-motion. */}
+      <MotionConfig reducedMotion="user">
+        <ThemeColorUpdater />
+        <ChatProvider>
+          {children}
+          <Chat />
+        </ChatProvider>
+        <ToastProvider />
+      </MotionConfig>
     </ThemeProvider>
   );
 }
@@ -38,36 +42,22 @@ function ToastProvider() {
   );
 }
 
+/**
+ * The layout declares a theme colour per OS scheme; the site's own toggle can
+ * differ from the OS, so once it resolves, both tags follow the page.
+ */
 function ThemeColorUpdater() {
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
-    // Use a timeout 0ms to ensure the browser has applied the new theme's styles
     const timerId = setTimeout(() => {
-      // Get the computed background color from the body
-      const bodyStyles = window.getComputedStyle(document.body);
-      const backgroundColor = bodyStyles.backgroundColor;
-
-      // Find the meta tag
-      let metaThemeColor = document.querySelector<HTMLMetaElement>(
-        "meta[name='theme-color']",
-      );
-
-      if (metaThemeColor) {
-        // If it exists, update it
-        metaThemeColor.content = backgroundColor;
-      } else {
-        // Create and append it to the head
-        metaThemeColor = document.createElement("meta");
-        metaThemeColor.name = "theme-color";
-        metaThemeColor.content = backgroundColor;
-        document.head.appendChild(metaThemeColor);
-      }
+      const color = window.getComputedStyle(document.body).backgroundColor;
+      document
+        .querySelectorAll<HTMLMetaElement>("meta[name='theme-color']")
+        .forEach((meta) => (meta.content = color));
     }, 0);
-
-    // Cleanup to clear the timeout if the component unmounts or theme changes quickly
     return () => clearTimeout(timerId);
-  }, [resolvedTheme]); // Re-run this effect whenever the theme changes
+  }, [resolvedTheme]);
 
   return null;
 }

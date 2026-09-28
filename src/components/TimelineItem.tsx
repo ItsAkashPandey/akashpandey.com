@@ -1,8 +1,8 @@
 import { Experience } from "@/lib/schemas";
 import Image from "next/image";
 import Link from "next/link";
-import { Badge } from "./ui/Badge";
 import Icon from "./Icon";
+import { badgeVariants } from "./ui/Badge";
 
 interface Props {
   experience: Experience;
@@ -36,11 +36,16 @@ export default function TimelineItem({ experience }: Props) {
         })}
       </div>
       <div className="flex min-w-0 flex-1 flex-col justify-start gap-1.5">
-        <Link href={href} target="_blank" rel="noreferrer" className="w-fit">
-                  <h2 className="text-[15px] leading-tight font-bold tracking-normal">
+        <h3 className="text-[15px] leading-tight font-bold tracking-normal">
+          <Link
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-ink w-fit transition-colors"
+          >
             {name}
-          </h2>
-        </Link>
+          </Link>
+        </h3>
         <div className="flex flex-col gap-1.5">
           {positions.map((position) => (
             <div key={`${position.title}-${position.start}`}>
@@ -48,18 +53,18 @@ export default function TimelineItem({ experience }: Props) {
                 <p className="text-muted-foreground min-w-0 text-sm leading-tight font-semibold">
                   {position.title}
                 </p>
-                <time className="text-muted-foreground text-[11px] tabular-nums">
+                <p className="text-muted-foreground text-xs tabular-nums">
                   <span>{position.start}</span>
                   <span>{" - "}</span>
                   <span>{position.end ?? "Present"}</span>
-                </time>
+                </p>
               </div>
               {position.description && (
                 <ul className="mt-1.5 ml-4 list-outside list-disc space-y-0.5">
                   {position.description.map((desc, i) => (
                     <li
                       key={i}
-                    className="text-muted-foreground max-w-none pr-0 text-sm leading-snug sm:pr-2"
+                      className="text-muted-foreground max-w-none pr-0 text-sm leading-snug sm:pr-2"
                     >
                       {desc}
                     </li>
@@ -69,16 +74,16 @@ export default function TimelineItem({ experience }: Props) {
               {position.links && position.links.length > 0 && (
                 <div className="mt-2 flex flex-row flex-wrap items-start gap-2">
                   {position.links.map((link) => (
-                    <Link href={link.href} key={link.href}>
-                      <Badge title={link.name} className="flex gap-2">
-                        <Icon
-                          name={link.icon}
-                          aria-hidden="true"
-                          className="size-3"
-                        />
-                        {link.name}
-                      </Badge>
-                    </Link>
+                    <a
+                      href={link.href}
+                      key={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`${badgeVariants()} flex gap-2`}
+                    >
+                      <Icon name={link.icon} className="size-3" />
+                      {link.name}
+                    </a>
                   ))}
                 </div>
               )}

@@ -4,7 +4,7 @@ My personal site — research, field work, publications, skills, contact.
 
 Live at [www.akashpandey.com](https://www.akashpandey.com/)
 
-![Screenshot of the website](public/img/akashpandey.com_screenshot.webp)
+![Screenshot of the website](docs/screenshot.webp)
 
 ## How it's built
 

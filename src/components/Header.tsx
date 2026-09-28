@@ -34,8 +34,15 @@ export default function Header() {
   return (
     <header className="border-border/70 bg-background/94 sticky top-0 z-50 border-b backdrop-blur-md">
       <div className="site-shell py-3.5">
-        <nav className="flex items-center justify-between">
-          <ul className="hidden gap-8 md:flex">
+        <nav aria-label="Main" className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-8">
+            <Link
+              href="/"
+              className="font-serif text-lg leading-none tracking-tight whitespace-nowrap sm:text-xl"
+            >
+              akash pandey
+            </Link>
+          <ul className="hidden gap-7 md:flex">
             {navLinks.map((nav, id) => (
               <li key={id}>
                 <Link
@@ -53,8 +60,9 @@ export default function Header() {
               </li>
             ))}
           </ul>
+          </div>
 
-          <div className="md:hidden">
+          <div className="ml-auto md:hidden">
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button
@@ -67,14 +75,14 @@ export default function Header() {
                   <Menu className="text-foreground/80 size-6" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-background/95 flex h-screen flex-col border-none pt-20 shadow-2xl backdrop-blur-xl sm:max-w-xs">
+              <DialogContent className="bg-background/95 flex h-dvh flex-col border-none pt-20 shadow-2xl backdrop-blur-xl sm:max-w-xs">
                 <DialogHeader className="hidden">
                   <DialogTitle>Navigation</DialogTitle>
                   <DialogDescription>
                     Choose a page on Akash&apos;s portfolio.
                   </DialogDescription>
                 </DialogHeader>
-                <nav className="flex flex-col gap-6 px-4">
+                <nav aria-label="Main" className="flex flex-col gap-6 px-4">
                   {navLinks.map((nav, id) => (
                     <Link
                       key={id}
