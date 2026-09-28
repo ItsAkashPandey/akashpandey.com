@@ -1,77 +1,98 @@
-import type { ChatMessageShape } from "@/lib/chat-types";
-import { CornerDownLeft, SendHorizontal, Trash } from "lucide-react";
-import { HTMLAttributes } from "react";
+import { LoaderCircle, SendHorizontal, Trash } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { Button } from "./ui/Button";
 
-interface ChatInputProps extends HTMLAttributes<HTMLFormElement> {
+interface ChatInputProps {
   input: string;
-  handleSubmit: (event?: { preventDefault?: () => void }) => void;
-  handleInputChange: (
-    e:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.ChangeEvent<HTMLTextAreaElement>,
-  ) => void;
-  setMessages: (
-    messages:
-      | ChatMessageShape[]
-      | ((messages: ChatMessageShape[]) => ChatMessageShape[]),
-  ) => void;
-  onClearChat?: () => void;
+  onInputChange: (value: string) => void;
+  onSubmit: () => void;
+  onClearChat: () => void;
   isLoading: boolean;
-  messages: ChatMessageShape[];
+  canClear: boolean;
 }
 
 export default function ChatInput({
-  input = "",
-  handleSubmit,
-  handleInputChange,
-  setMessages,
+  input,
+  onInputChange,
+  onSubmit,
   onClearChat,
   isLoading,
-  messages,
+  canClear,
 }: ChatInputProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Grow with the text, up to the max height, then scroll.
+  useEffect(() => {
+    const node = textareaRef.current;
+    if (!node) return;
+    node.style.height = "auto";
+    node.style.height = `${node.scrollHeight}px`;
+  }, [input]);
+
+  // Focus on open with a mouse or trackpad, but not on touch screens, where
+  // focusing throws the keyboard up over the conversation.
+  useEffect(() => {
+    if (window.matchMedia("(pointer: fine)").matches) {
+      textareaRef.current?.focus({ preventScroll: true });
+    }
+  }, []);
+
   return (
     <form
-      onSubmit={handleSubmit}
-      className="border-t border-white/20 bg-white/20 px-3 py-3 backdrop-blur-xl dark:border-white/10 dark:bg-black/20"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSubmit();
+      }}
+      className="kasi-divider border-t px-3 py-3"
     >
-      <div className="bg-background/70 focus-within:ring-primary/20 flex items-end gap-2 rounded-lg border border-white/30 p-2 shadow-sm ring-0 transition focus-within:ring-4 dark:border-white/10 dark:bg-white/5">
+      <div className="bg-background/70 focus-within:ring-ink/20 border-border/60 flex items-end gap-2 rounded-lg border p-2 shadow-sm ring-0 transition focus-within:ring-4">
         <Button
           title="Clear chat"
+          aria-label="Clear chat"
           variant="ghost"
-          onClick={() => {
-            setMessages([]);
-            onClearChat?.();
-          }}
-          className="size-10 shrink-0 rounded-md text-rose-500 hover:bg-rose-500/10"
-          disabled={messages.length === 0}
+          onClick={onClearChat}
+          className="text-tone-rose hover:bg-tone-rose/10 size-10 shrink-0 rounded-md"
+          disabled={!canClear || isLoading}
           type="button"
         >
           <Trash className="size-4" />
         </Button>
+        <label htmlFor="kasi-input" className="sr-only">
+          Message Kasi
+        </label>
         <textarea
-          autoFocus
+          id="kasi-input"
+          ref={textareaRef}
           placeholder="Ask about Akash..."
           value={input}
-          onChange={handleInputChange}
+          onChange={(event) => onInputChange(event.target.value)}
           rows={1}
-          className="placeholder:text-muted-foreground max-h-28 min-h-10 flex-1 resize-none bg-transparent px-1 py-2 text-sm outline-none"
+          maxLength={2000}
+          className="ios-prevent-zoom placeholder:text-muted-foreground max-h-28 min-h-10 flex-1 resize-none bg-transparent px-1 py-2 text-sm outline-none"
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            // Enter while an IME is composing (Hindi, Chinese, Japanese...)
+            // confirms the word; it must not send a half-typed message.
+            if (
+              event.key === "Enter" &&
+              !event.shiftKey &&
+              !event.nativeEvent.isComposing &&
+              event.keyCode !== 229
+            ) {
               event.preventDefault();
-              handleSubmit(event);
+              onSubmit();
             }
           }}
         />
         <Button
           title="Send message"
+          aria-label="Send message"
           variant="default"
           className="size-10 shrink-0 rounded-md"
           disabled={input.trim().length === 0 || isLoading}
           type="submit"
         >
           {isLoading ? (
-            <CornerDownLeft className="size-4 opacity-70" />
+            <LoaderCircle className="size-4 animate-spin" />
           ) : (
             <SendHorizontal className="size-4" />
           )}

@@ -1,6 +1,14 @@
-import { createHmac, scryptSync, timingSafeEqual } from "node:crypto";
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import {
+  createHash,
+  createHmac,
+  scryptSync,
+  timingSafeEqual,
+} from "node:crypto";
 
-const COOKIE_NAME = "hal_admin_session";
+const COOKIE_NAME = "admin_session";
+const SESSION_SECONDS = 60 * 60 * 24 * 7;
 
 function timingSafeStringEqual(a: string, b: string): boolean {
   const aBuffer = Buffer.from(a);
@@ -32,6 +40,25 @@ export function getAdminUsername(): string {
 }
 
 /**
+ * What is missing from the admin setup, if anything. Checked before a login
+ * is accepted: a login with no session secret used to "succeed" and then
+ * bounce straight back to the login page with no explanation.
+ */
+export function adminConfigProblem(): string | null {
+  if (!getAdminUsername()) return "ADMIN_USERNAME is not set.";
+  if (!process.env.ADMIN_PASSWORD && !process.env.ADMIN_PASSWORD_HASH) {
+    return "ADMIN_PASSWORD (or ADMIN_PASSWORD_HASH) is not set.";
+  }
+  if (!getAdminSessionSecret()) return "ADMIN_SESSION_SECRET is not set.";
+  return null;
+}
+
+/** Short secrets still work, but are worth replacing. */
+export function adminSecretIsWeak() {
+  return getAdminSessionSecret().length < 32;
+}
+
+/**
  * Credentials live only in the environment — there is deliberately no baked-in
  * fallback, so a misconfigured deploy locks admin out rather than shipping a
  * known password in the repository.
@@ -54,62 +81,52 @@ export function verifyAdminCredentials(
   return verifyScryptPassword(password, expectedHash!);
 }
 
-function base64UrlEncode(input: string | Buffer): string {
-  const buf = typeof input === "string" ? Buffer.from(input, "utf-8") : input;
-  return buf
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
-}
-
-function base64UrlDecodeToBuffer(input: string): Buffer {
-  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
-  const padLength = (4 - (normalized.length % 4)) % 4;
-  const padded = normalized + "=".repeat(padLength);
-  return Buffer.from(padded, "base64");
+/**
+ * Sessions are stateless cookies, so revoking them means changing the key
+ * they are signed with. The key mixes in the password and
+ * ADMIN_SESSION_VERSION: changing either (or the secret) signs every existing
+ * session out, on every device.
+ */
+function signingKey(secret: string) {
+  const credential = createHash("sha256")
+    .update(process.env.ADMIN_PASSWORD_HASH || process.env.ADMIN_PASSWORD || "")
+    .digest("hex");
+  return createHmac("sha256", secret)
+    .update(`admin-session:${credential}:${process.env.ADMIN_SESSION_VERSION ?? "1"}`)
+    .digest();
 }
 
 function sign(payloadB64: string, secret: string): string {
-  const sig = createHmac("sha256", secret).update(payloadB64).digest();
-  return base64UrlEncode(sig);
+  return createHmac("sha256", signingKey(secret))
+    .update(payloadB64)
+    .digest("base64url");
 }
 
 export function createAdminSessionCookieValue(
   username: string,
   secret: string,
 ): string {
-  const exp = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7; // 7 days
-  const payload = JSON.stringify({ u: username, exp });
-  const payloadB64 = base64UrlEncode(payload);
-  const signatureB64 = sign(payloadB64, secret);
-  return `${payloadB64}.${signatureB64}`;
+  const exp = Math.floor(Date.now() / 1000) + SESSION_SECONDS;
+  const payloadB64 = Buffer.from(JSON.stringify({ u: username, exp })).toString(
+    "base64url",
+  );
+  return `${payloadB64}.${sign(payloadB64, secret)}`;
 }
 
 export function decodeAdminSessionCookieValue(
   value: string,
   secret: string,
 ): { username: string; exp: number } | null {
-  const parts = value.split(".");
-  if (parts.length !== 2) return null;
-  const [payloadB64, signatureB64] = parts;
-  if (!payloadB64 || !signatureB64) return null;
+  if (!secret) return null;
+  const [payloadB64, signatureB64, extra] = value.split(".");
+  if (!payloadB64 || !signatureB64 || extra !== undefined) return null;
 
-  const expectedSig = sign(payloadB64, secret);
-
-  // timingSafeEqual requires equal lengths
-  const a = Buffer.from(signatureB64);
-  const b = Buffer.from(expectedSig);
-  if (a.length !== b.length) return null;
-  if (!timingSafeEqual(a, b)) return null;
+  if (!timingSafeStringEqual(signatureB64, sign(payloadB64, secret))) return null;
 
   try {
     const payload = JSON.parse(
-      base64UrlDecodeToBuffer(payloadB64).toString("utf-8"),
-    ) as {
-      u?: string;
-      exp?: number;
-    };
+      Buffer.from(payloadB64, "base64url").toString("utf-8"),
+    ) as { u?: string; exp?: number };
 
     if (!payload?.u || typeof payload.exp !== "number") return null;
     if (payload.exp < Math.floor(Date.now() / 1000)) return null;
@@ -119,14 +136,22 @@ export function decodeAdminSessionCookieValue(
   }
 }
 
-export function verifyAdminSessionCookieValue(
-  value: string,
-  secret: string,
-): boolean {
-  if (!secret) return false;
-  return Boolean(decodeAdminSessionCookieValue(value, secret));
-}
-
 export function getAdminCookieName() {
   return COOKIE_NAME;
+}
+
+export const ADMIN_SESSION_MAX_AGE = SESSION_SECONDS;
+
+/** The signed-in admin, or null. For pages and route handlers. */
+export async function readAdminSession() {
+  const cookieStore = await cookies();
+  const value = cookieStore.get(COOKIE_NAME)?.value;
+  return value ? decodeAdminSessionCookieValue(value, getAdminSessionSecret()) : null;
+}
+
+/** A 401 response when there is no valid admin session, otherwise null. */
+export async function requireAdminSession(): Promise<NextResponse | null> {
+  return (await readAdminSession())
+    ? null
+    : NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }

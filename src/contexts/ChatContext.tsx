@@ -1,39 +1,35 @@
-import { createContext, ReactNode, useContext, useState, useCallback } from "react";
+"use client";
 
-const ChatContext = createContext({
-  isVisible: true,
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+
+type ChatContextValue = {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  toggleChat: () => void;
+};
+
+const ChatContext = createContext<ChatContextValue>({
   isOpen: false,
-  toggleChatbot: () => { },
-  openChat: () => { },
-  toggleChat: () => { },
-  setIsOpen: (_open: boolean) => { },
+  setIsOpen: () => {},
+  toggleChat: () => {},
 });
 
 export const useChatbot = () => useContext(ChatContext);
 
-interface Props {
-  children: ReactNode;
-}
-
-export function ChatProvider({ children }: Props) {
-  const [isVisible, setIsVisible] = useState(true);
+export function ChatProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-
-  const toggleChatbot = useCallback(() => {
-    setIsVisible(!isVisible);
-  }, [isVisible]);
-
-  const openChat = useCallback(() => {
-    setIsOpen(true);
-  }, []);
-
-  const toggleChat = useCallback(() => {
-    setIsOpen((prev) => !prev);
-  }, []);
-
-  return (
-    <ChatContext.Provider value={{ isVisible, isOpen, toggleChatbot, openChat, toggleChat, setIsOpen }}>
-      {children}
-    </ChatContext.Provider>
+  const toggleChat = useCallback(() => setIsOpen((open) => !open), []);
+  const value = useMemo(
+    () => ({ isOpen, setIsOpen, toggleChat }),
+    [isOpen, toggleChat],
   );
+
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }

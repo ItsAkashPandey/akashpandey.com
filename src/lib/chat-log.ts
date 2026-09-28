@@ -1,4 +1,8 @@
-import { ensureChatLogTable, getChatLogPool } from "./chat-log-postgres";
+import {
+  ensureChatLogTable,
+  getChatLogPool,
+  pruneChatLogs,
+} from "./chat-log-postgres";
 
 export type ChatLogRow = {
   timestamp: string;
@@ -15,11 +19,6 @@ export type ChatLogAppendResult =
   | { status: "ok"; mode: "postgres" | "webhook" | "file" }
   | { status: "error"; error: string };
 
-type WebhookPayload = {
-  token?: string;
-  rows: ChatLogRow[];
-};
-
 function safeParseJson(text: string): { error?: string } | null {
   try {
     return JSON.parse(text) as { error?: string };
@@ -28,41 +27,59 @@ function safeParseJson(text: string): { error?: string } | null {
   }
 }
 
-export async function appendChatLogRows(rows: ChatLogRow[]) {
-  const databaseUrl =
+/**
+ * Google Sheets turns a cell that starts with = + - or @ into a formula, so a
+ * chat message like `=IMPORTXML(...)` would run inside the log sheet. A
+ * leading apostrophe makes Sheets store it as plain text (and hides the
+ * apostrophe itself).
+ */
+export function sheetSafe(value: string | null | undefined) {
+  if (typeof value !== "string") return value ?? null;
+  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+}
+
+function sheetSafeRow(row: ChatLogRow): ChatLogRow {
+  return {
+    ...row,
+    visitorName: sheetSafe(row.visitorName),
+    message: sheetSafe(row.message) ?? "",
+    notes: sheetSafe(row.notes),
+  };
+}
+
+export function chatLogDatabaseUrl() {
+  return (
     process.env.CHAT_LOG_DATABASE_URL ||
     process.env.POSTGRES_URL ||
-    process.env.DATABASE_URL;
-  const webhookUrl = process.env.CHAT_LOG_WEBHOOK_URL;
-  const filePath = process.env.CHAT_LOG_FILE_PATH || "./logs/chat-log.jsonl";
-  if (!databaseUrl && !webhookUrl && !filePath) {
-    return {
-      status: "disabled",
-      reason: "No chat log destination configured",
-    } as const;
-  }
+    process.env.DATABASE_URL
+  );
+}
 
-  // Preferred simple setup: webhook (Google Sheets).
-  // If it fails, fall back to Postgres (if configured) and then file.
+export async function appendChatLogRows(
+  rows: ChatLogRow[],
+): Promise<ChatLogAppendResult> {
+  const databaseUrl = chatLogDatabaseUrl();
+  const webhookUrl = process.env.CHAT_LOG_WEBHOOK_URL;
+  const filePath = process.env.CHAT_LOG_FILE_PATH;
+
+  // Preferred simple setup: webhook (Google Sheets). If it fails, fall back
+  // to Postgres (if configured) and then the file.
   if (webhookUrl) {
     try {
       const token = process.env.CHAT_LOG_WEBHOOK_TOKEN;
-
-      const payload: WebhookPayload = token ? { token, rows } : { rows };
-
       const response = await fetch(webhookUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(token ? { token } : {}),
+          rows: rows.map(sheetSafeRow),
+        }),
       });
 
       const body = await response.text().catch(() => "");
-
       if (!response.ok) {
         throw new Error(
-          `Chat log webhook failed: ${response.status} ${response.statusText}${body ? ` — ${body}` : ""}`,
+          `Chat log webhook failed: ${response.status} ${response.statusText}`,
         );
       }
 
@@ -73,41 +90,38 @@ export async function appendChatLogRows(rows: ChatLogRow[]) {
         throw new Error(`Chat log webhook rejected the write: ${parsed.error}`);
       }
 
-      return { status: "ok", mode: "webhook" } as const;
+      return { status: "ok", mode: "webhook" };
     } catch (error) {
-      // continue to next destination
       if (!databaseUrl && !filePath) {
         return {
           status: "error",
-          error:
-            error instanceof Error ? error.message : "Chat log webhook failed",
-        } as const;
+          error: error instanceof Error ? error.message : "Chat log webhook failed",
+        };
       }
     }
   }
 
-  // Optional: Postgres
   if (databaseUrl) {
     try {
       const pool = await getChatLogPool(databaseUrl);
       await ensureChatLogTable(pool);
-
-      const sql =
-        "insert into chat_logs (timestamp, visitor_id, visitor_name, conversation_id, role, message, notes) values ($1,$2,$3,$4,$5,$6,$7)";
-
-      for (const row of rows) {
-        await pool.query(sql, [
-          row.timestamp,
-          row.visitorId,
-          row.visitorName,
-          row.conversationId,
-          row.role,
-          row.message,
-          row.notes ?? null,
-        ]);
-      }
-
-      return { status: "ok", mode: "postgres" } as const;
+      await pool.query(
+        `insert into chat_logs (timestamp, visitor_id, visitor_name, conversation_id, role, message, notes)
+         select * from unnest($1::timestamptz[], $2::text[], $3::text[], $4::text[], $5::text[], $6::text[], $7::text[])`,
+        [
+          rows.map((row) => row.timestamp),
+          rows.map((row) => row.visitorId),
+          rows.map((row) => row.visitorName),
+          rows.map((row) => row.conversationId),
+          rows.map((row) => row.role),
+          rows.map((row) => row.message),
+          rows.map((row) => row.notes ?? null),
+        ],
+      );
+      await pruneChatLogs(pool).catch((error) =>
+        console.warn("[chat log] prune failed", error),
+      );
+      return { status: "ok", mode: "postgres" };
     } catch (error) {
       if (!filePath) {
         return {
@@ -116,27 +130,26 @@ export async function appendChatLogRows(rows: ChatLogRow[]) {
             error instanceof Error
               ? `Postgres chat log failed: ${error.message}`
               : "Postgres chat log failed",
-        } as const;
+        };
       }
-      // else fall back to file
     }
   }
 
-  // Fallback: local append-only JSONL file (no external API). Requires a persistent filesystem.
-  // NOTE: This is not reliable on serverless platforms that do not persist disk writes.
-  if (process.env.VERCEL === "1" && !process.env.CHAT_LOG_FILE_PATH) {
-    return {
-      status: "disabled",
-      reason: "Local file logging is disabled on Vercel to prevent build bloat",
-    } as const;
+  // Local append-only JSONL file, for development or a server with a
+  // persistent disk. Opt-in with CHAT_LOG_FILE_PATH; Vercel's disk is thrown
+  // away on every deploy.
+  if (!filePath) {
+    return { status: "disabled", reason: "No chat log destination configured" };
   }
 
   const { appendFile, mkdir } = await import("node:fs/promises");
   const path = await import("node:path");
-  const resolvedPath = filePath!.trim();
-  const directory = path.dirname(resolvedPath);
-  await mkdir(directory, { recursive: true });
-  const lines = rows.map((row) => JSON.stringify(row)).join("\n") + "\n";
-  await appendFile(resolvedPath, lines, "utf-8");
-  return { status: "ok", mode: "file" } as const;
+  const resolvedPath = filePath.trim();
+  await mkdir(path.dirname(resolvedPath), { recursive: true });
+  await appendFile(
+    resolvedPath,
+    rows.map((row) => JSON.stringify(row)).join("\n") + "\n",
+    "utf-8",
+  );
+  return { status: "ok", mode: "file" };
 }

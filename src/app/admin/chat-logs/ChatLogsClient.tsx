@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   type ReactNode,
   useCallback,
@@ -115,10 +116,12 @@ function toCsv(rows: ChatLogRow[]): string {
     "notes",
   ];
 
+  // Spreadsheet apps run a cell that starts with = + - or @ as a formula,
+  // so those get a leading apostrophe on the way out.
   const escape = (value: unknown) => {
     const text = String(value ?? "");
-    const escaped = text.replace(/"/g, '""');
-    return `"${escaped}"`;
+    const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
+    return `"${safe.replace(/"/g, '""')}"`;
   };
 
   const lines = [headers.join(",")];
@@ -138,7 +141,7 @@ function StatusCard({
   value: string;
 }) {
   return (
-    <div className="bg-background/55 rounded-xl border px-3 py-2.5">
+    <div className="bg-background/55 rounded-lg border px-3 py-2.5">
       <div className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-medium">
         {icon}
         <span>{label}</span>
@@ -201,6 +204,7 @@ export default function ChatLogsClient({
 }: {
   adminUsername: string | null;
 }) {
+  const router = useRouter();
   const [limit, setLimit] = useState(400);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -241,7 +245,7 @@ export default function ChatLogsClient({
         },
       );
       if (response.status === 401) {
-        window.location.href = `/admin/login?next=${encodeURIComponent("/admin")}`;
+        router.replace(`/admin/login?next=${encodeURIComponent("/admin")}`);
         return;
       }
       if (!response.ok) {
@@ -253,12 +257,12 @@ export default function ChatLogsClient({
       setData(json);
       setLastUpdated(new Date());
     } catch (err) {
-      setData(null);
+      // Keep showing the last good rows; one failed refresh is not "no logs".
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setIsLoading(false);
     }
-  }, [queryString]);
+  }, [queryString, router]);
 
   const resetSheet = useCallback(async () => {
     setIsResetting(true);
@@ -273,7 +277,7 @@ export default function ChatLogsClient({
         },
       });
       if (response.status === 401) {
-        window.location.href = `/admin/login?next=${encodeURIComponent("/admin")}`;
+        router.replace(`/admin/login?next=${encodeURIComponent("/admin")}`);
         return;
       }
       if (!response.ok) {
@@ -289,16 +293,17 @@ export default function ChatLogsClient({
     } finally {
       setIsResetting(false);
     }
-  }, [fetchLogs]);
+  }, [fetchLogs, router]);
 
   useEffect(() => {
-    // Initial fetch + interval refresh (no visible refresh controls).
+    // Initial fetch, then a quiet refresh every 30 seconds while the tab is
+    // visible. The Refresh button is there for anything more urgent.
     fetchLogs();
     refreshTimerRef.current = window.setInterval(() => {
       if (document.visibilityState === "visible") {
         fetchLogs();
       }
-    }, 5000);
+    }, 30_000);
 
     return () => {
       if (refreshTimerRef.current) {
@@ -310,8 +315,9 @@ export default function ChatLogsClient({
 
   const logout = useCallback(async () => {
     await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/";
-  }, []);
+    router.replace("/");
+    router.refresh();
+  }, [router]);
 
   const downloadCsv = useCallback(() => {
     const rows = data?.rows ?? [];
@@ -339,7 +345,7 @@ export default function ChatLogsClient({
         `${row.visitorName || ""} ${row.visitorId} ${row.conversationId} ${row.message}`.toLowerCase();
       return haystack.includes(searchText);
     });
-  }, [data]);
+  }, [data, searchText]);
 
   const conversations = useMemo((): ConversationGroup[] => {
     const byId = new Map<string, ConversationGroup>();
@@ -480,11 +486,10 @@ export default function ChatLogsClient({
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-8">
-      <header className="relative overflow-hidden rounded-2xl border border-white/60 bg-white/45 p-4 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35),0_14px_42px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-5 dark:border-white/10 dark:bg-white/[0.08] dark:shadow-[0_14px_42px_rgba(0,0,0,0.24)]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent dark:via-white/10" />
+      <header className="record-surface relative overflow-hidden rounded-lg p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-[16rem] items-start gap-3">
-            <div className="bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-xl">
+            <div className="bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-lg">
               <MessageCircle className="size-5" />
             </div>
             <div>
@@ -507,7 +512,7 @@ export default function ChatLogsClient({
 
           <div className="flex items-center gap-2">
             <button
-              className="bg-background/60 hover:bg-background flex h-9 items-center gap-2 rounded-xl border px-3 text-sm transition-colors disabled:opacity-50"
+              className="bg-background/60 hover:bg-background flex h-9 items-center gap-2 rounded-lg border px-3 text-sm transition-colors disabled:opacity-50"
               onClick={fetchLogs}
               disabled={isLoading}
               title="Refresh logs"
@@ -518,7 +523,7 @@ export default function ChatLogsClient({
               Refresh
             </button>
             <button
-              className="bg-background/60 hover:bg-background flex h-9 items-center gap-2 rounded-xl border px-3 text-sm transition-colors"
+              className="bg-background/60 hover:bg-background flex h-9 items-center gap-2 rounded-lg border px-3 text-sm transition-colors"
               onClick={logout}
             >
               <LogOut className="size-4" />
@@ -568,7 +573,7 @@ export default function ChatLogsClient({
         )}
       </header>
 
-      <section className="bg-background/55 mt-6 rounded-2xl border p-4 shadow-sm">
+      <section className="bg-background/55 mt-6 rounded-lg border p-4 shadow-sm">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <SlidersHorizontal className="size-4" />
@@ -584,7 +589,7 @@ export default function ChatLogsClient({
             <span className="relative">
               <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <input
-                className="bg-background/80 placeholder:text-muted-foreground focus:border-foreground/30 h-10 w-full rounded-xl border px-3 py-2 pl-10 text-sm shadow-sm transition-colors outline-none"
+                className="bg-background/80 placeholder:text-muted-foreground focus:border-foreground/30 h-10 w-full rounded-lg border px-3 py-2 pl-10 text-sm shadow-sm transition-colors outline-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Name, visitor id, conversation id, message…"
@@ -595,7 +600,7 @@ export default function ChatLogsClient({
           <label className="grid gap-1">
             <span className="text-muted-foreground px-1 text-xs">View</span>
             <select
-              className="bg-background/80 focus:border-foreground/30 h-10 rounded-xl border px-3 py-2 text-sm shadow-sm outline-none"
+              className="bg-background/80 focus:border-foreground/30 h-10 rounded-lg border px-3 py-2 text-sm shadow-sm outline-none"
               value={groupMode}
               onChange={(e) => setGroupMode(e.target.value as any)}
             >
@@ -607,7 +612,7 @@ export default function ChatLogsClient({
           <label className="grid gap-1">
             <span className="text-muted-foreground px-1 text-xs">Sort</span>
             <select
-              className="bg-background/80 focus:border-foreground/30 h-10 rounded-xl border px-3 py-2 text-sm shadow-sm outline-none"
+              className="bg-background/80 focus:border-foreground/30 h-10 rounded-lg border px-3 py-2 text-sm shadow-sm outline-none"
               value={sortMode}
               onChange={(e) => setSortMode(e.target.value as any)}
             >
@@ -620,7 +625,7 @@ export default function ChatLogsClient({
           <label className="grid gap-1">
             <span className="text-muted-foreground px-1 text-xs">Limit</span>
             <select
-              className="bg-background/80 focus:border-foreground/30 h-10 rounded-xl border px-3 py-2 text-sm shadow-sm outline-none"
+              className="bg-background/80 focus:border-foreground/30 h-10 rounded-lg border px-3 py-2 text-sm shadow-sm outline-none"
               value={limit}
               onChange={(e) => setLimit(Number(e.target.value))}
             >
@@ -639,7 +644,7 @@ export default function ChatLogsClient({
                 File path: {data.filePath}
               </p>
             )}
-            {error && <p className="text-sm text-rose-500">{error}</p>}
+            {error && <p className="text-sm text-tone-rose">{error}</p>}
             {data?.message && (
               <p className="text-muted-foreground text-sm">{data.message}</p>
             )}
@@ -648,9 +653,9 @@ export default function ChatLogsClient({
       </section>
 
       {data?.storage === "none" && (
-        <section className="mt-6 rounded-2xl border border-amber-500/25 bg-amber-500/8 p-4 shadow-sm">
+        <section className="mt-6 rounded-lg border border-tone-amber/25 bg-tone-amber/10 p-4 shadow-sm">
           <div className="flex gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-300">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-tone-amber/15 text-tone-amber">
               <Info className="size-4" />
             </div>
             <div className="min-w-0">
@@ -674,7 +679,7 @@ export default function ChatLogsClient({
         </section>
       )}
 
-      <section className="bg-background/55 mt-6 overflow-hidden rounded-2xl border shadow-sm">
+      <section className="bg-background/55 mt-6 overflow-hidden rounded-lg border shadow-sm">
         <div className="border-b px-4 py-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
@@ -688,7 +693,7 @@ export default function ChatLogsClient({
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="bg-background/70 hover:bg-background flex h-9 items-center gap-2 rounded-xl border px-3 text-sm transition-colors disabled:opacity-50"
+                className="bg-background/70 hover:bg-background flex h-9 items-center gap-2 rounded-lg border px-3 text-sm transition-colors disabled:opacity-50"
                 onClick={downloadCsv}
                 disabled={!data?.rows?.length}
                 title="Export the currently loaded rows"
@@ -755,7 +760,7 @@ export default function ChatLogsClient({
                           ).map(([cid, cidRows]) => (
                             <div
                               key={cid}
-                              className="bg-background rounded-xl border p-3"
+                              className="bg-background rounded-lg border p-3"
                             >
                               <div className="text-muted-foreground mb-3 flex items-center justify-between gap-2 text-xs">
                                 <span>Conversation #{cid.slice(0, 8)}</span>
@@ -764,7 +769,7 @@ export default function ChatLogsClient({
                               <div className="grid gap-3">
                                 {cidRows.map((row, idx) => {
                                   const isUser = row.role === "user";
-                                  const who = isUser ? name : "kasi";
+                                  const who = isUser ? name : "Kasi";
                                   const ts = formatTimestamp(row.timestamp);
                                   return (
                                     <div
@@ -806,7 +811,7 @@ export default function ChatLogsClient({
                                         }`}
                                       >
                                         <div
-                                          className={`max-w-[44rem] rounded-2xl border px-4 py-3 text-sm leading-relaxed ${
+                                          className={`max-w-[44rem] rounded-lg border px-4 py-3 text-sm leading-relaxed ${
                                             isUser
                                               ? "border-foreground/10 bg-foreground text-background"
                                               : "bg-background"
@@ -865,7 +870,7 @@ export default function ChatLogsClient({
                         <div className="grid gap-3">
                           {conv.rows.map((row, idx) => {
                             const isUser = row.role === "user";
-                            const who = isUser ? name : "kasi";
+                            const who = isUser ? name : "Kasi";
                             const ts = formatTimestamp(row.timestamp);
 
                             return (
@@ -902,7 +907,7 @@ export default function ChatLogsClient({
                                   className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                                 >
                                   <div
-                                    className={`max-w-[44rem] rounded-2xl border px-4 py-3 text-sm leading-relaxed ${
+                                    className={`max-w-[44rem] rounded-lg border px-4 py-3 text-sm leading-relaxed ${
                                       isUser
                                         ? "border-foreground/10 bg-foreground text-background"
                                         : "bg-background"
@@ -926,10 +931,10 @@ export default function ChatLogsClient({
         </div>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4">
+      <section className="mt-6 rounded-lg border border-tone-rose/20 bg-tone-rose/5 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="flex items-center gap-2 text-sm font-medium text-rose-600">
+            <h3 className="flex items-center gap-2 text-sm font-medium text-tone-rose">
               <Trash2 className="size-4" />
               Danger zone
             </h3>
@@ -942,7 +947,7 @@ export default function ChatLogsClient({
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <button
-                className="bg-background hover:bg-background/80 flex h-9 items-center gap-2 rounded-xl border border-rose-500/30 px-3 text-sm text-rose-600 transition-colors disabled:opacity-50"
+                className="bg-background hover:bg-background/80 flex h-9 items-center gap-2 rounded-lg border border-tone-rose/30 px-3 text-sm text-tone-rose transition-colors disabled:opacity-50"
                 disabled={isResetting || data?.storage !== "webhook"}
                 title={
                   data?.storage !== "webhook"
@@ -990,7 +995,7 @@ export default function ChatLogsClient({
                     resetSheet();
                     setResetText("");
                   }}
-                  className="bg-rose-600 hover:bg-rose-700"
+                  className="bg-tone-rose hover:bg-tone-rose/90"
                 >
                   Reset
                 </AlertDialogAction>

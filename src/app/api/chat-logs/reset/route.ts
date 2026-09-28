@@ -1,49 +1,20 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
 
-import { cookies } from "next/headers";
+import { requireAdminSession } from "@/lib/admin-auth";
 import { NextResponse } from "next/server";
-import {
-  getAdminCookieName,
-  getAdminSessionSecret,
-  verifyAdminSessionCookieValue,
-} from "@/lib/admin-auth";
-
-async function requireAdminSession(): Promise<NextResponse | null> {
-  const secret = getAdminSessionSecret();
-
-  const cookieStore = await cookies();
-  const session = cookieStore.get(getAdminCookieName())?.value;
-  if (!session || !verifyAdminSessionCookieValue(session, secret)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  return null;
-}
 
 export async function POST() {
-  const authError = await requireAdminSession();
-  if (authError) return authError;
+  const unauthorized = await requireAdminSession();
+  if (unauthorized) return unauthorized;
 
   const webhookUrl = process.env.CHAT_LOG_WEBHOOK_URL;
   const webhookToken = process.env.CHAT_LOG_WEBHOOK_TOKEN;
-
-  if (!webhookUrl) {
+  if (!webhookUrl || !webhookToken) {
     return NextResponse.json(
       {
-        error: "CHAT_LOG_WEBHOOK_URL is not configured",
-        hint: "Set up the Google Sheets Apps Script Web App and put its URL in CHAT_LOG_WEBHOOK_URL",
-      },
-      { status: 400 },
-    );
-  }
-
-  if (!webhookToken) {
-    return NextResponse.json(
-      {
-        error: "CHAT_LOG_WEBHOOK_TOKEN is not configured",
-        hint: "Set LOG_TOKEN in Apps Script and CHAT_LOG_WEBHOOK_TOKEN in .env.local",
+        error:
+          "Reset needs CHAT_LOG_WEBHOOK_URL and CHAT_LOG_WEBHOOK_TOKEN (the same value as TOKEN in the Apps Script).",
       },
       { status: 400 },
     );
@@ -51,20 +22,23 @@ export async function POST() {
 
   const response = await fetch(webhookUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-      Pragma: "no-cache",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token: webhookToken, action: "reset" }),
+    cache: "no-store",
   });
+  const json = (await response.json().catch(() => null)) as {
+    reset?: boolean;
+    error?: string;
+  } | null;
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
+  // Apps Script answers 200 even when it fails, and an older script without
+  // the reset action just reports "written: 0": only `reset: true` counts.
+  if (!response.ok || json?.error || !json?.reset) {
     return NextResponse.json(
       {
-        error: "Reset failed",
-        detail: `${response.status} ${response.statusText}${text ? ` — ${text}` : ""}`,
+        error:
+          json?.error ||
+          "The sheet was not reset. Update the Apps Script from docs/chat-logging.md; older versions have no reset action.",
       },
       { status: 502 },
     );
@@ -72,13 +46,6 @@ export async function POST() {
 
   return NextResponse.json(
     { ok: true },
-    {
-      headers: {
-        "Cache-Control":
-          "no-store, no-cache, must-revalidate, proxy-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
-    },
+    { headers: { "Cache-Control": "no-store" } },
   );
 }

@@ -1,80 +1,73 @@
 export const runtime = "nodejs";
 
-import { NextResponse } from "next/server";
 import {
+  ADMIN_SESSION_MAX_AGE,
+  adminConfigProblem,
+  adminSecretIsWeak,
   createAdminSessionCookieValue,
   getAdminCookieName,
-  getAdminUsername,
   getAdminSessionSecret,
+  getAdminUsername,
   verifyAdminCredentials,
 } from "@/lib/admin-auth";
-
-const loginAttempts = new Map<string, { count: number; resetAt: number }>();
-
-function getClientIp(req: Request): string {
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0]?.trim() || "unknown";
-  return req.headers.get("x-real-ip") || "unknown";
-}
-
-function isRateLimited(key: string, limit = 5, windowMs = 5 * 60_000): boolean {
-  const now = Date.now();
-  const current = loginAttempts.get(key);
-  if (!current || current.resetAt <= now) {
-    loginAttempts.set(key, { count: 1, resetAt: now + windowMs });
-    return false;
-  }
-
-  current.count += 1;
-  return current.count > limit;
-}
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  try {
-    const rateLimitKey = getClientIp(req);
-    if (isRateLimited(rateLimitKey)) {
-      return NextResponse.json(
-        { error: "Too many login attempts. Please try again later." },
-        { status: 429 },
-      );
-    }
-
-    const { username, password } = (await req.json()) as {
-      username?: string;
-      password?: string;
-    };
-
-    if (!username || !password) {
-      return NextResponse.json(
-        { error: "Missing username or password" },
-        { status: 400 },
-      );
-    }
-
-    if (!verifyAdminCredentials(username, password)) {
-      return NextResponse.json(
-        { error: "Invalid username or password" },
-        { status: 401 },
-      );
-    }
-
-    const cookieName = getAdminCookieName();
-    const cookieValue = createAdminSessionCookieValue(
-      getAdminUsername(),
-      getAdminSessionSecret(),
+  const ip = getClientIp(req.headers);
+  if (await isRateLimited("admin-login", ip, 5, 5 * 60_000)) {
+    return NextResponse.json(
+      { error: "Too many login attempts. Please try again later." },
+      { status: 429 },
     );
+  }
 
-    const res = NextResponse.json({ ok: true });
-    res.cookies.set(cookieName, cookieValue, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
-
-    return res;
-  } catch (error) {
+  let username: unknown;
+  let password: unknown;
+  try {
+    ({ username, password } = (await req.json()) as Record<string, unknown>);
+  } catch {
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }
+
+  if (typeof username !== "string" || typeof password !== "string" || !username || !password) {
+    return NextResponse.json(
+      { error: "Missing username or password" },
+      { status: 400 },
+    );
+  }
+
+  const problem = adminConfigProblem();
+  if (problem) {
+    console.error(`[admin] login refused: ${problem}`);
+    return NextResponse.json(
+      { error: `Admin login is not configured on the server. ${problem}` },
+      { status: 500 },
+    );
+  }
+
+  if (!verifyAdminCredentials(username, password)) {
+    return NextResponse.json(
+      { error: "Invalid username or password" },
+      { status: 401 },
+    );
+  }
+
+  if (adminSecretIsWeak()) {
+    console.warn("[admin] ADMIN_SESSION_SECRET is shorter than 32 characters.");
+  }
+
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(
+    getAdminCookieName(),
+    createAdminSessionCookieValue(getAdminUsername(), getAdminSessionSecret()),
+    {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: ADMIN_SESSION_MAX_AGE,
+    },
+  );
+  return res;
 }

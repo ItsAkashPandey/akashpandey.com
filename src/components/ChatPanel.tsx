@@ -1,201 +1,267 @@
 "use client";
 
 import type {
-  ChatAction,
   ChatMessageShape,
+  ChatStreamEvent,
   ChatUiCard,
 } from "@/lib/chat-types";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ChatInput from "./ChatInput";
 import ChatMessages from "./ChatMessages";
 
-type ChatPanelProps = {
-  isExpanded: boolean;
+const STORAGE_KEY = "kasi-chat-v1";
+const GREETING_ID = "kasi-greeting";
+
+const greeting = (): ChatMessageShape => ({
+  id: GREETING_ID,
+  role: "assistant",
+  content:
+    "Hi, I'm Kasi. Ask me about Akash's research, activities, publications, skills, or how to reach him.",
+  actions: [
+    {
+      label: "Recent activities",
+      prompt: "What has Akash been up to recently?",
+      kind: "prompt",
+    },
+    { label: "Publications", href: "/publications", kind: "page" },
+    { label: "Contact", href: "/contact", kind: "page" },
+  ],
+});
+
+const newId = () =>
+  globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+
+type Stored = {
+  conversationId: string;
+  visitorName: string;
+  messages: ChatMessageShape[];
 };
 
-export default function ChatPanel({ isExpanded }: ChatPanelProps) {
+/** The conversation survives reloads and page changes within the tab. */
+function loadConversation(): Stored | null {
+  try {
+    const stored = JSON.parse(
+      window.sessionStorage.getItem(STORAGE_KEY) ?? "null",
+    ) as Stored | null;
+    if (!stored?.conversationId || !Array.isArray(stored.messages)) return null;
+    return {
+      ...stored,
+      // A reply that was mid-stream when the page went away stays as it was.
+      messages: stored.messages
+        .filter((message) => message.content || !message.pending)
+        .map((message) => ({ ...message, pending: false })),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function saveConversation(stored: Stored) {
+  try {
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+  } catch {
+    // Private mode or storage full: the chat still works, it just won't
+    // survive a reload.
+  }
+}
+
+export default function ChatPanel({ isExpanded }: { isExpanded: boolean }) {
   const [messages, setMessages] = useState<ChatMessageShape[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | undefined>(undefined);
-  const messagesRef = useRef(messages);
-  const conversationIdRef = useRef(
-    crypto.randomUUID?.() ?? `${Date.now()}-conversation`,
-  );
+  const [error, setError] = useState<string | null>(null);
   const [visitorName, setVisitorName] = useState("");
-  // visitorName is optional and is inferred by the server (Gemini) when possible.
-
-  useEffect(() => {
-    if (!isExpanded) return;
-    if (messagesRef.current.length > 0) return;
-
-    const greeting =
-      "Hi, I’m kasi. Ask me about Akash’s research, activities, publications, skills, or contact details.";
-
-    setMessages([
-      {
-        id: crypto.randomUUID?.() ?? `${Date.now()}-assistant-greeting`,
-        role: "assistant",
-        content: greeting,
-        actions: [
-          {
-            label: "Recent activities",
-            prompt: "What are Akash's recent activities?",
-            kind: "prompt",
-          },
-          { label: "Publications", href: "/publications", kind: "page" },
-          { label: "Contact", href: "/contact", kind: "page" },
-        ],
-      },
-    ]);
-  }, [isExpanded]);
-
-  const handleInputChange = useCallback(
-    (
-      event: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>,
-    ) => {
-      setInput(event.target.value);
-    },
-    [],
-  );
+  const conversationIdRef = useRef("");
+  const messagesRef = useRef(messages);
+  const restoredRef = useRef(false);
 
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
-  const sendMessageText = useCallback(
+  // Restore (or start) the conversation on first open.
+  useEffect(() => {
+    if (!isExpanded || restoredRef.current) return;
+    restoredRef.current = true;
+    const stored = loadConversation();
+    conversationIdRef.current = stored?.conversationId ?? newId();
+    setVisitorName(stored?.visitorName ?? "");
+    setMessages(stored?.messages.length ? stored.messages : [greeting()]);
+  }, [isExpanded]);
+
+  useEffect(() => {
+    if (!restoredRef.current) return;
+    saveConversation({
+      conversationId: conversationIdRef.current,
+      visitorName,
+      messages,
+    });
+  }, [messages, visitorName]);
+
+  const updateMessage = useCallback(
+    (id: string, patch: (message: ChatMessageShape) => ChatMessageShape) => {
+      setMessages((previous) =>
+        previous.map((message) => (message.id === id ? patch(message) : message)),
+      );
+    },
+    [],
+  );
+
+  const sendMessage = useCallback(
     async (text: string) => {
-      const trimmedInput = text.trim();
-      if (!trimmedInput || isLoading) {
-        return;
-      }
+      const content = text.trim();
+      if (!content || isLoading) return;
 
-      const userMessage = {
-        id: crypto.randomUUID?.() ?? `${Date.now()}-user`,
-        role: "user" as const,
-        content: trimmedInput,
-      };
+      const history = messagesRef.current
+        .filter((message) => message.id !== GREETING_ID && !message.pending)
+        .slice(-8)
+        .map(({ role, content, signature }) => ({ role, content, signature }));
 
-      const nextMessages = [...messagesRef.current, userMessage];
-      setMessages(nextMessages);
+      const assistantId = newId();
+      setMessages((previous) => [
+        ...previous,
+        { id: newId(), role: "user", content },
+        { id: assistantId, role: "assistant", content: "", pending: true },
+      ]);
       setInput("");
       setIsLoading(true);
-      setError(undefined);
+      setError(null);
+
+      const fail = (message: string) => {
+        setError(message);
+        setMessages((previous) =>
+          previous.filter((item) => item.id !== assistantId || item.content),
+        );
+        updateMessage(assistantId, (message) => ({ ...message, pending: false }));
+      };
 
       try {
         const response = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            message: trimmedInput,
-            history: messagesRef.current
-              .slice(-6)
-              .map(({ role, content }) => ({ role, content })),
+            message: content,
+            history,
             conversationId: conversationIdRef.current,
             visitorName: visitorName || undefined,
-            client: {
-              page:
-                typeof window !== "undefined"
-                  ? window.location.pathname
-                  : undefined,
-            },
+            client: { page: window.location.pathname },
           }),
         });
 
         if (!response.ok) {
-          // Parse the friendly error from the server
-          let friendlyMessage =
-            "Oops, something went sideways 🙃 — please try again!";
-          try {
-            const errorData = await response.json();
-            if (errorData?.error && typeof errorData.error === "string") {
-              friendlyMessage = errorData.error;
-            }
-          } catch {
-            // If JSON parsing fails, use generic message
-          }
-          throw new Error(friendlyMessage);
+          const data = (await response.json().catch(() => null)) as {
+            error?: string;
+          } | null;
+          fail(data?.error ?? "Something went wrong. Please try again.");
+          return;
         }
 
-        const data = (await response.json()) as {
-          reply?: string;
-          visitorName?: string | null;
-          actions?: ChatAction[];
-          cards?: ChatUiCard[];
+        const namedVisitor = response.headers.get("X-Kasi-Visitor");
+        if (namedVisitor && !visitorName) {
+          setVisitorName(decodeURIComponent(namedVisitor));
+        }
+
+        if (response.headers.get("Content-Type")?.includes("application/json")) {
+          const data = (await response.json()) as {
+            reply?: string;
+            visitorName?: string | null;
+            signature?: string;
+          };
+          if (data.visitorName && !visitorName) setVisitorName(data.visitorName);
+          updateMessage(assistantId, (message) => ({
+            ...message,
+            content: data.reply?.trim() || "Sorry, I don't have an answer for that.",
+            signature: data.signature,
+            pending: false,
+          }));
+          return;
+        }
+
+        // Streamed answer: NDJSON events. Text is painted at most once per
+        // frame, so a fast stream doesn't re-render Markdown for every token.
+        const reader = response.body!.pipeThrough(new TextDecoderStream()).getReader();
+        let buffer = "";
+        let pendingText = "";
+        let frame = 0;
+        const flush = () => {
+          frame = 0;
+          if (!pendingText) return;
+          const text = pendingText;
+          pendingText = "";
+          updateMessage(assistantId, (message) => ({
+            ...message,
+            content: message.content + text,
+          }));
         };
-        const assistantText =
-          data.reply?.trim() || "Sorry, I don't have an answer for that.";
 
-        const nextVisitorName = (data.visitorName || "").trim();
-        if (nextVisitorName && !visitorName) {
-          setVisitorName(nextVisitorName);
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += value;
+          let newline: number;
+          while ((newline = buffer.indexOf("\n")) >= 0) {
+            const line = buffer.slice(0, newline).trim();
+            buffer = buffer.slice(newline + 1);
+            if (!line) continue;
+            const event = JSON.parse(line) as ChatStreamEvent;
+            if (event.type === "delta") {
+              pendingText += event.text;
+              frame ||= requestAnimationFrame(flush);
+            } else if (event.type === "done") {
+              cancelAnimationFrame(frame);
+              flush();
+              updateMessage(assistantId, (message) => ({
+                ...message,
+                content: message.content.trim(),
+                cards: event.cards as ChatUiCard[] | undefined,
+                signature: event.signature,
+                pending: false,
+              }));
+            } else if (event.type === "error") {
+              cancelAnimationFrame(frame);
+              flush();
+              fail(event.error);
+            }
+          }
         }
-
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: crypto.randomUUID?.() ?? `${Date.now()}-assistant`,
-            role: "assistant",
-            content: assistantText,
-            actions: data.actions,
-            cards: data.cards,
-          },
-        ]);
-      } catch (caughtError) {
-        setError(
-          caughtError instanceof Error
-            ? caughtError
-            : new Error("Unknown error"),
-        );
+        cancelAnimationFrame(frame);
+        flush();
+        updateMessage(assistantId, (message) => ({ ...message, pending: false }));
+      } catch {
+        fail("Could not reach Kasi. Check your connection and try again.");
       } finally {
         setIsLoading(false);
       }
     },
-    [isLoading, visitorName],
+    [isLoading, updateMessage, visitorName],
   );
 
-  const handleSubmit = useCallback(
-    async (event?: { preventDefault?: () => void }) => {
-      event?.preventDefault?.();
-      await sendMessageText(input);
-    },
-    [input, sendMessageText],
-  );
-
-  const handleClearChat = () => {
-    setMessages([]);
-    setError(undefined);
+  const clearChat = () => {
+    conversationIdRef.current = newId();
+    setMessages([greeting()]);
+    setError(null);
     setVisitorName("");
-    conversationIdRef.current =
-      crypto.randomUUID?.() ?? `${Date.now()}-conversation`;
   };
 
-  if (!isExpanded) {
-    return null;
-  }
+  if (!isExpanded) return null;
+
+  const hasQuestions = messages.some((message) => message.role === "user");
 
   return (
     <>
       <ChatMessages
         messages={messages}
         error={error}
-        isLoading={isLoading}
-        onPromptClick={(prompt) => sendMessageText(prompt)}
+        showPrompts={!hasQuestions && !isLoading}
+        onPromptClick={sendMessage}
       />
       <ChatInput
         input={input}
-        handleSubmit={handleSubmit}
-        handleInputChange={handleInputChange}
-        setMessages={setMessages}
-        onClearChat={handleClearChat}
+        onInputChange={setInput}
+        onSubmit={() => void sendMessage(input)}
+        onClearChat={clearChat}
         isLoading={isLoading}
-        messages={messages}
+        canClear={hasQuestions}
       />
     </>
   );
