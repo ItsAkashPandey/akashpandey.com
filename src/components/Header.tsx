@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import ChatToggle from "./ChatToggle";
+import SearchTrigger from "./search/SearchTrigger";
 import ThemeToggle from "./ThemeToggle";
 import { Menu } from "lucide-react";
 import {
@@ -99,7 +100,8 @@ export default function Header() {
             </Dialog>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            <SearchTrigger />
             <ChatToggle />
             <ThemeToggle />
           </div>
