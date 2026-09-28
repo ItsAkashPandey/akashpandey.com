@@ -1,4 +1,6 @@
-import SkillsExplorer, { type SkillCategoryView } from "@/components/SkillsExplorer";
+import SkillsExplorer, {
+  type SkillCategoryView,
+} from "@/components/SkillsExplorer";
 import { getSkills } from "@/lib/content";
 import { getPhotos } from "@/lib/photos";
 

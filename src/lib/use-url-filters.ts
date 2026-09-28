@@ -25,7 +25,10 @@ export function useUrlFilters<T extends Record<string, string>>(
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const raw: Partial<T> = {};
-    for (const [name, param] of Object.entries(keysRef.current) as [keyof T, string][]) {
+    for (const [name, param] of Object.entries(keysRef.current) as [
+      keyof T,
+      string,
+    ][]) {
       const value = params.get(param);
       if (value !== null) raw[name] = value as T[keyof T];
     }
@@ -40,7 +43,10 @@ export function useUrlFilters<T extends Record<string, string>>(
     if (!restored.current) return;
     const timer = window.setTimeout(() => {
       const url = new URL(window.location.href);
-      for (const [name, param] of Object.entries(keysRef.current) as [keyof T, string][]) {
+      for (const [name, param] of Object.entries(keysRef.current) as [
+        keyof T,
+        string,
+      ][]) {
         const value = filters[name].trim();
         if (value && value !== defaultsRef.current[name]) {
           url.searchParams.set(param, value);

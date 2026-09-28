@@ -86,7 +86,8 @@ function toVector(longitude: number, latitude: number, radius = 1) {
 
 /** Point i of the Fibonacci grid. Must match scripts/build-globe-land.mjs. */
 function gridPoint(i: number): [number, number] {
-  const latitude = (Math.asin(1 - ((i + 0.5) * 2) / GRID_POINTS) * 180) / Math.PI;
+  const latitude =
+    (Math.asin(1 - ((i + 0.5) * 2) / GRID_POINTS) * 180) / Math.PI;
   const longitude = (((i * GOLDEN_ANGLE) % TAU) - Math.PI) * (180 / Math.PI);
   return [longitude, latitude];
 }
@@ -105,15 +106,22 @@ function landPositions() {
 
 function graticule() {
   const positions: number[] = [];
-  const push = (a: Vector3, b: Vector3) => positions.push(a.x, a.y, a.z, b.x, b.y, b.z);
+  const push = (a: Vector3, b: Vector3) =>
+    positions.push(a.x, a.y, a.z, b.x, b.y, b.z);
   for (let latitude = -75; latitude <= 75; latitude += 15) {
     for (let longitude = -180; longitude < 180; longitude += 3) {
-      push(toVector(longitude, latitude, 1.0006), toVector(longitude + 3, latitude, 1.0006));
+      push(
+        toVector(longitude, latitude, 1.0006),
+        toVector(longitude + 3, latitude, 1.0006),
+      );
     }
   }
   for (let longitude = -180; longitude < 180; longitude += 15) {
     for (let latitude = -84; latitude < 84; latitude += 3) {
-      push(toVector(longitude, latitude, 1.0006), toVector(longitude, latitude + 3, 1.0006));
+      push(
+        toVector(longitude, latitude, 1.0006),
+        toVector(longitude, latitude + 3, 1.0006),
+      );
     }
   }
   return new Float32BufferAttribute(positions, 3);
@@ -131,7 +139,10 @@ function arcCurve(from: Vector3, to: Vector3) {
     const sinAngle = Math.sin(angle) || 1;
     const a = Math.sin((1 - t) * angle) / sinAngle;
     const b = Math.sin(t * angle) / sinAngle;
-    const point = from.clone().multiplyScalar(a).add(to.clone().multiplyScalar(b));
+    const point = from
+      .clone()
+      .multiplyScalar(a)
+      .add(to.clone().multiplyScalar(b));
     point.normalize().multiplyScalar(1.002 + Math.sin(Math.PI * t) * lift);
     points.push(point);
   }
@@ -173,7 +184,12 @@ export function createGlobeScene(options: Options): GlobeScene | null {
 
   // CSS colours are sRGB; three.js would otherwise read HSL as linear.
   const color = (hsl: [number, number, number]) =>
-    new Color().setHSL(hsl[0] / 360, hsl[1] / 100, hsl[2] / 100, SRGBColorSpace);
+    new Color().setHSL(
+      hsl[0] / 360,
+      hsl[1] / 100,
+      hsl[2] / 100,
+      SRGBColorSpace,
+    );
 
   // Paper sphere with a slightly darker rim.
   const sphereMaterial = new ShaderMaterial({
@@ -251,7 +267,8 @@ export function createGlobeScene(options: Options): GlobeScene | null {
   globe.add(new Points(dotsGeometry, dotsMaterial));
 
   // Arcs from home to every other place.
-  const home = markers.find((marker) => marker.category === "home") ?? markers[0];
+  const home =
+    markers.find((marker) => marker.category === "home") ?? markers[0];
   const homeVector = toVector(...home.coordinates);
   const arcUniforms = {
     uColor: { value: new Color() },
@@ -300,7 +317,10 @@ export function createGlobeScene(options: Options): GlobeScene | null {
       `,
     });
     const segments = Math.max(24, Math.round(curve.getLength() * 90));
-    const mesh = new Mesh(new TubeGeometry(curve, segments, 0.0032, 5, false), material);
+    const mesh = new Mesh(
+      new TubeGeometry(curve, segments, 0.0032, 5, false),
+      material,
+    );
     globe.add(mesh);
     arcs.push({ mesh, draw, delay: index * 0.07 });
   });
@@ -308,7 +328,13 @@ export function createGlobeScene(options: Options): GlobeScene | null {
   // Place dots, each on a paper-coloured backing so it reads on the land.
   const markerMeshes = new Map<
     string,
-    { marker: GlobeMarker; group: Group; dot: Mesh; backing: Mesh; position: Vector3 }
+    {
+      marker: GlobeMarker;
+      group: Group;
+      dot: Mesh;
+      backing: Mesh;
+      position: Vector3;
+    }
   >();
   const dotMaterials = {
     home: new MeshBasicMaterial(),
@@ -323,8 +349,14 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     const group = new Group();
     group.position.copy(position);
     group.lookAt(position.clone().multiplyScalar(2));
-    const backing = new Mesh(new CircleGeometry(radius * 1.45, 32), backingMaterial);
-    const dot = new Mesh(new CircleGeometry(radius, 32), dotMaterials[marker.category]);
+    const backing = new Mesh(
+      new CircleGeometry(radius * 1.45, 32),
+      backingMaterial,
+    );
+    const dot = new Mesh(
+      new CircleGeometry(radius, 32),
+      dotMaterials[marker.category],
+    );
     dot.position.z = 0.0005;
     group.add(backing, dot);
     globe.add(group);
@@ -332,14 +364,23 @@ export function createGlobeScene(options: Options): GlobeScene | null {
   }
 
   // Home keeps a slow ring going out from it; the selected place gets a ring.
-  const homeRingMaterial = new MeshBasicMaterial({ transparent: true, depthWrite: false });
+  const homeRingMaterial = new MeshBasicMaterial({
+    transparent: true,
+    depthWrite: false,
+  });
   const homeRing = new Mesh(new RingGeometry(0.9, 1, 48), homeRingMaterial);
   const homeEntry = markerMeshes.get(home.id);
   homeEntry?.group.add(homeRing);
   homeRing.position.z = 0.0003;
 
-  const selectedMaterial = new MeshBasicMaterial({ transparent: true, depthWrite: false });
-  const selectedRing = new Mesh(new RingGeometry(0.78, 1, 48), selectedMaterial);
+  const selectedMaterial = new MeshBasicMaterial({
+    transparent: true,
+    depthWrite: false,
+  });
+  const selectedRing = new Mesh(
+    new RingGeometry(0.78, 1, 48),
+    selectedMaterial,
+  );
   selectedRing.visible = false;
   let selectedAt = 0;
 
@@ -372,7 +413,10 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     if (!entry) return null;
     const [longitude, latitude] = entry.marker.coordinates;
     return {
-      x: Math.min(TILT_MAX, Math.max(TILT_MIN, latitude * DEG - VIEW_LAT_OFFSET)),
+      x: Math.min(
+        TILT_MAX,
+        Math.max(TILT_MIN, latitude * DEG - VIEW_LAT_OFFSET),
+      ),
       y: -longitude * DEG,
     };
   }
@@ -435,7 +479,8 @@ export function createGlobeScene(options: Options): GlobeScene | null {
       entry.group.getWorldPosition(projected);
       normal.copy(projected).normalize();
       // Skip places on the far side.
-      if (normal.dot(camera.position.clone().sub(projected).normalize()) < 0.15) continue;
+      if (normal.dot(camera.position.clone().sub(projected).normalize()) < 0.15)
+        continue;
       projected.project(camera);
       const px = ((projected.x + 1) / 2) * rect.width;
       const py = ((1 - projected.y) / 2) * rect.height;
@@ -482,7 +527,8 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     const scale = 1 / globeRadiusPx();
     const dx = (event.clientX - last.x) * scale;
     // Touch only turns the globe sideways; up and down scroll the page.
-    const dy = event.pointerType === "mouse" ? (event.clientY - last.y) * scale : 0;
+    const dy =
+      event.pointerType === "mouse" ? (event.clientY - last.y) * scale : 0;
     rotation.y += dx;
     rotation.x = Math.min(TILT_MAX, Math.max(TILT_MIN, rotation.x + dy));
     velocity.x = velocity.x * 0.6 + (dy / dt) * 0.4;
@@ -552,8 +598,14 @@ export function createGlobeScene(options: Options): GlobeScene | null {
 
     let moving = dragging;
 
-    if (!dragging && (Math.abs(velocity.x) > 0.002 || Math.abs(velocity.y) > 0.002)) {
-      rotation.x = Math.min(TILT_MAX, Math.max(TILT_MIN, rotation.x + velocity.x * dt));
+    if (
+      !dragging &&
+      (Math.abs(velocity.x) > 0.002 || Math.abs(velocity.y) > 0.002)
+    ) {
+      rotation.x = Math.min(
+        TILT_MAX,
+        Math.max(TILT_MIN, rotation.x + velocity.x * dt),
+      );
       rotation.y += velocity.y * dt;
       const decay = Math.exp(-dt * 3.2);
       velocity.x *= decay;
@@ -563,7 +615,10 @@ export function createGlobeScene(options: Options): GlobeScene | null {
       const k = 1 - Math.exp(-dt * 3.4);
       rotation.x += (target.x - rotation.x) * k;
       rotation.y += (target.y - rotation.y) * k;
-      if (Math.abs(target.x - rotation.x) < 0.0005 && Math.abs(target.y - rotation.y) < 0.0005) {
+      if (
+        Math.abs(target.x - rotation.x) < 0.0005 &&
+        Math.abs(target.y - rotation.y) < 0.0005
+      ) {
         rotation.x = target.x;
         rotation.y = target.y;
         easing = false;
@@ -590,7 +645,8 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     if (!reducedMotion) {
       const pulse = (clock % 3.2) / 3.2;
       homeRing.scale.setScalar(
-        ((homeEntry?.dot.geometry as CircleGeometry | undefined)?.parameters.radius ?? 0.02) *
+        ((homeEntry?.dot.geometry as CircleGeometry | undefined)?.parameters
+          .radius ?? 0.02) *
           (1.6 + pulse * 3.2),
       );
       homeRingMaterial.opacity = 0.55 * (1 - pulse);
@@ -604,7 +660,8 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     renderer.render(scene, camera);
     dirty = false;
 
-    const keepGoing = active && (!reducedMotion || moving || drawing || easing || dirty);
+    const keepGoing =
+      active && (!reducedMotion || moving || drawing || easing || dirty);
     if (keepGoing) frame = requestAnimationFrame(tick);
     else previous = 0;
   }
@@ -632,7 +689,10 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     camera.updateProjectionMatrix();
     dotsMaterial.uniforms.uPixelRatio.value = renderer.getPixelRatio();
     // Denser dots on small globes would merge; lighter ones on big globes look sparse.
-    dotsMaterial.uniforms.uSize.value = Math.min(3, Math.max(1.6, height / 230));
+    dotsMaterial.uniforms.uSize.value = Math.min(
+      3,
+      Math.max(1.6, height / 230),
+    );
     requestRender();
   }
 

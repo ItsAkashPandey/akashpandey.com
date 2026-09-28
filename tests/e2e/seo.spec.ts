@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("SEO endpoints", () => {
-  test("sitemap.xml lists activities and image entries", async ({ request }) => {
+  test("sitemap.xml lists activities and image entries", async ({
+    request,
+  }) => {
     const response = await request.get("/sitemap.xml");
     expect(response.ok()).toBe(true);
     const body = await response.text();

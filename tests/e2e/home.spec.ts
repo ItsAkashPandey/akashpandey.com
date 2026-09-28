@@ -16,7 +16,9 @@ test.describe("home page", () => {
   test("places along the way: tour counter and city advance on Next place", async ({
     page,
   }) => {
-    const section = page.locator("section", { hasText: "places along the way" });
+    const section = page.locator("section", {
+      hasText: "places along the way",
+    });
     const heading = section.getByRole("heading", {
       name: "places along the way",
       level: 2,

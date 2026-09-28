@@ -46,7 +46,10 @@ const port = Number.isInteger(requested)
 
 // Pre-sized gallery photos (public/_img; cached, so after the first run this
 // takes well under a second) and the map's worker files (public/maplibre).
-for (const script of ["scripts/build-images.mjs", "scripts/copy-maplibre-worker.mjs"]) {
+for (const script of [
+  "scripts/build-images.mjs",
+  "scripts/copy-maplibre-worker.mjs",
+]) {
   await new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [script], { stdio: "inherit" });
     child.on("exit", (code) =>

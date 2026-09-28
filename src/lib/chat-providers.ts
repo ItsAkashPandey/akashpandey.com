@@ -109,7 +109,12 @@ const PROVIDERS: Record<ProviderId, Provider> = {
   },
 };
 
-const DEFAULT_ORDER: ProviderId[] = ["cerebras", "groq", "gemini", "openrouter"];
+const DEFAULT_ORDER: ProviderId[] = [
+  "cerebras",
+  "groq",
+  "gemini",
+  "openrouter",
+];
 
 function list(value: string | undefined) {
   return (value ?? "")
@@ -163,7 +168,8 @@ export function chatAttempts(): Attempt[] {
     if (provider.modelsInOneRequest) {
       attempts.push({ provider, apiKey, models });
     } else {
-      for (const model of models) attempts.push({ provider, apiKey, models: [model] });
+      for (const model of models)
+        attempts.push({ provider, apiKey, models: [model] });
     }
   }
   return attempts;
@@ -238,7 +244,8 @@ function streamAttempt(
   deadline: number,
 ): Stream {
   const { provider, apiKey, models } = attempt;
-  const baseUrl = process.env[envName(provider.id, "BASE_URL")] || provider.baseUrl;
+  const baseUrl =
+    process.env[envName(provider.id, "BASE_URL")] || provider.baseUrl;
   let modelUsed = `${provider.id}:${models[0]}`;
 
   async function* chunks() {
@@ -277,7 +284,9 @@ function streamAttempt(
         );
       }
 
-      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+      const reader = response.body
+        .pipeThrough(new TextDecoderStream())
+        .getReader();
       let buffer = "";
 
       while (true) {
@@ -355,7 +364,8 @@ export async function openChatStream(
   deadline: number,
 ): Promise<OpenedStream> {
   const attempts = chatAttempts();
-  if (!attempts.length) throw new UpstreamError("config", "no provider key set");
+  if (!attempts.length)
+    throw new UpstreamError("config", "no provider key set");
 
   const failures: UpstreamError[] = [];
   for (const attempt of attempts) {
@@ -367,7 +377,9 @@ export async function openChatStream(
       return { first: first.value, rest: stream.chunks, model: stream.model };
     } catch (error) {
       const failure =
-        error instanceof UpstreamError ? error : new UpstreamError("busy", String(error));
+        error instanceof UpstreamError
+          ? error
+          : new UpstreamError("busy", String(error));
       failures.push(failure);
       console.warn(
         `[chat] ${attempt.provider.id}:${attempt.models.join("|")} failed (${failure.kind}): ${failure.message}`,

@@ -1,9 +1,4 @@
-import {
-  photoKey,
-  photoSrcSet,
-  photoVariants,
-  type Photo,
-} from "@/lib/photo";
+import { photoKey, photoSrcSet, photoVariants, type Photo } from "@/lib/photo";
 import { getImageProps } from "next/image";
 
 /** Photos this page has finished downloading, keyed by `photoKey`. */
@@ -18,7 +13,12 @@ export function markPhotoLoaded(photo: Photo) {
   loaded.add(photoKey(photo));
 }
 
-type Rendering = { sizes: string; width: number; height: number; quality: number };
+type Rendering = {
+  sizes: string;
+  width: number;
+  height: number;
+  quality: number;
+};
 
 /**
  * The attributes a gallery <img> gets for a photo. Pre-sized files from the
@@ -41,7 +41,11 @@ export function photoAttributes(photo: Photo, rendering: Rendering) {
     sizes: rendering.sizes,
     quality: rendering.quality,
   });
-  return { src: props.src, srcSet: props.srcSet, sizes: props.sizes ?? rendering.sizes };
+  return {
+    src: props.src,
+    srcSet: props.srcSet,
+    sizes: props.sizes ?? rendering.sizes,
+  };
 }
 
 /**
@@ -50,7 +54,10 @@ export function photoAttributes(photo: Photo, rendering: Rendering) {
  * request is a cache hit. (Preloading the original path used to fetch every
  * photo twice.)
  */
-export function preloadPhoto(photo: Photo, rendering: Rendering): Promise<void> {
+export function preloadPhoto(
+  photo: Photo,
+  rendering: Rendering,
+): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
   const key = photoKey(photo);
   if (loaded.has(key)) return Promise.resolve();

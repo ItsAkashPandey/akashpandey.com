@@ -52,10 +52,15 @@ export default function Socials() {
           <li key={item.name}>
             <a
               href={item.href}
-              {...(isEmail ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+              {...(isEmail
+                ? {}
+                : { target: "_blank", rel: "noopener noreferrer" })}
               aria-label={label}
               title={label}
-              className={cn(socialClass, brandStyles[item.name] ?? "text-foreground")}
+              className={cn(
+                socialClass,
+                brandStyles[item.name] ?? "text-foreground",
+              )}
             >
               {Icon && <Icon className="size-[17px]" aria-hidden />}
             </a>

@@ -22,7 +22,13 @@ let fonts: Promise<[Buffer, Buffer]> | null = null;
 function loadFonts() {
   fonts ??= Promise.all([
     fs.readFile(
-      path.join(process.cwd(), "src", "assets", "fonts", "Calistoga-Regular.ttf"),
+      path.join(
+        process.cwd(),
+        "src",
+        "assets",
+        "fonts",
+        "Calistoga-Regular.ttf",
+      ),
     ),
     fs.readFile(
       path.join(
@@ -39,7 +45,10 @@ async function photoDataUrl(src: string) {
   const file = path.join(process.cwd(), "public", src.replace(/^\//, ""));
   const jpeg = await sharp(file)
     .rotate()
-    .resize(PHOTO_WIDTH, OG_SIZE.height, { fit: "cover", position: "attention" })
+    .resize(PHOTO_WIDTH, OG_SIZE.height, {
+      fit: "cover",
+      position: "attention",
+    })
     .jpeg({ quality: 78, mozjpeg: true })
     .toBuffer();
   return `data:image/jpeg;base64,${jpeg.toString("base64")}`;
@@ -64,71 +73,69 @@ export async function renderOgImage({
   const titleSize = title.length > 70 ? 50 : title.length > 42 ? 58 : 70;
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        display: "flex",
+        width: "100%",
+        height: "100%",
+        background: PAPER,
+        color: TEXT,
+        fontFamily: "Geist",
+      }}
+    >
       <div
         style={{
           display: "flex",
-          width: "100%",
-          height: "100%",
-          background: PAPER,
-          color: TEXT,
-          fontFamily: "Geist",
+          flex: 1,
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "60px 60px 52px",
         }}
       >
         <div
           style={{
             display: "flex",
-            flex: 1,
-            flexDirection: "column",
-            justifyContent: "space-between",
-            padding: "60px 60px 52px",
+            alignItems: "center",
+            gap: 16,
+            fontSize: 26,
+            color: INK,
           }}
         >
+          <div style={{ width: 44, height: 4, background: INK }} />
+          {kicker}
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              fontSize: 26,
-              color: INK,
+              fontFamily: "Calistoga",
+              fontSize: titleSize,
+              lineHeight: 1.08,
+              letterSpacing: -1,
             }}
           >
-            <div style={{ width: 44, height: 4, background: INK }} />
-            {kicker}
+            {title}
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-            <div
-              style={{
-                fontFamily: "Calistoga",
-                fontSize: titleSize,
-                lineHeight: 1.08,
-                letterSpacing: -1,
-              }}
-            >
-              {title}
+          {subtitle && (
+            <div style={{ fontSize: 28, lineHeight: 1.35, color: MUTED }}>
+              {subtitle}
             </div>
-            {subtitle && (
-              <div style={{ fontSize: 28, lineHeight: 1.35, color: MUTED }}>
-                {subtitle}
-              </div>
-            )}
-          </div>
-          <div style={{ display: "flex", fontSize: 24, color: MUTED }}>
-            akashpandey.com
-          </div>
+          )}
         </div>
-        {image && (
-          // eslint-disable-next-line @next/next/no-img-element -- Satori renders plain <img>
-          <img
-            src={image}
-            alt=""
-            width={PHOTO_WIDTH}
-            height={OG_SIZE.height}
-            style={{ objectFit: "cover" }}
-          />
-        )}
+        <div style={{ display: "flex", fontSize: 24, color: MUTED }}>
+          akashpandey.com
+        </div>
       </div>
-    ),
+      {image && (
+        // eslint-disable-next-line @next/next/no-img-element -- Satori renders plain <img>
+        <img
+          src={image}
+          alt=""
+          width={PHOTO_WIDTH}
+          height={OG_SIZE.height}
+          style={{ objectFit: "cover" }}
+        />
+      )}
+    </div>,
     {
       ...OG_SIZE,
       fonts: [

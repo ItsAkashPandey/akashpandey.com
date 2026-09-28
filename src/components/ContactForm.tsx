@@ -45,7 +45,8 @@ export default function ContactForm() {
   }, []);
 
   const renderTurnstile = () => {
-    const turnstile = (window as unknown as { turnstile?: Turnstile }).turnstile;
+    const turnstile = (window as unknown as { turnstile?: Turnstile })
+      .turnstile;
     if (!turnstile || !turnstileRef.current || widgetIdRef.current) return;
     widgetIdRef.current = turnstile.render(turnstileRef.current, {
       sitekey: TURNSTILE_SITE_KEY,
@@ -91,7 +92,9 @@ export default function ContactForm() {
     ) : null;
 
   const describedBy = (name: keyof Inputs) =>
-    errors[name] ? { "aria-invalid": true, "aria-describedby": `${name}-error` } : {};
+    errors[name]
+      ? { "aria-invalid": true, "aria-describedby": `${name}-error` }
+      : {};
 
   return (
     <form
@@ -181,7 +184,9 @@ export default function ContactForm() {
         </p>
         <Button
           type="submit"
-          disabled={isSubmitting || Boolean(TURNSTILE_SITE_KEY && !turnstileToken)}
+          disabled={
+            isSubmitting || Boolean(TURNSTILE_SITE_KEY && !turnstileToken)
+          }
           className="h-11 w-full px-6 disabled:opacity-50 sm:w-auto sm:min-w-44"
         >
           <span className="flex items-center gap-2">

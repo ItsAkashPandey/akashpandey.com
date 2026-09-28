@@ -10,7 +10,5 @@ export const metadata: Metadata = {
 export default function PublicationsLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <>{children}</>
-  );
+  return <>{children}</>;
 }

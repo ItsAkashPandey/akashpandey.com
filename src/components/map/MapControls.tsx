@@ -102,7 +102,11 @@ export default function MapControls({
           disabled={disabled}
           onClick={onToggleImagery}
         >
-          {imagery ? <MapIcon className="size-4" /> : <Satellite className="size-4" />}
+          {imagery ? (
+            <MapIcon className="size-4" />
+          ) : (
+            <Satellite className="size-4" />
+          )}
         </ControlButton>
       </div>
     </div>

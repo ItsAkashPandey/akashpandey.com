@@ -135,7 +135,7 @@ export default function ChatMessage({
               />
             ),
             table: ({ node, ...props }) => (
-              <div className="mt-3 max-w-full [scrollbar-width:thin] overflow-x-auto overscroll-x-contain rounded-lg border first:mt-0">
+              <div className="mt-3 max-w-full overflow-x-auto overscroll-x-contain rounded-lg border [scrollbar-width:thin] first:mt-0">
                 <table
                   className="w-max min-w-full border-collapse text-left text-xs"
                   {...props}

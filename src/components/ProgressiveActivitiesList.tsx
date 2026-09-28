@@ -49,10 +49,28 @@ const INITIAL_COUNT = 3;
 const BATCH_SIZE = 3;
 
 const focusOptions = {
-  all: { label: "All activities", short: "All", Icon: LegendIcon, ink: "text-foreground/80" },
-  academic: { label: "Academic", short: "Academic", Icon: PlateIcon, ink: "text-tone-green" },
-  startup: { label: "Startup", short: "Startup", Icon: ShootIcon, ink: "text-tone-sky" },
-} satisfies Record<Focus, { label: string; short: string; Icon: typeof LegendIcon; ink: string }>;
+  all: {
+    label: "All activities",
+    short: "All",
+    Icon: LegendIcon,
+    ink: "text-foreground/80",
+  },
+  academic: {
+    label: "Academic",
+    short: "Academic",
+    Icon: PlateIcon,
+    ink: "text-tone-green",
+  },
+  startup: {
+    label: "Startup",
+    short: "Startup",
+    Icon: ShootIcon,
+    ink: "text-tone-sky",
+  },
+} satisfies Record<
+  Focus,
+  { label: string; short: string; Icon: typeof LegendIcon; ink: string }
+>;
 
 /**
  * The slug a hash points at. Also accepts the old `#activity-N` links (N was
@@ -138,7 +156,10 @@ export default function ProgressiveActivitiesList({
       }))
       .filter(({ activity, score }) => {
         if (normalizedQuery && score === 0) return false;
-        if (filters.year !== "all" && activityYear(activity.date) !== filters.year) {
+        if (
+          filters.year !== "all" &&
+          activityYear(activity.date) !== filters.year
+        ) {
           return false;
         }
         return filters.focus === "all" || activity.category === filters.focus;
@@ -223,7 +244,13 @@ export default function ProgressiveActivitiesList({
       behavior: far ? "instant" : "smooth",
       block: "start",
     });
-  }, [pendingTarget, filteredActivities, visibleCount, isFiltered, resetFilters]);
+  }, [
+    pendingTarget,
+    filteredActivities,
+    visibleCount,
+    isFiltered,
+    resetFilters,
+  ]);
 
   // After a jump: photos and fonts above the card can still shift it, so
   // re-align a couple of times unless the visitor has started scrolling, and
@@ -248,7 +275,9 @@ export default function ProgressiveActivitiesList({
         element.scrollIntoView({ behavior: "instant", block: "start" });
       }
     };
-    const timers = [700, 1500].map((delay) => window.setTimeout(realign, delay));
+    const timers = [700, 1500].map((delay) =>
+      window.setTimeout(realign, delay),
+    );
     const unhighlight = window.setTimeout(() => setHighlighted(null), 2400);
 
     return () => {
@@ -301,7 +330,10 @@ export default function ProgressiveActivitiesList({
               <SlidersHorizontal className="size-4" aria-hidden />
               <h2 className="text-sm font-semibold">Explore</h2>
             </div>
-            <p className="text-muted-foreground mt-1 text-xs" aria-live="polite">
+            <p
+              className="text-muted-foreground mt-1 text-xs"
+              aria-live="polite"
+            >
               {filteredActivities.length}{" "}
               {filteredActivities.length === 1 ? "activity" : "activities"}
             </p>
@@ -327,14 +359,19 @@ export default function ProgressiveActivitiesList({
             </Label>
             <div className="relative min-w-0">
               <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
-                <Search className="text-muted-foreground size-3.5" aria-hidden />
+                <Search
+                  className="text-muted-foreground size-3.5"
+                  aria-hidden
+                />
               </span>
               <Input
                 id="activity-search"
                 type="search"
                 placeholder="Topic or place"
                 value={filters.query}
-                onChange={(event) => updateFilters({ query: event.target.value })}
+                onChange={(event) =>
+                  updateFilters({ query: event.target.value })
+                }
                 className="border-border/60 bg-background/70 h-10 rounded-lg pl-10 text-sm shadow-none"
               />
             </div>
@@ -418,7 +455,9 @@ export default function ProgressiveActivitiesList({
               </Label>
               <Select
                 value={filters.sort}
-                onValueChange={(value) => updateFilters({ sort: value as Sort })}
+                onValueChange={(value) =>
+                  updateFilters({ sort: value as Sort })
+                }
               >
                 <SelectTrigger
                   id="activity-sort-filter"

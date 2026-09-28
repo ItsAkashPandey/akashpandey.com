@@ -1,4 +1,8 @@
-import { chatAttempts, openChatStream, UpstreamError } from "@/lib/chat-providers";
+import {
+  chatAttempts,
+  openChatStream,
+  UpstreamError,
+} from "@/lib/chat-providers";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const KEYS = [
@@ -15,7 +19,10 @@ const KEYS = [
 
 function sse(...pieces: string[]) {
   const body = pieces
-    .map((text) => `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`)
+    .map(
+      (text) =>
+        `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`,
+    )
     .join("");
   return new Response(`${body}data: [DONE]\n\n`, {
     status: 200,
@@ -61,7 +68,10 @@ describe("chatAttempts", () => {
     vi.stubEnv("OPENROUTER_MODEL", "example/paid-model");
     vi.stubEnv("CEREBRAS_MODEL", "gpt-oss-120b");
     const attempts = chatAttempts();
-    expect(attempts[0].models).toEqual(["example/paid-model", "openrouter/free"]);
+    expect(attempts[0].models).toEqual([
+      "example/paid-model",
+      "openrouter/free",
+    ]);
     expect(attempts[1].models).toEqual(["gpt-oss-120b"]);
   });
 
@@ -83,7 +93,9 @@ describe("openChatStream", () => {
     const stream = await openChatStream(messages, Date.now() + 30_000);
     expect(await readAll(stream)).toBe("Akash flies drones.");
     expect(stream.model()).toBe("cerebras:gpt-oss-120b");
-    expect(JSON.parse(fetchMock.mock.calls[1][1].body).model).toBe("gpt-oss-120b");
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).model).toBe(
+      "gpt-oss-120b",
+    );
   });
 
   it("reports a rate limit when every provider is rate limited", async () => {
@@ -93,22 +105,28 @@ describe("openChatStream", () => {
       vi.fn().mockImplementation(async () => new Response("", { status: 429 })),
     );
     vi.spyOn(console, "warn").mockImplementation(() => {});
-    await expect(openChatStream(messages, Date.now() + 30_000)).rejects.toMatchObject({
+    await expect(
+      openChatStream(messages, Date.now() + 30_000),
+    ).rejects.toMatchObject({
       kind: "rateLimit",
     });
   });
 
   it("fails with a config error when no key is set", async () => {
-    await expect(openChatStream(messages, Date.now() + 30_000)).rejects.toBeInstanceOf(
-      UpstreamError,
-    );
+    await expect(
+      openChatStream(messages, Date.now() + 30_000),
+    ).rejects.toBeInstanceOf(UpstreamError);
   });
 
   it("drops reasoning a model writes into the answer", async () => {
     vi.stubEnv("GROQ_API_KEY", "gq-key");
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(sse("<thi", "nk>let me see</think>", "\n\nHello", " there")),
+      vi
+        .fn()
+        .mockResolvedValue(
+          sse("<thi", "nk>let me see</think>", "\n\nHello", " there"),
+        ),
     );
     const stream = await openChatStream(messages, Date.now() + 30_000);
     expect(await readAll(stream)).toBe("Hello there");
@@ -116,7 +134,10 @@ describe("openChatStream", () => {
 
   it("leaves ordinary answers alone", async () => {
     vi.stubEnv("GROQ_API_KEY", "gq-key");
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(sse("<b>", "Bold</b> move")));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(sse("<b>", "Bold</b> move")),
+    );
     const stream = await openChatStream(messages, Date.now() + 30_000);
     expect(await readAll(stream)).toBe("<b>Bold</b> move");
   });

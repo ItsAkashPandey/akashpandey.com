@@ -136,7 +136,10 @@ export default function SearchPalette({
   };
 
   const nextTheme =
-    THEMES[(THEMES.indexOf((theme as (typeof THEMES)[number]) ?? "system") + 1) % THEMES.length];
+    THEMES[
+      (THEMES.indexOf((theme as (typeof THEMES)[number]) ?? "system") + 1) %
+        THEMES.length
+    ];
 
   // Quick actions (group: null) and the groups, each holding only what
   // matches, best match first. The sort is stable, so with nothing typed
@@ -228,7 +231,9 @@ export default function SearchPalette({
           aria-describedby={undefined}
           className="bg-card border-border data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-2 fixed top-3 left-1/2 z-[71] w-[calc(100%-1.5rem)] max-w-xl -translate-x-1/2 overflow-hidden rounded-lg border shadow-[0_1px_2px_hsl(var(--foreground)/0.08),0_24px_60px_-20px_hsl(var(--foreground)/0.4)] motion-reduce:animate-none sm:top-[12vh]"
         >
-          <DialogPrimitive.Title className="sr-only">Search the site</DialogPrimitive.Title>
+          <DialogPrimitive.Title className="sr-only">
+            Search the site
+          </DialogPrimitive.Title>
           <Command
             label="Search the site"
             loop
@@ -236,7 +241,10 @@ export default function SearchPalette({
             className="[&_[cmdk-group-heading]]:text-muted-foreground flex flex-col [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold"
           >
             <div className="border-border/70 flex items-center gap-2 border-b px-3">
-              <Search className="text-muted-foreground size-4 shrink-0" aria-hidden />
+              <Search
+                className="text-muted-foreground size-4 shrink-0"
+                aria-hidden
+              />
               <Command.Input
                 value={query}
                 onValueChange={setQuery}
@@ -251,12 +259,15 @@ export default function SearchPalette({
             <Command.List className="max-h-[60dvh] overflow-y-auto overscroll-contain p-1.5 sm:max-h-[min(60vh,28rem)]">
               {!entries && !failed && (
                 <Command.Loading>
-                  <p className="text-muted-foreground px-3 py-6 text-center text-sm">Loading…</p>
+                  <p className="text-muted-foreground px-3 py-6 text-center text-sm">
+                    Loading…
+                  </p>
                 </Command.Loading>
               )}
               {failed && (
                 <p className="text-muted-foreground px-3 py-6 text-center text-sm">
-                  Search couldn&apos;t load. Check your connection and try again.
+                  Search couldn&apos;t load. Check your connection and try
+                  again.
                 </p>
               )}
               <Command.Empty className="text-muted-foreground px-3 py-6 text-center text-sm">
@@ -281,9 +292,14 @@ export default function SearchPalette({
                         onSelect={() => go(entry)}
                         className={cn(itemClass, "items-start")}
                       >
-                        <Icon className="text-muted-foreground mt-0.5 size-4 shrink-0" aria-hidden />
+                        <Icon
+                          className="text-muted-foreground mt-0.5 size-4 shrink-0"
+                          aria-hidden
+                        />
                         <span className="flex min-w-0 flex-col">
-                          <span className="truncate font-medium">{entry.title}</span>
+                          <span className="truncate font-medium">
+                            {entry.title}
+                          </span>
                           <span className="text-muted-foreground truncate text-xs">
                             {entry.detail}
                           </span>
@@ -303,7 +319,8 @@ export default function SearchPalette({
                 <kbd className="font-sans">↵</kbd> to open
               </span>
               <span className="ml-auto">
-                <kbd className="font-sans">/</kbd> or <kbd className="font-sans">{shortcut}</kbd> from anywhere
+                <kbd className="font-sans">/</kbd> or{" "}
+                <kbd className="font-sans">{shortcut}</kbd> from anywhere
               </span>
             </div>
           </Command>

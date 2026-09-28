@@ -24,7 +24,10 @@ export default async function Image({
   }
 
   return renderOgImage({
-    kicker: formatActivityDate(activity.date, { month: "long", year: "numeric" }),
+    kicker: formatActivityDate(activity.date, {
+      month: "long",
+      year: "numeric",
+    }),
     title: activity.name,
     subtitle: getPlace(activity.place).name,
     photo: getActivityImages(activity)[0],

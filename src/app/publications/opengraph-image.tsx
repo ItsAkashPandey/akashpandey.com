@@ -7,7 +7,9 @@ export const alt = "Publications by Dr. Akash Kumar";
 
 export default async function Image() {
   const publications = getPublications();
-  const withFigure = publications.find((publication) => publication.media?.length);
+  const withFigure = publications.find(
+    (publication) => publication.media?.length,
+  );
   return renderOgImage({
     kicker: "Publications",
     title: "Papers on PhenoCam, crop phenology and remote sensing",

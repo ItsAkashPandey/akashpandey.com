@@ -33,7 +33,9 @@ const readJson = async (file) =>
 async function listFolder(folder) {
   try {
     const files = await fs.readdir(path.join(publicDir, folder));
-    return files.filter((file) => RASTER.test(file)).map((file) => `/${folder}/${file}`);
+    return files
+      .filter((file) => RASTER.test(file))
+      .map((file) => `/${folder}/${file}`);
   } catch {
     console.warn(`[images] missing folder public/${folder}`);
     return [];
@@ -174,7 +176,8 @@ async function main() {
         const result = await processImage(src, cacheIndex);
         if (result.fresh) {
           processed += 1;
-          if (processed % 50 === 0) console.log(`[images] ${processed} resized…`);
+          if (processed % 50 === 0)
+            console.log(`[images] ${processed} resized…`);
         }
         return { src, ...result };
       } catch (error) {
@@ -200,9 +203,9 @@ async function main() {
     for (const [, file] of entry.variants) {
       keep.add(file);
       const target = path.join(outputDir, file);
-      await fs.access(target).catch(() =>
-        fs.copyFile(path.join(cacheDir, file), target),
-      );
+      await fs
+        .access(target)
+        .catch(() => fs.copyFile(path.join(cacheDir, file), target));
     }
   }
 

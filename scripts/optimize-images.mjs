@@ -38,10 +38,7 @@ async function optimizeSkillAssets() {
 
   const entries = await fs.readdir(folder, { withFileTypes: true });
   const sources = entries
-    .filter(
-      (entry) =>
-        entry.isFile() && /\.(png|jpe?g)$/i.test(entry.name),
-    )
+    .filter((entry) => entry.isFile() && /\.(png|jpe?g)$/i.test(entry.name))
     .map((entry) => assertInsidePublic(path.join(folder, entry.name)));
 
   for (const input of sources) {
@@ -84,11 +81,13 @@ async function walk(directory) {
   const entries = await fs.readdir(directory, { withFileTypes: true });
   const nested = await Promise.all(
     entries
-      .filter((entry) => !(directory === publicRoot && GENERATED.has(entry.name)))
+      .filter(
+        (entry) => !(directory === publicRoot && GENERATED.has(entry.name)),
+      )
       .map((entry) => {
-      const fullPath = path.join(directory, entry.name);
-      return entry.isDirectory() ? walk(fullPath) : [fullPath];
-    }),
+        const fullPath = path.join(directory, entry.name);
+        return entry.isDirectory() ? walk(fullPath) : [fullPath];
+      }),
   );
   return nested.flat();
 }

@@ -104,9 +104,11 @@ export function parseCollaborators(text: string): Collaborator[] {
     const key = collaboratorKey(label);
 
     const profile = LINKEDIN_PROFILES[key];
-    if (profile) return { kind: "person", label, role, href: profile, verified: true };
+    if (profile)
+      return { kind: "person", label, role, href: profile, verified: true };
     if (GROUP_PATTERN.test(label)) return { kind: "group", label };
-    if (WITHOUT_PROFILE.has(key)) return { kind: "person", label, role, verified: false };
+    if (WITHOUT_PROFILE.has(key))
+      return { kind: "person", label, role, verified: false };
 
     return {
       kind: "person",

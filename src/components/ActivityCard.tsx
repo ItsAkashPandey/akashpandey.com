@@ -213,7 +213,12 @@ export function ActivityLinks({
   if (!links.length) return null;
 
   return (
-    <div className={cn("flex flex-row flex-wrap items-center gap-2 pt-1", className)}>
+    <div
+      className={cn(
+        "flex flex-row flex-wrap items-center gap-2 pt-1",
+        className,
+      )}
+    >
       {links.map((link) => (
         <a
           key={link.href}

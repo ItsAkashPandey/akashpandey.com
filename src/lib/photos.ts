@@ -30,7 +30,9 @@ function readManifest() {
  */
 export function getPhoto(src: string, withBlur = true): Photo {
   const entry = readManifest()[src];
-  const hash = entry?.variants[0]?.[1].match(/\/_img\/([a-f0-9]+)-\d+\.webp$/)?.[1];
+  const hash = entry?.variants[0]?.[1].match(
+    /\/_img\/([a-f0-9]+)-\d+\.webp$/,
+  )?.[1];
   if (!entry || !hash) return { src };
 
   return {

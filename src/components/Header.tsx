@@ -35,7 +35,10 @@ export default function Header() {
   return (
     <header className="border-border/70 bg-background/94 sticky top-0 z-50 border-b backdrop-blur-md">
       <div className="site-shell py-3.5">
-        <nav aria-label="Main" className="flex items-center justify-between gap-4">
+        <nav
+          aria-label="Main"
+          className="flex items-center justify-between gap-4"
+        >
           <div className="flex items-center gap-8">
             <Link
               href="/"
@@ -43,24 +46,24 @@ export default function Header() {
             >
               akash pandey
             </Link>
-          <ul className="hidden gap-7 md:flex">
-            {navLinks.map((nav, id) => (
-              <li key={id}>
-                <Link
-                  href={nav.href}
-                  title={nav.title}
-                  aria-current={pathname === nav.href ? "page" : undefined}
-                  className={cn(
-                    "text-muted-foreground hover:text-foreground relative block py-1 text-sm font-medium transition-colors",
-                    pathname === nav.href &&
-                      "text-foreground after:absolute after:right-0 after:-bottom-1 after:left-0 after:h-px after:bg-[hsl(var(--map-accent))]",
-                  )}
-                >
-                  {nav.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
+            <ul className="hidden gap-7 md:flex">
+              {navLinks.map((nav, id) => (
+                <li key={id}>
+                  <Link
+                    href={nav.href}
+                    title={nav.title}
+                    aria-current={pathname === nav.href ? "page" : undefined}
+                    className={cn(
+                      "text-muted-foreground hover:text-foreground relative block py-1 text-sm font-medium transition-colors",
+                      pathname === nav.href &&
+                        "text-foreground after:absolute after:right-0 after:-bottom-1 after:left-0 after:h-px after:bg-[hsl(var(--map-accent))]",
+                    )}
+                  >
+                    {nav.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className="ml-auto md:hidden">

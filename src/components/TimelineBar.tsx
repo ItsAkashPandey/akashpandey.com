@@ -48,7 +48,10 @@ function buildTimeline(entries: TimelineEntry[]) {
     const date = new Date(`${entry.date}T12:00:00`);
     monthMap.set(month, {
       id: entry.id,
-      label: date.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+      label: date.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      }),
       shortLabel: date.toLocaleDateString("en-US", { month: "short" }),
       year: date.getFullYear(),
     });

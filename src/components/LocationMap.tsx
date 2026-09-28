@@ -79,7 +79,10 @@ function toFeatureCollection(
       })),
       {
         type: "Feature" as const,
-        geometry: { type: "Point" as const, coordinates: data.home.coordinates },
+        geometry: {
+          type: "Point" as const,
+          coordinates: data.home.coordinates,
+        },
         properties: { id: HOME_ID, category: "home", count: 0 },
       },
     ],
@@ -95,7 +98,9 @@ function regionBounds(data: MapData): LngLatBoundsLike {
   const home = data.home.coordinates;
   const nearby = data.points
     .map((point) => point.coordinates)
-    .filter((coordinates) => distanceKm(home, coordinates) <= HOME_REGION_RADIUS_KM);
+    .filter(
+      (coordinates) => distanceKm(home, coordinates) <= HOME_REGION_RADIUS_KM,
+    );
   const all = [home, ...nearby];
   return [
     [Math.min(...all.map((c) => c[0])), Math.min(...all.map((c) => c[1]))],
@@ -155,18 +160,24 @@ export default function LocationMap({ data }: { data: MapData }) {
   const [mapState, setMapState] = useState<MapState>("loading");
   const [imagery, setImagery] = useState(true);
   const [visitorLocation, setVisitorLocation] = useState<LngLat | null>(null);
-  const [distanceLabelPosition, setDistanceLabelPosition] = useState({ x: 0, y: 0 });
+  const [distanceLabelPosition, setDistanceLabelPosition] = useState({
+    x: 0,
+    y: 0,
+  });
   const [locating, setLocating] = useState(false);
   const [locationMessage, setLocationMessage] = useState("");
 
   const home = data.home.coordinates;
   const mapLoaded = mapState === "ready";
   const pointsById = useMemo(
-    () => new Map<string, MapPoint>(data.points.map((point) => [point.id, point])),
+    () =>
+      new Map<string, MapPoint>(data.points.map((point) => [point.id, point])),
     [data.points],
   );
   const bounds = useMemo(() => regionBounds(data), [data]);
-  const visitorDistance = visitorLocation ? distanceKm(home, visitorLocation) : null;
+  const visitorDistance = visitorLocation
+    ? distanceKm(home, visitorLocation)
+    : null;
 
   useEffect(() => {
     visitorLocationRef.current = visitorLocation;
@@ -223,7 +234,9 @@ export default function LocationMap({ data }: { data: MapData }) {
       const maplibregl = await loadMapLibre();
       if (cancelled) return;
 
-      const theme: MapTheme = document.documentElement.classList.contains("dark")
+      const theme: MapTheme = document.documentElement.classList.contains(
+        "dark",
+      )
         ? "dark"
         : "light";
 
@@ -261,8 +274,11 @@ export default function LocationMap({ data }: { data: MapData }) {
         const seen = new Set<string>();
 
         for (const feature of current.querySourceFeatures(SOURCE)) {
-          const properties = feature.properties as ClusterProperties | PointProperties;
-          const coordinates = (feature.geometry as GeoJSON.Point).coordinates as LngLat;
+          const properties = feature.properties as
+            | ClusterProperties
+            | PointProperties;
+          const coordinates = (feature.geometry as GeoJSON.Point)
+            .coordinates as LngLat;
           const key = properties.cluster
             ? `cluster:${properties.cluster_id}`
             : `point:${properties.id}`;
@@ -277,17 +293,31 @@ export default function LocationMap({ data }: { data: MapData }) {
             element.addEventListener("click", async (event) => {
               event.stopPropagation();
               const source = current.getSource(SOURCE) as GeoJSONSource;
-              const zoom = await source.getClusterExpansionZoom(cluster.cluster_id);
+              const zoom = await source.getClusterExpansionZoom(
+                cluster.cluster_id,
+              );
               if (zoom <= CLUSTER_MAX_ZOOM) {
-                current.easeTo({ center: coordinates, zoom: zoom + 0.2, duration: 600 });
+                current.easeTo({
+                  center: coordinates,
+                  zoom: zoom + 0.2,
+                  duration: 600,
+                });
                 return;
               }
               // Points that share one spot never separate: list them instead.
-              const leaves = await source.getClusterLeaves(cluster.cluster_id, 200, 0);
+              const leaves = await source.getClusterLeaves(
+                cluster.cluster_id,
+                200,
+                0,
+              );
               const points = leaves
                 .map((leaf) => pointsById.get(String(leaf.properties?.id)))
                 .filter((point): point is MapPoint => Boolean(point));
-              openPopup(maplibregl, coordinates, groupPopupHtml(points, cluster.home > 0));
+              openPopup(
+                maplibregl,
+                coordinates,
+                groupPopupHtml(points, cluster.home > 0),
+              );
             });
           } else if (properties.id === HOME_ID) {
             element = createLocationMarkerElement("akash");
@@ -424,7 +454,9 @@ export default function LocationMap({ data }: { data: MapData }) {
         return;
       }
 
-      const focusBounds = boundsForCoordinates(points.map((point) => point.coordinates));
+      const focusBounds = boundsForCoordinates(
+        points.map((point) => point.coordinates),
+      );
       map.fitBounds(focusBounds, {
         padding: FOCUS_PADDING,
         maxZoom: FOCUS_ZOOM,
@@ -500,7 +532,10 @@ export default function LocationMap({ data }: { data: MapData }) {
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const next: LngLat = [position.coords.longitude, position.coords.latitude];
+        const next: LngLat = [
+          position.coords.longitude,
+          position.coords.latitude,
+        ];
         setVisitorLocation(next);
         setLocating(false);
         setLocationMessage("");
@@ -516,7 +551,11 @@ export default function LocationMap({ data }: { data: MapData }) {
 
   const resetView = useCallback(() => {
     popupRef.current?.remove();
-    mapRef.current?.fitBounds(bounds, { padding: 40, maxZoom: 9, duration: 700 });
+    mapRef.current?.fitBounds(bounds, {
+      padding: 40,
+      maxZoom: 9,
+      duration: 700,
+    });
   }, [bounds]);
 
   // Links inside popups are plain HTML; route the internal ones through the
@@ -580,7 +619,10 @@ export default function LocationMap({ data }: { data: MapData }) {
           <>
             <div
               className="bg-background/92 border-border/65 pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-1/2 rounded-sm border px-2 py-1 text-xs font-semibold shadow-sm backdrop-blur-md"
-              style={{ left: distanceLabelPosition.x, top: distanceLabelPosition.y }}
+              style={{
+                left: distanceLabelPosition.x,
+                top: distanceLabelPosition.y,
+              }}
             >
               {formatDistance(visitorDistance)}
             </div>
@@ -590,9 +632,7 @@ export default function LocationMap({ data }: { data: MapData }) {
               <span className="font-semibold tabular-nums">
                 {formatDistance(visitorDistance)}
               </span>
-              <span className="text-warm mt-1 font-semibold">
-                Akash
-              </span>
+              <span className="text-warm mt-1 font-semibold">Akash</span>
             </div>
           </>
         )}

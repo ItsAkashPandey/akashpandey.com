@@ -61,7 +61,7 @@ function systemPrompt(
     "- Keep it short: a few plain sentences or a compact list. No buzzwords.",
     "- Talk about Akash in the third person. Some facts are quoted in his own words; rephrase them.",
     "- Link to pages on the site with Markdown links taken from the facts, like [NASA Space Apps Challenge 2024](/activities/nasa-space-apps-2024) or [his skills](/skills). Never write a bare path and never make up a link.",
-    "- Reply in the visitor's language or mix (English, Hindi, Hinglish and so on). In Hindi or Hinglish, use feminine first-person forms for yourself (\"main bata sakti hoon\").",
+    '- Reply in the visitor\'s language or mix (English, Hindi, Hinglish and so on). In Hindi or Hinglish, use feminine first-person forms for yourself ("main bata sakti hoon").',
     "- Personality: friendly, a little witty, now and then a dry Sheldon-style remark. Never rude, crude or flirty. An emoji is fine once in a while.",
     "- You are not a general assistant. Do not write code, essays or homework, and do not answer general questions unrelated to Akash; say so in one line and offer to help with something about him. Brief small talk is fine.",
     "- If the visitor is abusive, answer with one calm line and move on. Do not repeat slurs.",
@@ -75,7 +75,9 @@ function systemPrompt(
     "<context>",
     knowledge.context,
     ...(visitorName
-      ? [`The visitor introduced themselves as ${visitorName}. Use the name sparingly.`]
+      ? [
+          `The visitor introduced themselves as ${visitorName}. Use the name sparingly.`,
+        ]
       : []),
     "</context>",
   ].join("\n");
@@ -117,7 +119,10 @@ function normalizeHistory(
 
 function cleanName(value: unknown) {
   if (typeof value !== "string") return null;
-  const name = value.replace(/[^\p{L}\s'-]/gu, "").trim().slice(0, 40);
+  const name = value
+    .replace(/[^\p{L}\s'-]/gu, "")
+    .trim()
+    .slice(0, 40);
   return name || null;
 }
 
@@ -162,7 +167,11 @@ function localReply(message: string): { reply: string; model: string } | null {
   }
 
   const normalized = lower.replace(/[!?.,\s]+/g, " ").trim();
-  if (/^(hi|hello|hey|hiya|good (morning|afternoon|evening))( there| kasi)?$/.test(normalized)) {
+  if (
+    /^(hi|hello|hey|hiya|good (morning|afternoon|evening))( there| kasi)?$/.test(
+      normalized,
+    )
+  ) {
     return {
       reply:
         "Hi, I'm Kasi. Ask me about Akash's research, activities, publications, skills, or how to reach him.",
@@ -234,7 +243,11 @@ export async function POST(req: Request) {
     return response;
   };
 
-  type Outcome = { reply: string; model: string; notes?: Record<string, unknown> };
+  type Outcome = {
+    reply: string;
+    model: string;
+    notes?: Record<string, unknown>;
+  };
   /** Logs the exchange once the answer is complete (after streaming ends). */
   const log = (outcome: Promise<Outcome>) => {
     after(async () => {
@@ -247,12 +260,29 @@ export async function POST(req: Request) {
         ...notes,
       });
       const rows: ChatLogRow[] = [
-        { timestamp, visitorId, visitorName, conversationId, role: "user", message, notes: common },
-        { timestamp, visitorId, visitorName, conversationId, role: "assistant", message: reply, notes: common },
+        {
+          timestamp,
+          visitorId,
+          visitorName,
+          conversationId,
+          role: "user",
+          message,
+          notes: common,
+        },
+        {
+          timestamp,
+          visitorId,
+          visitorName,
+          conversationId,
+          role: "assistant",
+          message: reply,
+          notes: common,
+        },
       ];
       try {
         const result = await appendChatLogRows(rows);
-        if (result.status === "error") console.warn(`[chat log] ${result.error}`);
+        if (result.status === "error")
+          console.warn(`[chat log] ${result.error}`);
       } catch (error) {
         console.warn("[chat log]", error);
       }
@@ -288,8 +318,13 @@ export async function POST(req: Request) {
       startedAt + TOTAL_TIMEOUT_MS,
     );
   } catch (error) {
-    const kind: ErrorKind = error instanceof UpstreamError ? error.kind : "generic";
-    console.error("[chat]", kind, error instanceof Error ? error.message : error);
+    const kind: ErrorKind =
+      error instanceof UpstreamError ? error.kind : "generic";
+    console.error(
+      "[chat]",
+      kind,
+      error instanceof Error ? error.message : error,
+    );
     return errorResponse(kind);
   }
 
@@ -318,8 +353,13 @@ export async function POST(req: Request) {
           signature: signReply(conversationId, reply),
         });
       } catch (error) {
-        const kind: ErrorKind = error instanceof UpstreamError ? error.kind : "generic";
-        console.error("[chat] stream", kind, error instanceof Error ? error.message : error);
+        const kind: ErrorKind =
+          error instanceof UpstreamError ? error.kind : "generic";
+        console.error(
+          "[chat] stream",
+          kind,
+          error instanceof Error ? error.message : error,
+        );
         try {
           send(controller, { type: "error", error: ERRORS[kind] });
         } catch {
@@ -334,7 +374,9 @@ export async function POST(req: Request) {
         finish({
           reply: reply || "(no answer)",
           model: upstream.model(),
-          notes: { activities: knowledge.relevant.map((activity) => activity.slug) },
+          notes: {
+            activities: knowledge.relevant.map((activity) => activity.slug),
+          },
         });
       }
     },
@@ -350,7 +392,9 @@ export async function POST(req: Request) {
         "Content-Type": "application/x-ndjson; charset=utf-8",
         "Cache-Control": "no-store",
         "X-Accel-Buffering": "no",
-        ...(visitorName ? { "X-Kasi-Visitor": encodeURIComponent(visitorName) } : {}),
+        ...(visitorName
+          ? { "X-Kasi-Visitor": encodeURIComponent(visitorName) }
+          : {}),
       },
     }),
   );

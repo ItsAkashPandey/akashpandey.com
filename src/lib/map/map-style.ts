@@ -382,7 +382,12 @@ export function applyMapTheme(map: MapLibreMap, theme: MapTheme) {
 }
 
 /** Opaque vector paint that would otherwise bury the imagery underneath it. */
-const GROUND_COVER_LAYERS = ["landcover-green", "landuse-builtup", "water", "waterway"];
+const GROUND_COVER_LAYERS = [
+  "landcover-green",
+  "landuse-builtup",
+  "water",
+  "waterway",
+];
 
 export function setImageryVisible(map: MapLibreMap, visible: boolean) {
   if (!map.getLayer("imagery")) return;
@@ -398,14 +403,14 @@ export function setImageryVisible(map: MapLibreMap, visible: boolean) {
 
   // Roads and labels stay, but they dim flat under imagery instead of using
   // their normal (sometimes zoom-interpolated) opacity.
-  for (const layer of Object.keys(ROAD_NORMAL_OPACITY) as (keyof typeof ROAD_NORMAL_OPACITY)[]) {
+  for (const layer of Object.keys(
+    ROAD_NORMAL_OPACITY,
+  ) as (keyof typeof ROAD_NORMAL_OPACITY)[]) {
     if (map.getLayer(layer)) {
       map.setPaintProperty(
         layer,
         "line-opacity",
-        visible
-          ? ROAD_IMAGERY_OPACITY
-          : (ROAD_NORMAL_OPACITY[layer] as never),
+        visible ? ROAD_IMAGERY_OPACITY : (ROAD_NORMAL_OPACITY[layer] as never),
       );
     }
   }

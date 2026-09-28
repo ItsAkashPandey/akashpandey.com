@@ -1,5 +1,10 @@
 import siteData from "@/data/site.json";
-import { getActivities, getCareer, getEducation, getPublications } from "@/lib/content";
+import {
+  getActivities,
+  getCareer,
+  getEducation,
+  getPublications,
+} from "@/lib/content";
 import {
   activityHref,
   formatActivityDate,

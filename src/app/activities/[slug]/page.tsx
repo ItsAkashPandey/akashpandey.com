@@ -146,7 +146,10 @@ export default async function ActivityPage({ params }: Params) {
       </section>
 
       {photos.length > 0 && (
-        <section aria-labelledby="photos-heading" className="flex flex-col gap-4">
+        <section
+          aria-labelledby="photos-heading"
+          className="flex flex-col gap-4"
+        >
           <div className="section-heading">
             <h2 id="photos-heading" className="section-title">
               photos

@@ -91,11 +91,16 @@ export default function Chat() {
             "kasi-divider transition-colors hover:no-underline [&>svg:last-child]:hidden",
             isOpen ? "border-b px-5 py-3.5" : "h-[64px] px-3 py-2",
           )}
-          aria-label={isOpen ? "Close Kasi" : "Open Kasi, Akash's portfolio guide"}
+          aria-label={
+            isOpen ? "Close Kasi" : "Open Kasi, Akash's portfolio guide"
+          }
         >
           <ChatHeader compact={!isOpen} />
         </AccordionTrigger>
-        <AccordionContent forceMount={hasOpened ? true : undefined} className="p-0">
+        <AccordionContent
+          forceMount={hasOpened ? true : undefined}
+          className="p-0"
+        >
           {hasOpened && (
             <div
               className={

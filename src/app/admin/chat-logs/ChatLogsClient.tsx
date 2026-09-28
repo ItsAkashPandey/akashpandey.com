@@ -644,7 +644,7 @@ export default function ChatLogsClient({
                 File path: {data.filePath}
               </p>
             )}
-            {error && <p className="text-sm text-tone-rose">{error}</p>}
+            {error && <p className="text-tone-rose text-sm">{error}</p>}
             {data?.message && (
               <p className="text-muted-foreground text-sm">{data.message}</p>
             )}
@@ -653,9 +653,9 @@ export default function ChatLogsClient({
       </section>
 
       {data?.storage === "none" && (
-        <section className="mt-6 rounded-lg border border-tone-amber/25 bg-tone-amber/10 p-4 shadow-sm">
+        <section className="border-tone-amber/25 bg-tone-amber/10 mt-6 rounded-lg border p-4 shadow-sm">
           <div className="flex gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-tone-amber/15 text-tone-amber">
+            <div className="bg-tone-amber/15 text-tone-amber flex size-9 shrink-0 items-center justify-center rounded-lg">
               <Info className="size-4" />
             </div>
             <div className="min-w-0">
@@ -931,10 +931,10 @@ export default function ChatLogsClient({
         </div>
       </section>
 
-      <section className="mt-6 rounded-lg border border-tone-rose/20 bg-tone-rose/5 p-4">
+      <section className="border-tone-rose/20 bg-tone-rose/5 mt-6 rounded-lg border p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="flex items-center gap-2 text-sm font-medium text-tone-rose">
+            <h3 className="text-tone-rose flex items-center gap-2 text-sm font-medium">
               <Trash2 className="size-4" />
               Danger zone
             </h3>
@@ -947,7 +947,7 @@ export default function ChatLogsClient({
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <button
-                className="bg-background hover:bg-background/80 flex h-9 items-center gap-2 rounded-lg border border-tone-rose/30 px-3 text-sm text-tone-rose transition-colors disabled:opacity-50"
+                className="bg-background hover:bg-background/80 border-tone-rose/30 text-tone-rose flex h-9 items-center gap-2 rounded-lg border px-3 text-sm transition-colors disabled:opacity-50"
                 disabled={isResetting || data?.storage !== "webhook"}
                 title={
                   data?.storage !== "webhook"

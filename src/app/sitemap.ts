@@ -27,7 +27,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     .map((route) => ({
       url: `${siteData.url}${route.path === "/" ? "" : route.path}`,
       lastModified,
-      changeFrequency: route.path === "/" ? ("weekly" as const) : ("monthly" as const),
+      changeFrequency:
+        route.path === "/" ? ("weekly" as const) : ("monthly" as const),
       priority: route.path === "/" ? 1 : 0.7,
       ...(route.path === "/"
         ? { images: homeContent.portraits.map(imageUrl) }

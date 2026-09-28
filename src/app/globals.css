@@ -505,7 +505,11 @@
     bottom: 2%;
     height: 7%;
     pointer-events: none;
-    background: radial-gradient(closest-side, hsl(var(--foreground) / 0.2), transparent);
+    background: radial-gradient(
+      closest-side,
+      hsl(var(--foreground) / 0.2),
+      transparent
+    );
     filter: blur(8px);
     z-index: -1;
   }
