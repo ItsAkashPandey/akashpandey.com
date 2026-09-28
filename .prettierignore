@@ -1,0 +1,6 @@
+# generated
+src/components/globe/land.ts
+package-lock.json
+
+# static files, served as they are
+public/
