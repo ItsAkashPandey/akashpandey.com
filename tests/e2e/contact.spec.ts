@@ -108,6 +108,30 @@ test.describe("contact map", () => {
     expect(Math.max(...offsets)).toBeLessThanOrEqual(1);
   });
 
+  test("the wheel zooms the map without Ctrl; phones move it with two fingers", async ({
+    page,
+  }, testInfo) => {
+    await page.goto("/contact");
+    const map = page.locator("#map .maplibregl-map");
+    await expect(map.locator("canvas")).toBeVisible({ timeout: 30_000 });
+    const hint = map.locator(".maplibregl-cooperative-gesture-screen");
+
+    if (testInfo.project.name !== "desktop") {
+      // One finger keeps scrolling the page past the map.
+      await expect(hint).toBeAttached();
+      return;
+    }
+    await expect(hint).not.toBeAttached();
+    await map.scrollIntoViewIfNeeded();
+    const box = (await map.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    const top = await page.evaluate(() => window.scrollY);
+    await page.mouse.wheel(0, -100);
+    await page.mouse.wheel(0, -100);
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => window.scrollY)).toBe(top);
+  });
+
   test("a link to a far-off city keeps the map in view and opens its popup", async ({
     page,
   }) => {

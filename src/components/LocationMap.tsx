@@ -251,9 +251,10 @@ export default function LocationMap({ data }: { data: MapData }) {
         touchPitch: false,
         // Box zoom fights the drag-to-pan people expect.
         boxZoom: false,
-        // The page keeps the wheel and one-finger swipes; the map takes
-        // Ctrl/Cmd + wheel and two fingers, and says so on screen.
-        cooperativeGestures: true,
+        // With a mouse or trackpad the wheel zooms the map, no Ctrl needed.
+        // On phones the page keeps one-finger swipes and the map takes two,
+        // and says so on screen, so the map can't trap the scroll.
+        cooperativeGestures: window.matchMedia("(pointer: coarse)").matches,
         attributionControl: { compact: true },
         renderWorldCopies: false,
         fadeDuration: 80,
