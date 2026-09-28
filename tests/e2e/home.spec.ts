@@ -51,6 +51,31 @@ test.describe("home page", () => {
     );
   });
 
+  test("the wheel zooms the globe, and scrolls the page once it is all the way in", async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop", "phones pinch instead");
+
+    const frame = page.locator(".globe-frame");
+    await frame.scrollIntoViewIfNeeded();
+    await expect(frame.locator("canvas").locator("..")).toHaveClass(
+      /opacity-100/,
+      { timeout: 20_000 },
+    );
+    const box = (await frame.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    const top = await page.evaluate(() => window.scrollY);
+
+    for (let i = 0; i < 3; i += 1) await page.mouse.wheel(0, -100);
+    await page.waitForTimeout(300);
+    expect(await page.evaluate(() => window.scrollY)).toBe(top);
+
+    for (let i = 0; i < 6; i += 1) await page.mouse.wheel(0, -100);
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeLessThan(top);
+  });
+
   test("Person JSON-LD names Akash Kumar", async ({ page }) => {
     const scripts = page.locator('script[type="application/ld+json"]');
     const payloads = await scripts.allTextContents();

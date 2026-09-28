@@ -73,6 +73,14 @@ const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 const VIEW_LAT_OFFSET = 7 * DEG;
 const TILT_MIN = -40 * DEG;
 const TILT_MAX = 70 * DEG;
+/** Camera distance from the centre of the globe, zoomed all the way out. */
+const DISTANCE = 4.35;
+/**
+ * The wheel or a pinch brings the surface up to this many times closer.
+ * Further in, the land dots (about a degree apart) are too sparse to read.
+ */
+const MAX_ZOOM = 3;
+const ARC_RADIUS = 0.0032;
 
 function toVector(longitude: number, latitude: number, radius = 1) {
   const phi = latitude * DEG;
@@ -177,7 +185,7 @@ export function createGlobeScene(options: Options): GlobeScene | null {
 
   const scene = new Scene();
   const camera = new PerspectiveCamera(30, 1, 0.1, 20);
-  camera.position.set(0, 0, 4.35);
+  camera.position.set(0, 0, DISTANCE);
 
   const globe = new Group();
   scene.add(globe);
@@ -275,6 +283,8 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     uPulseColor: { value: new Color() },
     uTime: { value: 0 },
     uPulse: { value: reducedMotion ? 0 : 1 },
+    /** How far to pull the tube walls in, so arcs stay hairlines when zoomed. */
+    uInset: { value: 0 },
   };
   const arcs: { mesh: Mesh; draw: { value: number }; delay: number }[] = [];
   markers.forEach((marker, index) => {
@@ -292,10 +302,13 @@ export function createGlobeScene(options: Options): GlobeScene | null {
         uOffset: { value: (index * 0.137) % 1 },
       },
       vertexShader: /* glsl */ `
+        uniform float uInset;
         varying float vT;
         void main() {
           vT = uv.x;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          // A tube vertex sits one radius out from the curve, along its normal.
+          vec3 p = position - normal * uInset;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
         }
       `,
       fragmentShader: /* glsl */ `
@@ -318,7 +331,7 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     });
     const segments = Math.max(24, Math.round(curve.getLength() * 90));
     const mesh = new Mesh(
-      new TubeGeometry(curve, segments, 0.0032, 5, false),
+      new TubeGeometry(curve, segments, ARC_RADIUS, 5, false),
       material,
     );
     globe.add(mesh);
@@ -451,6 +464,33 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     requestRender();
   }
 
+  // --- zoom ----------------------------------------------------------------
+  // 1 shows the whole globe; the camera closes in on the surface from there.
+  // Places and arcs keep their size on screen, so zooming in pulls the
+  // crowded dots around Delhi and Roorkee apart.
+  let zoom = 1;
+  let zoomTarget = 1;
+  let dotSize = 2.4;
+
+  function applyZoom() {
+    camera.position.z = 1 + (DISTANCE - 1) / zoom;
+    for (const entry of markerMeshes.values()) {
+      entry.group.scale.setScalar(1 / zoom);
+    }
+    arcUniforms.uInset.value = ARC_RADIUS * (1 - 1 / zoom);
+    // Land dots spread apart as the camera closes in. Growing them keeps the
+    // coastlines readable, but slower than the zoom, so they stay smaller
+    // than the places.
+    dotsMaterial.uniforms.uSize.value = dotSize * Math.pow(zoom, 0.6);
+  }
+
+  /** `immediate` for pinches, which follow the fingers; the wheel eases. */
+  function zoomTo(next: number, immediate = false) {
+    zoomTarget = Math.min(MAX_ZOOM, Math.max(1, next));
+    if (immediate || reducedMotion) zoom = zoomTarget;
+    requestRender();
+  }
+
   // --- pointer -------------------------------------------------------------
   let pointerId: number | null = null;
   let last = { x: 0, y: 0, time: 0 };
@@ -458,13 +498,35 @@ export function createGlobeScene(options: Options): GlobeScene | null {
   let hovered: string | null = null;
   let movedSinceDown = 0;
   let reportedDrag = false;
+  // Fingers on the globe; two of them pinch.
+  const touches = new Map<number, { x: number; y: number }>();
+  let pinch: { spread: number; zoom: number } | null = null;
 
-  const globeRadiusPx = () => {
-    const height = canvas.clientHeight || 1;
-    const distance = camera.position.z;
-    const halfHeight = Math.tan((camera.fov * DEG) / 2) * distance;
-    return (height / 2) * (1 / halfHeight);
+  const touchSpread = () => {
+    const [a, b] = [...touches.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y) || 1;
   };
+
+  /** Radians per pixel dragged, so the surface keeps up with the pointer at any zoom. */
+  const turnPerPixel = () => {
+    const height = canvas.clientHeight || 1;
+    const halfHeight = Math.tan((camera.fov * DEG) / 2) * DISTANCE;
+    return halfHeight / (height / 2) / zoom;
+  };
+
+  /** Whether a point on the canvas is over the globe, not the empty corners. */
+  function overGlobe(clientX: number, clientY: number) {
+    const rect = canvas.getBoundingClientRect();
+    const half = rect.height / 2 || 1;
+    const fromCentre = Math.hypot(
+      clientX - rect.left - rect.width / 2,
+      clientY - rect.top - rect.height / 2,
+    );
+    const outline =
+      Math.tan(Math.asin(1 / camera.position.z)) /
+      Math.tan((camera.fov * DEG) / 2);
+    return fromCentre <= half * outline;
+  }
 
   const projected = new Vector3();
   const normal = new Vector3();
@@ -502,6 +564,19 @@ export function createGlobeScene(options: Options): GlobeScene | null {
   }
 
   function onPointerDown(event: PointerEvent) {
+    if (event.pointerType === "touch") {
+      touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (touches.size === 2) {
+        // A second finger turns the drag into a pinch, which doesn't turn
+        // the globe or count as a tap.
+        dragging = false;
+        pointerId = null;
+        velocity.x = velocity.y = 0;
+        pinch = { spread: touchSpread(), zoom };
+        return;
+      }
+      if (touches.size > 2) return;
+    }
     if (event.button !== 0) return;
     pointerId = event.pointerId;
     dragging = true;
@@ -515,6 +590,15 @@ export function createGlobeScene(options: Options): GlobeScene | null {
   }
 
   function onPointerMove(event: PointerEvent) {
+    if (touches.has(event.pointerId)) {
+      touches.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+    if (pinch) {
+      if (touches.size >= 2) {
+        zoomTo(pinch.zoom * (touchSpread() / pinch.spread), true);
+      }
+      return;
+    }
     if (!dragging || event.pointerId !== pointerId) {
       if (event.pointerType === "mouse") {
         const hit = pick(event.clientX, event.clientY);
@@ -524,7 +608,7 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     }
     const now = performance.now();
     const dt = Math.max(1, now - last.time) / 1000;
-    const scale = 1 / globeRadiusPx();
+    const scale = turnPerPixel();
     const dx = (event.clientX - last.x) * scale;
     // Touch only turns the globe sideways; up and down scroll the page.
     const dy =
@@ -547,6 +631,12 @@ export function createGlobeScene(options: Options): GlobeScene | null {
   }
 
   function onPointerUp(event: PointerEvent) {
+    touches.delete(event.pointerId);
+    if (pinch) {
+      // Lifting one finger ends the pinch; the other one doesn't start a drag.
+      if (touches.size < 2) pinch = null;
+      return;
+    }
     if (event.pointerId !== pointerId) return;
     dragging = false;
     pointerId = null;
@@ -570,12 +660,47 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     if (!dragging && hovered) setHovered(null, 0, 0);
   }
 
+  // The canvas lets the browser scroll the page with vertical swipes
+  // (touch-pan-y), and two fingers moving together count as one; on the
+  // globe they are a pinch.
+  function onTouchMove(event: TouchEvent) {
+    if (event.targetTouches.length > 1 && event.cancelable) {
+      event.preventDefault();
+    }
+  }
+
+  function onWheel(event: WheelEvent) {
+    const pixels =
+      event.deltaMode === WheelEvent.DOM_DELTA_LINE
+        ? event.deltaY * 40
+        : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+          ? event.deltaY * 800
+          : event.deltaY;
+    if (!pixels || !overGlobe(event.clientX, event.clientY)) return;
+    // Trackpad pinches arrive as wheel events with ctrlKey set; they are
+    // what zooms the page, so they never get through to it.
+    const pinching = event.ctrlKey;
+    // Like a scrolling box on the page: once the globe is all the way in or
+    // out, the wheel goes back to scrolling the page.
+    const atLimit = pixels < 0 ? zoomTarget >= MAX_ZOOM : zoomTarget <= 1;
+    if (atLimit && !pinching) return;
+    event.preventDefault();
+    // A pinch sends many small deltas; a wheel notch is about 100 pixels,
+    // and a fast spin can arrive as one bigger event.
+    const rate = pinching && Math.abs(pixels) < 50 ? 0.01 : 0.0022;
+    const step = Math.min(0.7, Math.max(-0.7, -pixels * rate));
+    zoomTo(zoomTarget * Math.exp(step));
+    if (hovered) setHovered(null, 0, 0);
+  }
+
   canvas.style.cursor = "grab";
   canvas.addEventListener("pointerdown", onPointerDown);
   canvas.addEventListener("pointermove", onPointerMove);
   canvas.addEventListener("pointerup", onPointerUp);
   canvas.addEventListener("pointercancel", onPointerUp);
   canvas.addEventListener("pointerleave", onPointerLeave);
+  canvas.addEventListener("touchmove", onTouchMove, { passive: false });
+  canvas.addEventListener("wheel", onWheel, { passive: false });
 
   // --- loop --------------------------------------------------------------
   let active = false;
@@ -626,9 +751,24 @@ export function createGlobeScene(options: Options): GlobeScene | null {
       moving = true;
     }
 
-    // A slow sway so the globe never looks frozen.
-    const sway = reducedMotion ? 0 : Math.sin(clock * 0.22) * 0.035;
-    globe.rotation.set(rotation.x, rotation.y + sway, 0);
+    if (zoom !== zoomTarget) {
+      // Eased by ratio, so every wheel notch feels the same at any zoom.
+      zoom *= Math.pow(zoomTarget / zoom, 1 - Math.exp(-dt * 12));
+      if (Math.abs(Math.log(zoomTarget / zoom)) < 0.002) zoom = zoomTarget;
+      moving = true;
+    }
+    applyZoom();
+
+    // A slow sway so the globe never looks frozen; the same few pixels at
+    // any zoom.
+    const sway = reducedMotion ? 0 : (Math.sin(clock * 0.22) * 0.035) / zoom;
+    // Zooming closes in on the focused place, which sits off the middle,
+    // and keeps it where it is on screen.
+    globe.rotation.set(
+      rotation.x + VIEW_LAT_OFFSET * (1 - 1 / zoom),
+      rotation.y + sway,
+      0,
+    );
 
     let drawing = false;
     if (drawStartedAt !== null) {
@@ -689,10 +829,8 @@ export function createGlobeScene(options: Options): GlobeScene | null {
     camera.updateProjectionMatrix();
     dotsMaterial.uniforms.uPixelRatio.value = renderer.getPixelRatio();
     // Denser dots on small globes would merge; lighter ones on big globes look sparse.
-    dotsMaterial.uniforms.uSize.value = Math.min(
-      3,
-      Math.max(1.6, height / 230),
-    );
+    dotSize = Math.min(3, Math.max(1.6, height / 230));
+    applyZoom();
     requestRender();
   }
 
@@ -712,6 +850,8 @@ export function createGlobeScene(options: Options): GlobeScene | null {
       canvas.removeEventListener("pointerup", onPointerUp);
       canvas.removeEventListener("pointercancel", onPointerUp);
       canvas.removeEventListener("pointerleave", onPointerLeave);
+      canvas.removeEventListener("touchmove", onTouchMove);
+      canvas.removeEventListener("wheel", onWheel);
       scene.traverse((object) => {
         const mesh = object as Mesh;
         mesh.geometry?.dispose();
