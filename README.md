@@ -43,7 +43,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-`npm run dev` gets the photos and the map's worker files ready first, then picks
+`npm run dev` gets the photos and the map's library files ready first, then picks
 the first free port from 3000 up and prints it — I had something else squatting
 on 3000 for months and got tired of the collision. Set `PORT` if you want a
 specific one, or `npm run dev:lan` to reach it from your phone.

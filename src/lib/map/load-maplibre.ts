@@ -1,17 +1,23 @@
-let loading: Promise<typeof import("maplibre-gl")> | null = null;
+type MapLibre = typeof import("maplibre-gl");
+
+let loading: Promise<MapLibre> | null = null;
 
 /**
- * MapLibre 6 runs its tile worker from a separate module that imports a
- * sibling file. Turbopack can't bundle that pair, so
- * scripts/copy-maplibre-worker.mjs copies both into public/maplibre and the
- * library is pointed there before the first map is created.
+ * MapLibre comes from its own files in public/maplibre
+ * (scripts/copy-maplibre-worker.mjs), not from the bundle. Its tile worker
+ * starts from the same folder, and the library and the worker both import
+ * maplibre-gl-shared.mjs, so the browser fetches that half of MapLibre once.
+ * Bundled, the page carried its own copy and the worker downloaded it again;
+ * Turbopack can't bundle the worker, whose URL MapLibre works out at run time.
  */
 export function loadMapLibre() {
-  loading ??= import("maplibre-gl").then((maplibregl) => {
-    maplibregl.setWorkerUrl(
-      `/maplibre/maplibre-gl-worker.mjs?v=${maplibregl.getVersion()}`,
-    );
-    return maplibregl;
+  const url = "/maplibre/maplibre-gl.mjs";
+  loading ??= (
+    import(/* webpackIgnore: true */ url) as Promise<MapLibre>
+  ).catch((error) => {
+    // Let "Try again" on the map load it afresh.
+    loading = null;
+    throw error;
   });
   return loading;
 }

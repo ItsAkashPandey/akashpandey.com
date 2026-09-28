@@ -45,7 +45,7 @@ const port = Number.isInteger(requested)
   : await findPort(Number(process.env.DEV_PORT_START) || 3000);
 
 // Pre-sized gallery photos (public/_img; cached, so after the first run this
-// takes well under a second) and the map's worker files (public/maplibre).
+// takes well under a second) and MapLibre's files (public/maplibre).
 for (const script of [
   "scripts/build-images.mjs",
   "scripts/copy-maplibre-worker.mjs",
