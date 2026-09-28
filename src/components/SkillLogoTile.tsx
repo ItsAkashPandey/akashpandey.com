@@ -26,7 +26,9 @@ export default function SkillLogoTile({
         width={128}
         height={96}
         sizes="96px"
-        loading="eager"
+        // Lazy: an eager image makes React add a preload link for it, and a
+        // dozen logo preloads would compete with the hero photo.
+        loading="lazy"
         containerClassName="h-full w-full"
         skeletonClassName="bg-muted/55"
         className={cn(
