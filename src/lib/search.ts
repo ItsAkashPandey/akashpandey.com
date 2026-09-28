@@ -14,7 +14,7 @@ export type SearchDocument = IndexedField[];
 export function normalizeSearchText(value: unknown) {
   return String(value ?? "")
     .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
@@ -28,7 +28,7 @@ export function createSearchDocument(fields: SearchField[]): SearchDocument {
   });
 }
 
-function isOneEditAway(query: string, candidate: string) {
+export function isOneEditAway(query: string, candidate: string) {
   if (Math.abs(query.length - candidate.length) > 1) return false;
   let queryIndex = 0;
   let candidateIndex = 0;
@@ -51,7 +51,20 @@ function isOneEditAway(query: string, candidate: string) {
     }
   }
 
-  return edits + Number(queryIndex < query.length || candidateIndex < candidate.length) <= 1;
+  return (
+    edits +
+      Number(queryIndex < query.length || candidateIndex < candidate.length) <=
+    1
+  );
+}
+
+/** Typo matching only kicks in for words long enough to be unambiguous. */
+function isFuzzyMatch(queryToken: string, candidate: string) {
+  return (
+    queryToken.length >= 4 &&
+    candidate.length >= 4 &&
+    isOneEditAway(queryToken, candidate)
+  );
 }
 
 function tokenScore(queryToken: string, field: IndexedField) {
@@ -62,11 +75,7 @@ function tokenScore(queryToken: string, field: IndexedField) {
     else if (candidate.startsWith(queryToken)) best = Math.max(best, 4);
     else if (queryToken.length >= 3 && candidate.includes(queryToken)) {
       best = Math.max(best, 2.5);
-    } else if (
-      queryToken.length >= 4 &&
-      candidate.length >= 4 &&
-      isOneEditAway(queryToken, candidate)
-    ) {
+    } else if (isFuzzyMatch(queryToken, candidate)) {
       best = Math.max(best, 1.5);
     }
   }
@@ -100,4 +109,43 @@ export function scoreSearchDocument(
   }
 
   return score;
+}
+
+/**
+ * The strings to mark in `text` for a query: the query itself, its words, and
+ * any word in the text that only matched through the one-typo rule above —
+ * otherwise a fuzzy hit shows up in the results with nothing highlighted.
+ */
+export function getHighlightTerms(query: string | undefined, text = "") {
+  const trimmed = query?.trim();
+  if (!trimmed) return [];
+
+  const words = trimmed.split(/\s+/).filter((word) => word.length > 1);
+  const terms = new Set([trimmed, ...words].map((term) => term.toLowerCase()));
+
+  const queryTokens = normalizeSearchText(trimmed).split(" ");
+  for (const word of text.match(/[\p{L}\p{N}]+/gu) ?? []) {
+    const token = normalizeSearchText(word);
+    if (
+      queryTokens.some(
+        (queryToken) =>
+          !token.includes(queryToken) && isFuzzyMatch(queryToken, token),
+      )
+    ) {
+      terms.add(word.toLowerCase());
+    }
+  }
+
+  return Array.from(terms).sort((a, b) => b.length - a.length);
+}
+
+export function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** A case-insensitive matcher for the terms, or null when there are none. */
+export function highlightMatcher(terms: string[]) {
+  return terms.length
+    ? new RegExp(`(${terms.map(escapeRegExp).join("|")})`, "gi")
+    : null;
 }
